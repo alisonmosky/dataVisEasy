@@ -1,0 +1,190 @@
+\name{AOV2way}
+\alias{AOV2way}
+%- Also NEED an '\alias' for EACH other topic documented here.
+\title{
+Two-Way ANOVA
+}
+\description{
+A two-way ANOVA for the samples in the supplied data matrix based on annotations stored in the params list object.
+}
+\usage{
+AOV2way(data.to.aov, category1, category2, pthreshold = 0.05, additional.report = "NONE")
+}
+%- maybe also 'usage' for other objects documented here.
+\arguments{
+  \item{data.to.aov}{
+numeric data matrix with samples/observations in the columns and genes/variables in the rows
+}
+  \item{category1}{
+Character string pointing to a column of the annotations data frame stores in params$annotations
+}
+  \item{category2}{
+Character string pointing to a column of the annotations data frame stores in params$annotations
+}
+  \item{pthreshold}{
+pvalue threshold for which genes will be considered significant
+}
+  \item{additional.report}{
+Option to include full output of aov or TukeyHSD, options are "NONE", "AOV","TUKEY", or "ALL"
+}
+}
+\details{
+Runs a standard two-way ANOVA and subsequent TukeyHSD on the data provided using stored annotations as the categories for ANOVA groupings
+}
+\value{
+List object
+
+\item{AOV.Results}{dataframe giving the F statistic and pvalue of each gene in the original input matrix for each category indepenently and the interaction values}
+
+ \item{Category1-Sig.Genes}{character vector of the genes with pvalues below the specified pthreshold for the levels in Category1}
+
+\item{Category2-Sig.Genes}{character vector of the genes with pvalues below the specified pthreshold for the levels in Category2}
+
+\item{Interaction-Sig.Genes}{character vector of the genes with pvalues below the specified pthreshold for the interaction between Category1 and Category2}
+
+\item{All.Sig.Genes}{character vector of the all genes with pvalues below the specified pthreshold for any contrast}
+
+\item{NonSig.Genes}{character vector of the genes with pvalues that did not pass the specified pthreshold for any contrast}
+
+\item{Category1-Tukey.pVals}{dataframe containing the adjusted pvalues from TukeyHSD for each contrast in Category2 for each gene in the original input matrix}
+
+\item{Category2-Tukey.pVals}{dataframe containing the adjusted pvalues from TukeyHSD for each contrast in Category2 for each gene in the original input matrix}
+
+\item{Interaction-Tukey.pVals}{dataframe containing the adjusted pvalues from TukeyHSD for each contrast of the interaction between Category1 and Category2 for each gene in the original input matrix}
+
+\item{Category1-Tukey.diffs}{dataframe containing the difference values from TukeyHSD for each contrast in Category1 for each gene in the original input matrix}
+
+\item{Category2-Tukey.diffs}{dataframe containing the difference values from TukeyHSD for each contrast in Category2 for each gene in the original input matrix}
+
+\item{Interaction-Tukey.diffs}{dataframe containing the difference values from TukeyHSD for each contrast of the interaction between Category1 and Category2 for each gene in the original input matrix}
+
+optional items
+
+\item{AOV.output}{list object containing the aov output for all genes in the original input matrix }
+
+\item{Tukey.output}{list object containing the TUkeyHSD output for all genes in the original input matrix }
+}
+\references{
+%% ~put references to the literature/web site here ~
+}
+\author{
+~~Alison Moss~~
+}
+\note{
+%%  ~~further notes~~
+}
+
+%% ~Make other sections like Warning with \section{Warning }{....} ~
+
+\seealso{
+%% ~~objects to See Also as \code{\link{help}}, ~~~
+}
+\examples{
+##---- Should be DIRECTLY executable !! ----
+##-- ==>  Define data, use random,
+##--	or do  help(data=index)  for the standard data sets.
+
+## The function is currently defined as
+function (data.to.aov, category1, category2, pthreshold = 0.05,
+    additional.report = "NONE")
+{
+    if (sum(colnames(data.to.aov) \%notin\% rownames(params$annotations)) !=
+        0) {
+        stop("colnames of input data do not match rownames of annotations, cannot link annotations to data and assign groupings for ANOVA")
+    }
+    temp.annotations <- params$annotations[match(colnames(data.to.aov),
+        rownames(params$annotations)), ]
+    groupings1 <- temp.annotations[, category1]
+    groupings2 <- temp.annotations[, category2]
+    aov.all <- apply(data.to.aov, 1, function(x) (summary(aov(x ~
+        groupings1 + groupings2 + groupings1:groupings2))))
+    aov.results <- t(data.frame((lapply(aov.all, function(x) (unlist(x[[1]]))))))[,
+        c(13:15, 17:19)]
+    colnames(aov.results) <- c(paste0("FVal-", category1), paste0("FVal-",
+        category2), paste0("FVal-", category1, ":", category2),
+        paste0("pVal-", category1), paste0("pVal-", category2),
+        paste0("pVal-", category1, ":", category2))
+    category1.sig <- rownames(aov.results)[which(aov.results[,
+        4] <= pthreshold)]
+    category2.sig <- rownames(aov.results)[which(aov.results[,
+        5] <= pthreshold)]
+    interaction.sig <- rownames(aov.results)[which(aov.results[,
+        6] <= pthreshold)]
+    any.sig <- unique(c(category1.sig, category2.sig, interaction.sig))
+    nonsig.genes <- rownames(data.to.aov)[rownames(data.to.aov) \%notin\%
+        any.sig]
+    sig.set <- data.to.aov[which(rownames(data.to.aov) \%in\% any.sig),
+        ]
+    tukey.all <- apply(data.to.aov, 1, function(x) (TukeyHSD(aov(x ~
+        groupings1 + groupings2 + groupings1:groupings2))))
+    tukey.pvals1 <- data.frame(Reduce(rbind, lapply(tukey.all[which(names(tukey.all) \%in\%
+        category1.sig)], function(x) (x$groupings1[, 4]))), row.names = names(tukey.all)[which(names(tukey.all) \%in\%
+        category1.sig)])
+    colnames(tukey.pvals1) <- rownames(tukey.all[[1]]$groupings1)
+    tukey.pvals2 <- data.frame(Reduce(rbind, lapply(tukey.all[which(names(tukey.all) \%in\%
+        category2.sig)], function(x) (x$groupings2[, 4]))), row.names = names(tukey.all)[which(names(tukey.all) \%in\%
+        category2.sig)])
+    colnames(tukey.pvals2) <- rownames(tukey.all[[1]]$groupings2)
+    tukey.pvals3 <- data.frame(Reduce(rbind, lapply(tukey.all[which(names(tukey.all) \%in\%
+        interaction.sig)], function(x) (x$`groupings1:groupings2`[,
+        4]))), row.names = names(tukey.all)[which(names(tukey.all) \%in\%
+        interaction.sig)])
+    colnames(tukey.pvals3) <- rownames(tukey.all[[1]]$`groupings1:groupings2`)
+    tukey.diffs1 <- data.frame(Reduce(rbind, lapply(tukey.all[which(names(tukey.all) \%in\%
+        category1.sig)], function(x) (x$groupings1[, 1]))), row.names = names(tukey.all)[which(names(tukey.all) \%in\%
+        category1.sig)])
+    colnames(tukey.diffs1) <- rownames(tukey.all[[1]]$groupings1)
+    tukey.diffs2 <- data.frame(Reduce(rbind, lapply(tukey.all[which(names(tukey.all) \%in\%
+        category2.sig)], function(x) (x$groupings2[, 1]))), row.names = names(tukey.all)[which(names(tukey.all) \%in\%
+        category2.sig)])
+    colnames(tukey.diffs2) <- rownames(tukey.all[[1]]$groupings2)
+    tukey.diffs3 <- data.frame(Reduce(rbind, lapply(tukey.all[which(names(tukey.all) \%in\%
+        interaction.sig)], function(x) (x$`groupings1:groupings2`[,
+        1]))), row.names = names(tukey.all)[which(names(tukey.all) \%in\%
+        interaction.sig)])
+    colnames(tukey.diffs3) <- rownames(tukey.all[[1]]$`groupings1:groupings2`)
+    if (toupper(additional.report) == "ALL") {
+        return(list(AOV.output = aov.all, AOV.Results = aov.results,
+            `Category1-Sig.Genes` = category1.sig, `Category2-Sig.Genes` = category2.sig,
+            `Interaction-Sig.Genes` = interaction.sig, All.Sig.Genes = any.sig,
+            NonSig.Genes = nonsig.genes, Tukey.output = tukey.all,
+            `Category1-Tukey.pVals` = tukey.pvals1, `Category2-Tukey.pVals` = tukey.pvals2,
+            `Interaction-Tukey.pVals` = tukey.pvals3, `Category1-Tukey.diffs` = tukey.diffs1,
+            `Category2-Tukey.diffs` = tukey.diffs2, `Interaction-Tukey.diffs` = tukey.diffs3))
+    }
+    if (toupper(additional.report) == "AOV") {
+        return(list(AOV.output = aov.all, AOV.Results = aov.results,
+            `Category1-Sig.Genes` = category1.sig, `Category2-Sig.Genes` = category2.sig,
+            `Interaction-Sig.Genes` = interaction.sig, All.Sig.Genes = any.sig,
+            NonSig.Genes = nonsig.genes, `Category1-Tukey.pVals` = tukey.pvals1,
+            `Category2-Tukey.pVals` = tukey.pvals2, `Interaction-Tukey.pVals` = tukey.pvals3,
+            `Category1-Tukey.diffs` = tukey.diffs1, `Category2-Tukey.diffs` = tukey.diffs2,
+            `Interaction-Tukey.diffs` = tukey.diffs3))
+    }
+    if (toupper(additional.report) == "TUKEY") {
+        return(list(AOV.Results = aov.results, `Category1-Sig.Genes` = category1.sig,
+            `Category2-Sig.Genes` = category2.sig, `Interaction-Sig.Genes` = interaction.sig,
+            All.Sig.Genes = any.sig, NonSig.Genes = nonsig.genes,
+            `Category1-Tukey.pVals` = tukey.pvals1, `Category2-Tukey.pVals` = tukey.pvals2,
+            `Interaction-Tukey.pVals` = tukey.pvals3, `Category1-Tukey.diffs` = tukey.diffs1,
+            `Category2-Tukey.diffs` = tukey.diffs2, `Interaction-Tukey.diffs` = tukey.diffs3))
+    }
+    if (toupper(additional.report) == "NONE") {
+        return(list(AOV.Results = aov.results, `Category1-Sig.Genes` = category1.sig,
+            `Category2-Sig.Genes` = category2.sig, `Interaction-Sig.Genes` = interaction.sig,
+            All.Sig.Genes = any.sig, NonSig.Genes = nonsig.genes,
+            `Category1-Tukey.pVals` = tukey.pvals1, `Category2-Tukey.pVals` = tukey.pvals2,
+            `Interaction-Tukey.pVals` = tukey.pvals3, `Category1-Tukey.diffs` = tukey.diffs1,
+            `Category2-Tukey.diffs` = tukey.diffs2, `Interaction-Tukey.diffs` = tukey.diffs3))
+    }
+  }
+}
+% Add one or more standard keywords, see file 'KEYWORDS' in the
+% R documentation directory (show via RShowDoc("KEYWORDS")):
+% \keyword{ ~kwd1 }
+% \keyword{ ~kwd2 }
+% Use only one keyword per line.
+% For non-standard keywords, use \concept instead of \keyword:
+% \concept{ ~cpt1 }
+% \concept{ ~cpt2 }
+% Use only one concept per line.
