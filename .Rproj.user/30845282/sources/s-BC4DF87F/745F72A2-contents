@@ -1,0 +1,253 @@
+
+
+library(dataVisEasy)
+
+
+####Import data and annotations####
+
+common.norm <- as.matrix(read.table("Demo_Pig_Normalized_trimmed.txt", sep="\t", header=T));colnames(common.norm) <- gsub("\\.","-",colnames(common.norm))
+all.raw <- as.matrix(read.table("Demo_Pig_all_raw.txt", sep="\t", header=T));colnames(all.raw) <- gsub("\\.","-",colnames(all.raw))
+all.annots <- read.table("Demo_Pig_Annotations.txt", sep="\t", header=T, stringsAsFactors = T) ;rownames(all.annots) <- gsub("\\.","-",rownames(all.annots))
+
+########################################################################
+####Set up color scale and annotations for heatmap based on data set####
+########################################################################
+
+initiate_params(parameters)
+###make sure annotations are in the right order, rownames of annotations should match colnames (samples) of data, must be factors
+annotations <- all.annots[all.annots$Sample_ID %in% colnames(all.raw),]
+head(annotations)
+
+###set annotations
+set_annotations(annotations)
+
+###set sample annotations to be colored in heatmap
+set_annot_samps(c("Cell_Type","Animal","State"))
+
+###set up annotation colors, names should match the colnames of sample annotations, values should match levels of columns
+state.cols <- brewer.pal(6,"Set1"); names(state.cols) <- LETTERS[1:6]
+annot_cols <- list('Cell_Type'=c("FB"="blue","CV"="violet","NONE"="grey"),
+                   'Animal'=c("PR1534"="#0571b0","PR1643"="#ca0020","PR1705"="#92c5de","PR1729"="#f4a582"),
+                   "State"=c(state.cols))
+
+###set color annotations
+set_annot_cols(annot_cols)
+
+assessScale(common.norm)
+
+set_scale.range(c(-2,2))
+assessScale(common.norm)
+set_scale.range(c(-1,1))
+
+data <- common.norm
+###########
+####PCA####
+###########
+
+myPCA(data, color.by = "Animal")
+
+##################################################
+####Get Expression Stats and Find Correlations####
+##################################################
+
+goi <- c("Th","Chat","Npy","PGP9.5","Gal")
+reportGenes(data, goi)
+
+##find top correlations in data
+
+correlateGenes(data)  ##will give histogram of all correlations, allows you to see distribution
+
+highcors <- correlateGenes(data, limits= c(-0.6, 0.95))  ##will return dataframe giving the gene pair and their correlations for those outside the limits specified
+head(highcors)
+
+####find correlations to gene of interest
+goi <- "Gal"
+
+corrs2Gene(data,goi)   ##will return histogram of correlations to gene of interest
+
+lims <- c(-0.3,0.3)   ##pick limits based on what you want to see in heatmap, will return genes with negative correlation
+##less than first element and genes with positive correlation highter than second element
+
+corrs2Gene(data,"Gal", limits=lims)  ##otherwise wrapper for myHeatmap
+
+##################################
+####Run Through Basic Heatmaps####
+##################################
+
+
+myHeatmap(data)
+myHeatmapByAnnotation(data, groupings = "Cell_Type")
+myHeatmapByAnnotation(data, groupings = "Animal")
+myHeatmapByAnnotation(data, groupings = "State")
+myHeatmapByAnnotation(data, groupings = "Sex")
+
+
+###separate by multiple annotations
+myHeatmapByAnnotation(data, groupings = c("Cell_Type","Sex"))
+myHeatmapByAnnotation(data, groupings = c("Animal","Cell_Type","State"))
+myHeatmapByAnnotation(data, groupings = c("Animal","Cell_Type","State"), groupings.gaps = c(0,1,2))
+myHeatmapByAnnotation(data, groupings = c("Animal","Cell_Type","State"), groupings.gaps = c(0,0,2))
+
+##find number of clusters
+myHeatmap(data)
+myHeatmap(data, row.groups = 3, col.groups = 4)
+myHeatmapByAnnotation(data, groupings = "State", row.groups = 7)
+
+
+
+##############################
+####Make Heatmap Varieties####
+##############################
+
+###change gaps, only view a certain number of genes, na.fix=T sets NAs equal to the lowest value to aid in clustering
+myHeatmapByAnnotation(data, c("Th","Chat","Dbh","Npy","Chrm1","Chrna7","Chat","Gal","Galr1"), groupings = "State", gap.width = 3, na.fix = T)
+
+
+###for any list
+list <- c("Th","Gal","Sst","Dbh","Npy","Npy2r","Adra","Adrb","Chrm")
+
+myHeatmap(data, list)
+myHeatmap(data, list, exact = F)
+
+
+##order by gene
+myHeatmap(data, list, order.by.gene = "Th")
+myHeatmapByAnnotation(data, list, groupings=annotations$State, order.by.gene = "Th")
+
+
+###take multiple heatmaps, extract matrix, and put together####
+
+##neurotransmitters and receptors together
+neurot <- c("Sst","Npy","Gal","Cck","Npff","Glp1","Kng1..Bdk.","Trh","Tac1","Nppa","Nppb","Nppc",   "Oxt", "Vip","Agt","Crh", "Gcg", "Grp", "Hcrt", "Hrh", "Nmu",
+            "BNP","Bdk") #,"Ddc", "Pnmt","Chat","Th","Dbh")
+
+t <- myHeatmap(data, neurot, show.colnames = T)
+tmat <- ExtractMatrix(data,t, clustered.cols = F)
+
+r.adr <- myHeatmap(data,"Adr", exact=F, show.colnames = T)
+r.adr.mat <- ExtractMatrix(data,r.adr, clustered.cols=F)
+
+r.chol <- myHeatmap(data, "Chr", exact=F, show.colnames = T)
+r.chol.mat <- ExtractMatrix(data,r.chol, clustered.cols = F)
+
+r.pep <- myHeatmap(data, c( paste0(neurot,"r"),"Sstr","Npy.r","Galr","Cckar","Cckbr","Npffr","Glp1r","Bdkr","Trhr","Tacr1","Npr"), exact=F, show.colnames = T)
+r.pep.mat <- ExtractMatrix(data,r.pep, clustered.cols = F)
+
+
+comb.mat <- rbind(tmat,r.chol.mat[nrow(r.chol.mat):1,],r.adr.mat, r.pep.mat[order(rownames(r.pep.mat)),])
+gaps <- cumsum(c(nrow(tmat), nrow(r.chol.mat), nrow(r.adr.mat)))
+myHeatmap(comb.mat, rownames(comb.mat), clust.rows = F, gaps.row=sort(c(rep(gaps,2), rep(nrow(tmat),3))))
+
+###split columns into groups based on dendrogram, set heights and dimensions, fontsize
+myHeatmap(comb.mat, rownames(comb.mat), clust.rows = F, gaps.row=sort(c(rep(gaps,2), rep(nrow(tmat),3))), col.groups = 12,
+          treeheight.col=10, fontsize.row = 10, cell.width = .85, cell.height = 10)
+
+
+
+
+###lets say raj wants you to put more space in between the groups#####
+p <- myHeatmapByAnnotation(data, groupings = "State", row.groups=7, show.colnames = T)
+pmat <- ExtractMatrix(data, p)
+pgaps <- extractGaps(data, p, extractRows = T, extractCols = F, num_Rows = 7)
+
+myHeatmapByAnnotation(pmat, groupings = "State", clust.rows = F, gaps.row.spec = pgaps, gap.width = 3)
+
+###or you want to extract the clusters####
+genemods <- extractClusters(data, p, extractGenes = TRUE, extractSamples = F, num_Gene.groups = 7, GeneGroup_Name = "GeneMods")
+head(genemods)
+
+set_annotations.genes(genemods)
+set_annot_genes("GeneMods")
+genemod.cols <- brewer.pal(7,"Set3"); names(genemod.cols) <- levels(genemods$GeneMods)
+update_annot_cols("GeneMods",c(genemod.cols))
+
+myHeatmapByAnnotation(data, groupings = "State", groupings.genes = "GeneMods")
+
+myHeatmapByAnnotation(data, c("Th","Dbh","Chat","Npy","Gal","Sst"), exact=F, groupings = F, groupings.genes = "GeneMods")
+
+#############################
+####Scatter for two Genes####
+#############################
+
+scatterGenes(data, "Th","Chat")
+scatterGenes(data, "Th","Chat", color.by = "Cell_Type")
+scatterGenes(data, "Th","Chat", color.by = "Chat")
+plot <- scatterGenes(data, "Th","Chat", color.by = "Npy")
+
+plot + theme(axis.text = element_text(size=10))
+
+##########################
+####Beeswarm for Genes####
+##########################
+
+list <- c("Th","Dbh","Npy","PGP9.5","NeuN", "Chat")
+
+beeswarmGenes(data, list)
+
+beeswarmGenes(all.raw, list, is.raw.Ct = T)
+
+beeswarmGenes(data, list, groupby.x = "Sex")
+
+##color by something, options
+beeswarmGenes(data, list, color.by = "Animal")
+beeswarmGenes(data, list, color.by = "Animal", groupby.x = F)
+beeswarmGenes(data, list, color.by = "Animal", groupby.x = "Sex")
+beeswarmGenes(data, list, color.by = "Animal", groupby.x = "Sex", facet.wrap = T)
+beeswarmGenes(data, list, color.by = "Animal", groupby.x = "Sex", facet.wrap = T)
+
+
+######################
+####Density Plots#####
+######################
+
+list <- c("Chat","Th","Npy","PGP9.5")
+
+DensityGenes(data,list, legend.position = "none")
+DensityGenes(data,list, "Animal")
+DensityGenes(data,list, "Animal") + ggtitle("My Density Plots")
+
+dat2 <- subsetSamples(data, group = "Cell_Type", take.out = c("CV", "FB"))
+DensityGenes(dat2,list, "Cell_Type")
+
+
+##################
+####Statistics####
+##################
+
+##1 Way ANOVA
+
+aov.results <- AOV1way(data, "Cell_Type")
+head(aov.results$AOV.Results)
+head(aov.results$Tukey.pVals)
+
+myHeatmapByAnnotation(data, aov.results$Sig.Genes, groupings= "Cell_Type")
+
+##2 Way ANOVA
+aov2.results <- AOV2way(data, "Cell_Type", "Sex")
+
+
+####Volcano Plot
+volcano(data, "Sex")
+volcano(data, "Cell_Type", levels = c("CV","FB"))
+volcano(data, "Cell_Type", levels = c("CV","FB"), pval.cut = 0.1, FC.cut = 1.5,
+        upreg.color = "yellow", downreg.color = "blue", nosig.color = "gray90")
+
+###add things to ggplot object
+volcano(data, "Cell_Type", levels = c("CV","FB")) + geom_text(aes(label=Gene),  nudge_x = 0.1, nudge_y = -.1)
+
+##add lines
+horiz.lines <- c(0.05)
+vert.lines <- c(2,3)
+
+volcano(data, "Cell_Type", levels = c("CV","FB")) + geom_hline(yintercept = c(-log10(horiz.lines))) + geom_vline(xintercept = c(log2(vert.lines), -log2(vert.lines)))
+
+##get output
+volcano.summary <- volcano(data, "Cell_Type", levels = c("CV","FB"), return.summary = TRUE)
+
+
+###PTM
+
+matches <- PTM(data, match.template = "State", set.high="A")
+myHeatmapByAnnotation(data, matches, groupings = "State")
+
+

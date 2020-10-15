@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1602773005983.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "13|36|15|0|\n26|34|27|29|\n30|41|40|0|\n45|2|52|0|\n66|53|77|0|\n82|2|89|0|\n91|48|102|0|\n106|39|109|0|\n114|2|121|0|\n124|51|134|55|\n142|2|148|0|\n155|2|171|0|\n179|2|199|0|\n201|61|228|0|\n263|2|402|4|\n444|2|855|4|\n988|2|1052|0|\n1062|2|1165|0|\n1180|2|1283|0|\n1298|2|1361|0|\n1398|2|1425|0|\n1434|2|1456|0|\n1466|2|1505|0|\n1515|2|1576|0|\n1596|2|1685|0|\n1704|2|1820|0|\n1842|2|2093|0|\n",
+    "hash" : "1750025183",
+    "id" : "D0D3D82",
+    "lastKnownWriteTime" : 1602775091,
+    "last_content_update" : 1602780980759,
+    "path" : "D:/Dropbox (SBG)/SHR-Work/Alison-DataVis-Package/dataVisEasy/R/Package-Code5-Compiled.R",
+    "project_path" : "R/Package-Code5-Compiled.R",
+    "properties" : {
+        "cursorPosition" : "899,34",
+        "scrollLine" : "885"
+    },
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

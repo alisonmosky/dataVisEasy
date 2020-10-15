@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1602774363180.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "45A05AB1",
+    "lastKnownWriteTime" : 1602774760,
+    "last_content_update" : 1602774760514,
+    "path" : "D:/Dropbox (SBG)/SHR-Work/Alison-DataVis-Package/dataVisEasy/man/scatterGenes.Rd",
+    "project_path" : "man/scatterGenes.Rd",
+    "properties" : {
+        "cursorPosition" : "53,0",
+        "scrollLine" : "43"
+    },
+    "relative_order" : 5,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_doc"
+}
