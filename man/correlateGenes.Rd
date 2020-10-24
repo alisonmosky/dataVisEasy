@@ -8,7 +8,8 @@ Examine Gene-Gene Correlations in Datamatrix
 Provides a quick way to check for the range of correlations in a given data matrix. If no limits are supplied, will return a histogram of all correlation present. When limits are supplied, a data frame is returned detailing all gene pair correlations that are more negatively correlated than the lower limit and more positively correlated than the upper limit.
 }
 \usage{
-correlateGenes(data, limits = NULL, nbreaks = 20, method = "pearson", NA.handling = "pairwise.complete.obs")
+correlateGenes(data, limits = NULL, nbreaks = 20, method = "pearson",
+  NA.handling = "pairwise.complete.obs")
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{

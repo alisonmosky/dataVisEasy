@@ -8,7 +8,10 @@ Volcano Plot Comparing Two Groups of Data
 Creates a volcano plot for the data provided showing up and downregulation of genes between the groups specified.
 }
 \usage{
-volcano(data, groups, levels = NULL, is.log2 = TRUE, pval.cut = 0.05, FC.cut = 2, return.summary = FALSE, downreg.color = "green", upreg.color = "red", nosig.color = "gray", show.genes = NULL, point.size = 2, transparency = 1, legend.position = "right")
+volcano(data, groups, levels = NULL, is.log2 = TRUE, pval.cut = 0.05,
+  FC.cut = 2, return.summary = FALSE, downreg.color = "green",
+  upreg.color = "red", nosig.color = "gray", show.genes = NULL,
+  point.size = 2, transparency = 1, legend.position = "right")
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{

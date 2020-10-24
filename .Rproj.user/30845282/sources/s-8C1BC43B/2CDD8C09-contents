@@ -1,0 +1,493 @@
+Project_Compact <- function(
+  list,
+  ROI,
+  type = "Strain", ##can also be time
+  q.cut = 0.2,
+  FC.cut = 1.5,
+  pattern.freq.min = 1,
+  show.sums = TRUE,
+  reduce.mat = TRUE,
+  cell.number.size = 0.5,
+  exact = TRUE
+){
+
+  all.compact <- read.table(paste0("D://Dropbox (SBG)/SHR-Work/Integration/All_COMPACT_Assignments_Qval_", q.cut,"_FC_", FC.cut, ".txt"), sep = "\t", header = T)
+
+  if (exact == TRUE) {
+    if (length(grep("_", list)) == length(list)) {
+      subclusts <- all.compact[which(rownames(all.compact) %in% list),]#; rownames(dat.to.plot) <- colsplit(rownames(dat.to.plot),"_",c("ENS","Gene"))$Gene
+    }else{
+      subclusts <- all.compact[which(colsplit(rownames(all.compact),"_",c("ENS","Gene"))$Gene %in% list),];#rownames(dat.to.plot) <- colsplit(rownames(dat.to.plot),"_",c("ENS","Gene"))$Gene
+    }
+  }else{
+    subclusts <- all.compact[grep(paste(list, collapse="|"),rownames(all.compact)),]; #rownames(dat.to.plot) <- colsplit(rownames(dat.to.plot),"_",c("ENS","Gene"))$Gene
+  }
+
+  ##make a table of all availabel combinations and the frequency at which they appear--only need to run once
+  SHR.perms.all.strain <- permutations(3,5,v=-1:1, repeats.allowed = TRUE); SHR.perms.all.time <- permutations(3,4,v=-1:1, repeats.allowed = TRUE);WKY.perms.all <- permutations(3,4,v=-1:1, repeats.allowed = TRUE)
+
+  #subclusts <- all.compact.1.5[which(rownames(all.compact.1.5) %in% list),]
+
+  if (ROI == "NTS") {
+    ##get frequency of permutations and can filter to make it smaller in NTS
+    shr.freq.strain <- read.table(paste0("D://Dropbox (SBG)/SHR-Work/NTS-Analysis/COMPACT/COMPACT-STRAIN-DIFF/qvalue_", q.cut,"-FC", FC.cut,"/patterns.counts.shr.txt"), sep="\t", header=T)
+    SHR.perms.strain <- SHR.perms.all.strain[-c(which(shr.freq.strain$shr.count < pattern.freq.min)),]
+
+    shr.freq.time <- read.table(paste0("D://Dropbox (SBG)/SHR-Work/NTS-Analysis/COMPACT/COMPACT-TIME/qvalue_", q.cut,"-FC", FC.cut,"/patterns.counts.shr.txt"), sep="\t", header=T)
+    SHR.perms.time <- SHR.perms.all.time[-c(which(shr.freq.time$shr.count < pattern.freq.min)),]
+
+    wky.freq <- read.table(paste0("D://Dropbox (SBG)/SHR-Work/NTS-Analysis/COMPACT/COMPACT-STRAIN-DIFF/qvalue_", q.cut, "-FC", FC.cut, "/patterns.counts.wky.txt"), sep="\t", header=T)
+    WKY.perms <- WKY.perms.all[-c(which(wky.freq$wky.count < pattern.freq.min)),]
+
+    all.combs.strain <- tidyr::crossing(A=unique(paste0("w",WKY.perms[,1], WKY.perms[,2], WKY.perms[,3], WKY.perms[,4])), B=unique(paste0("s",SHR.perms.strain[,1], SHR.perms.strain[,2], SHR.perms.strain[,3], SHR.perms.strain[,4], SHR.perms.strain[,5]))); all.combs.strain <- paste0(all.combs.strain$A,"-",all.combs.strain$B)
+    all.combs.time <- tidyr::crossing(A=unique(paste0("w",WKY.perms[,1], WKY.perms[,2], WKY.perms[,3], WKY.perms[,4])), B=unique(paste0("s",SHR.perms.time[,1], SHR.perms.time[,2], SHR.perms.time[,3], SHR.perms.time[,4]))); all.combs.time <- paste0(all.combs.time$A,"-",all.combs.time$B)
+
+    ##setup NTS matrix##
+
+    tab.strain <- as.data.frame(table(paste(subclusts$NTS.Strain[which(!is.na(subclusts$NTS.Strain))])));# tab.strain <- tab.strain[-which(tab.strain$Var1=="NA"),]
+    all.combs.present.strain <- tab.strain[match(all.combs.strain, as.character(tab.strain$Var1)),];
+    freqmat.strain <- matrix(all.combs.present.strain$Freq,nrow=nrow(WKY.perms), byrow=TRUE); freqmat.strain[is.na(freqmat.strain)] <- 0; rownames(freqmat.strain) <- paste0("w",WKY.perms[,1], WKY.perms[,2], WKY.perms[,3],WKY.perms[,4]); colnames(freqmat.strain) <- paste0("s",SHR.perms.strain[,1], SHR.perms.strain[,2], SHR.perms.strain[,3], SHR.perms.strain[,4], SHR.perms.strain[,5])
+
+    tab.time <- as.data.frame(table(paste(subclusts$NTS.Time[which(!is.na(subclusts$NTS.Time))])))
+    all.combs.present.time <- tab.time[match(all.combs.time, as.character(tab.time$Var1)),];
+    freqmat.time <- matrix(all.combs.present.time$Freq,nrow=nrow(WKY.perms), byrow=TRUE); freqmat.time[is.na(freqmat.time)] <- 0; rownames(freqmat.time) <- paste0("w",WKY.perms[,1], WKY.perms[,2], WKY.perms[,3],WKY.perms[,4]); colnames(freqmat.time) <- paste0("s",SHR.perms.time[,1], SHR.perms.time[,2], SHR.perms.time[,3], SHR.perms.time[,4])
+
+  }
+
+  if (ROI == "RVLM") {
+    ##get frequency of permutations and can filter to make it smaller in RVLM
+    shr.freq.strain <- read.table(paste0("D://Dropbox (SBG)/SHR-Work/RVLM-Analysis/COMPACT/COMPACT-STRAIN-DIFF/qvalue_", q.cut, "-FC", FC.cut, "/patterns.counts.shr.txt"), sep="\t", header=T)
+    SHR.perms.strain <- SHR.perms.all.strain[-c(which(shr.freq.strain$shr.count < pattern.freq.min)),]
+
+    shr.freq.time <- read.table(paste0("D://Dropbox (SBG)/SHR-Work/RVLM-Analysis/COMPACT/COMPACT-TIME/qvalue_", q.cut, "-FC", FC.cut, "/patterns.counts.shr.txt"), sep="\t", header=T)
+    SHR.perms.time <- SHR.perms.all.time[-c(which(shr.freq.time$shr.count < pattern.freq.min)),]
+
+    wky.freq <- read.table(paste0("D://Dropbox (SBG)/SHR-Work/RVLM-Analysis/COMPACT/COMPACT-STRAIN-DIFF/qvalue_", q.cut, "-FC", FC.cut, "/patterns.counts.wky.txt"), sep="\t", header=T)
+    WKY.perms <- WKY.perms.all[-c(which(wky.freq$wky.count < pattern.freq.min)),]
+
+    all.combs.strain <- tidyr::crossing(A=unique(paste0("w",WKY.perms[,1], WKY.perms[,2], WKY.perms[,3], WKY.perms[,4])), B=unique(paste0("s",SHR.perms.strain[,1], SHR.perms.strain[,2], SHR.perms.strain[,3], SHR.perms.strain[,4], SHR.perms.strain[,5]))); all.combs.strain <- paste0(all.combs.strain$A,"-",all.combs.strain$B)
+    all.combs.time <- tidyr::crossing(A=unique(paste0("w",WKY.perms[,1], WKY.perms[,2], WKY.perms[,3], WKY.perms[,4])), B=unique(paste0("s",SHR.perms.time[,1], SHR.perms.time[,2], SHR.perms.time[,3], SHR.perms.time[,4]))); all.combs.time <- paste0(all.combs.time$A,"-",all.combs.time$B)
+
+    ##setup RVLM matrix##
+    tab.strain <- as.data.frame(table(paste(subclusts$RVLM.Strain[which(!is.na(subclusts$RVLM.Strain))]))); #tab.strain <- tab.strain[-which(tab.strain$Var1=="NA"),]
+    all.combs.present.strain <- tab.strain[match(all.combs.strain, as.character(tab.strain$Var1)),];
+    freqmat.strain <- matrix(all.combs.present.strain$Freq,nrow=nrow(WKY.perms), byrow=TRUE); freqmat.strain[is.na(freqmat.strain)] <- 0; rownames(freqmat.strain) <- paste0("w",WKY.perms[,1], WKY.perms[,2], WKY.perms[,3],WKY.perms[,4]); colnames(freqmat.strain) <- paste0("s",SHR.perms.strain[,1], SHR.perms.strain[,2], SHR.perms.strain[,3], SHR.perms.strain[,4], SHR.perms.strain[,5])
+
+    tab.time <- as.data.frame(table(paste(subclusts$RVLM.Time[which(!is.na(subclusts$RVLM.Time))]))); #tab.time <- tab.time[-which(tab.time$Var1=="NA"),]
+    all.combs.present.time <- tab.time[match(all.combs.time, as.character(tab.time$Var1)),];
+    freqmat.time <- matrix(all.combs.present.time$Freq,nrow=nrow(WKY.perms), byrow=TRUE); freqmat.time[is.na(freqmat.time)] <- 0; rownames(freqmat.time) <- paste0("w",WKY.perms[,1], WKY.perms[,2], WKY.perms[,3],WKY.perms[,4]); colnames(freqmat.time) <- paste0("s",SHR.perms.time[,1], SHR.perms.time[,2], SHR.perms.time[,3], SHR.perms.time[,4])
+
+
+  }
+
+  if (ROI == "CVLM") {
+    ##get frequency of permutations and can filter to make it smaller in CVLM
+    shr.freq.strain <- read.table(paste0("D://Dropbox (SBG)/SHR-Work/CVLM-Analysis/COMPACT/COMPACT-STRAIN-DIFF/qvalue_", q.cut, "-FC", FC.cut, "/patterns.counts.shr.txt"), sep="\t", header=T)
+    SHR.perms.strain <- SHR.perms.all.strain[-c(which(shr.freq.strain$shr.count < pattern.freq.min)),]
+
+    shr.freq.time <- read.table(paste0("D://Dropbox (SBG)/SHR-Work/CVLM-Analysis/COMPACT/COMPACT-TIME/qvalue_", q.cut, "-FC", FC.cut, "/patterns.counts.shr.txt"), sep="\t", header=T)
+    SHR.perms.time <- SHR.perms.all.time[-c(which(shr.freq.time$shr.count < pattern.freq.min)),]
+
+    wky.freq <- read.table(paste0("D://Dropbox (SBG)/SHR-Work/CVLM-Analysis/COMPACT/COMPACT-STRAIN-DIFF/qvalue_", q.cut, "-FC", FC.cut, "/patterns.counts.wky.txt"), sep="\t", header=T)
+    WKY.perms <- WKY.perms.all[-c(which(wky.freq$wky.count < pattern.freq.min)),]
+
+    all.combs.strain <- tidyr::crossing(A=unique(paste0("w",WKY.perms[,1], WKY.perms[,2], WKY.perms[,3], WKY.perms[,4])), B=unique(paste0("s",SHR.perms.strain[,1], SHR.perms.strain[,2], SHR.perms.strain[,3], SHR.perms.strain[,4], SHR.perms.strain[,5]))); all.combs.strain <- paste0(all.combs.strain$A,"-",all.combs.strain$B)
+    all.combs.time <- tidyr::crossing(A=unique(paste0("w",WKY.perms[,1], WKY.perms[,2], WKY.perms[,3], WKY.perms[,4])), B=unique(paste0("s",SHR.perms.time[,1], SHR.perms.time[,2], SHR.perms.time[,3], SHR.perms.time[,4]))); all.combs.time <- paste0(all.combs.time$A,"-",all.combs.time$B)
+
+
+    ##setup CVLM matrix##
+    tab.strain <- as.data.frame(table(paste(subclusts$CVLM.Strain[which(!is.na(subclusts$CVLM.Strain))])))
+    all.combs.present.strain <- tab.strain[match(all.combs.strain, as.character(tab.strain$Var1)),];
+    freqmat.strain <- matrix(all.combs.present.strain$Freq,nrow=nrow(WKY.perms), byrow=TRUE); freqmat.strain[is.na(freqmat.strain)] <- 0; rownames(freqmat.strain) <- paste0("w",WKY.perms[,1], WKY.perms[,2], WKY.perms[,3],WKY.perms[,4]); colnames(freqmat.strain) <- paste0("s",SHR.perms.strain[,1], SHR.perms.strain[,2], SHR.perms.strain[,3], SHR.perms.strain[,4], SHR.perms.strain[,5])
+
+    tab.time <- as.data.frame(table(paste(subclusts$CVLM.Time[which(!is.na(subclusts$CVLM.Time))])))
+    all.combs.present.time <- tab.time[match(all.combs.time, as.character(tab.time$Var1)),];
+    freqmat.time <- matrix(all.combs.present.time$Freq,nrow=nrow(WKY.perms), byrow=TRUE); freqmat.time[is.na(freqmat.time)] <- 0; rownames(freqmat.time) <- paste0("w",WKY.perms[,1], WKY.perms[,2], WKY.perms[,3],WKY.perms[,4]); colnames(freqmat.time) <- paste0("s",SHR.perms.time[,1], SHR.perms.time[,2], SHR.perms.time[,3], SHR.perms.time[,4])
+
+  }
+
+
+  ###set up matrix to be printed with correct colors and aesthetics
+
+  if (tolower(type) == "strain") {
+    freqmat <- freqmat.strain
+    SHR.perms <- SHR.perms.strain
+    WKY.perms <- WKY.perms
+
+    freqmat[which(freqmat==0)] <- NA
+    freqmat <- rbind(t(mapvalues(SHR.perms, from=c(-1,0,1), to=c(-3,-2,-1))), freqmat);
+    freqmat <- cbind(rbind(matrix(0,nrow=5,ncol=4), mapvalues(WKY.perms, from=c(-1,0,1), to=c(-3,-2,-1))),freqmat)
+  }
+
+  if (tolower(type) == "time") {
+
+    freqmat <- freqmat.time
+    SHR.perms <- SHR.perms.time
+    WKY.perms <- WKY.perms
+
+    freqmat[which(freqmat==0)] <- NA
+    freqmat <- rbind(t(mapvalues(SHR.perms, from=c(-1,0,1), to=c(-3,-2,-1))), freqmat);
+    freqmat <- cbind(rbind(matrix(0,nrow=4,ncol=4), mapvalues(WKY.perms, from=c(-1,0,1), to=c(-3,-2,-1))),freqmat)
+  }
+
+  ##switch the order.......
+
+  ##switch bottom of WKY
+  freqmat <- rbind(freqmat[1:which(rownames(freqmat)=="w0000"),], freqmat[nrow(freqmat):(which(rownames(freqmat)=="w0000")+1),])
+  if (tolower(type) == "time") {
+    freqmat <- cbind(freqmat[,1:which(colnames(freqmat)=="s0000")], freqmat[,ncol(freqmat):(which(colnames(freqmat)=="s0000")+1)])}
+  if (tolower(type) == "strain") {
+    freqmat <- cbind(freqmat[,1:which(colnames(freqmat)=="s00000")], freqmat[,ncol(freqmat):(which(colnames(freqmat)=="s00000")+1)])}
+
+
+
+  ###to show sums
+  sums.row <- rowSums(freqmat[,5:ncol(freqmat)], na.rm = T)
+  if (tolower(type) == "strain") {sums.col <- colSums(freqmat[6:nrow(freqmat),], na.rm = T)
+    sums.row[which(rownames(freqmat) == "w0000")] <- sums.row[which(rownames(freqmat) == "w0000")] - freqmat[which(rownames(freqmat) == "w0000"), which(colnames(freqmat) == "s00000")]
+    sums.col[which(colnames(freqmat) == "s00000")] <- sums.col[which(colnames(freqmat) == "s00000")] - freqmat[which(rownames(freqmat) == "w0000"), which(colnames(freqmat) == "s00000")]
+    total.sum <- sum(freqmat[6:nrow(freqmat),5:ncol(freqmat)], na.rm=T)}
+  if (tolower(type) == "time") {sums.col <- colSums(freqmat[5:nrow(freqmat),], na.rm = T)
+    sums.row[which(rownames(freqmat) == "w0000")] <- sums.row[which(rownames(freqmat) == "w0000")] - freqmat[which(rownames(freqmat) == "w0000"), which(colnames(freqmat) == "s0000")]
+    sums.col[which(colnames(freqmat) == "s0000")] <- sums.col[which(colnames(freqmat) == "s0000")] - freqmat[which(rownames(freqmat) == "w0000"), which(colnames(freqmat) == "s0000")]
+    total.sum <- sum(freqmat[5:nrow(freqmat),5:ncol(freqmat)], na.rm=T)}
+
+  if (show.sums==TRUE) {
+    freqmat <- rbind(freqmat,sums.col)
+    freqmat <- cbind(freqmat, c(sums.row,total.sum))
+  }
+
+  if(reduce.mat == TRUE){  ##options because if which(sums == 0) is 0 then it wont return anything...
+    if ((sum(sums.row == 0)!= 0) & (sum(sums.col == 0) != 0) ) {freqmat <- freqmat[-which(sums.row==0),-which(sums.col==0)]}
+    if ((sum(sums.row == 0)== 0) & (sum(sums.col == 0) != 0) ) {freqmat <- freqmat[,-which(sums.col==0)]}
+    if ((sum(sums.row == 0)!= 0) & (sum(sums.col == 0) == 0) ) {freqmat <- freqmat[-which(sums.row==0),]}
+    if ((sum(sums.row == 0)== 0) & (sum(sums.col == 0) == 0) ) {freqmat <- freqmat}
+
+  }
+
+  ##cellcolors
+
+  ##need to do this one by one....
+  cellcolors <- unlist(freqmat);
+  #cellcolors[,grep("s0000", colnames(freqmat))] <- "grey90";
+  #cellcolors[which(freqmat == 0)] <- "white"
+  cellcolors[which(freqmat >0 & freqmat >=1)] <- "white"
+  if (tolower(type) == "strain") {cellcolors[,which(colnames(freqmat) == "s00000")] <- "grey90"}else {cellcolors[,which(colnames(freqmat) == "s0000")] <- "grey90" }
+  cellcolors[which(rownames(freqmat)=="w0000"),] <- "grey90"
+  cellcolors[which(freqmat == -3)] <- "royalblue3"; cellcolors[which(freqmat == -1)] <- "gold"; cellcolors[which(freqmat == -2)] <- "grey85"
+  if(show.sums==TRUE){cellcolors[nrow(freqmat),] <- "white"; cellcolors[,ncol(freqmat)] <- "white"}
+  cellcolors[which(freqmat < 5 & freqmat > 1)] <- "lavenderblush"
+  cellcolors[which(freqmat <= 10 & freqmat >= 5)] <- "pink"
+  cellcolors[which(freqmat > 10 & freqmat <= 25)] <- "hotpink"
+  cellcolors[which(freqmat > 25 & freqmat < 1000)] <- "red"
+  #cellcolors[which(rownames(freqmat)=="w0000"),grep("s0000",colnames(freqmat)) ] <- "black"
+  if (tolower(type) == "strain") {cellcolors[which(rownames(freqmat)=="w0000"),which(colnames(freqmat) == "s00000")] <- "black"}else {cellcolors[which(rownames(freqmat)=="w0000"),which(colnames(freqmat) == "s0000")] <- "black" }
+  if (show.sums == TRUE) {
+    if (tolower(type) == "strain") {cellcolors[which(rownames(freqmat)=="w0000"),ncol(freqmat)] <- "black"; cellcolors[nrow(freqmat),which(colnames(freqmat)=="s00000")] <- "black"}else {cellcolors[which(rownames(freqmat)=="w0000"),ncol(freqmat)] <- "black" ; cellcolors[nrow(freqmat),which(colnames(freqmat) == "s0000")] <- "black" }
+    cellcolors[nrow(freqmat), ncol(freqmat)] <- "black"
+  }
+
+
+  ##textcolors
+
+  textcolors <- unlist(freqmat)
+  textcolors[] <- "white"
+  #textcolors[6:nrow(freqmat),grep("s0000",colnames(freqmat))] <- "grey90";
+  if (tolower(type) == "strain") {textcolors[6:nrow(freqmat),which(colnames(freqmat) == "s00000")] <- "grey90"}else {textcolors[5:nrow(freqmat),which(colnames(freqmat) == "s0000")] <- "grey90" }
+  textcolors[which(rownames(freqmat)=="w0000"),5:ncol(freqmat)] <- "grey90"
+  textcolors[which(freqmat == -3)] <- "royalblue3"; textcolors[which(freqmat == -1)] <- "gold";  textcolors[which(freqmat == -2)] <- "grey85"
+  textcolors[which(freqmat > 0 & freqmat < 1000)] <- "black"
+  #textcolors[which(rownames(freqmat)=="w0000"),grep("s0000",colnames(freqmat)) ] <- "white"
+  if (tolower(type) == "strain") {textcolors[which(rownames(freqmat)=="w0000"),which(colnames(freqmat)=="s00000") ] <- "white"}else {textcolors[which(rownames(freqmat)=="w0000"),which(colnames(freqmat)=="s0000") ] <- "white" }
+  if (show.sums == TRUE) {
+    if (tolower(type) == "strain") {textcolors[which(rownames(freqmat)=="w0000"),ncol(freqmat)] <- "white"; textcolors[nrow(freqmat),which(colnames(freqmat)=="s00000")] <- "white"}else {textcolors[which(rownames(freqmat)=="w0000"),ncol(freqmat)] <- "white" ; textcolors[nrow(freqmat),which(colnames(freqmat) == "s0000")] <- "white" }
+    textcolors[nrow(freqmat), ncol(freqmat)] <- "white"
+  }
+
+
+  ###set up matrix to be printed with correct colors and aesthetics
+
+
+
+  plotrix::color2D.matplot(freqmat, cellcolors=cellcolors, show.values = 0.5, axes=FALSE, vcol = textcolors, vcex = cell.number.size, border="white", ylab="WKY Pattern",
+                  xlab=paste(tools::toTitleCase(paste(type)), "COMPACT for", ROI, "Qval", q.cut, "FC", FC.cut));axis(3, at=seq_len(ncol(freqmat))-0.5, labels=colnames(freqmat)); axis(2,at=seq_len(nrow(freqmat))-0.5, labels=(rev(rownames(freqmat))))
+
+}
+
+
+###not quite working properly
+lineGraph <- function(   ##this function is going to need a lot more options to work with ggplot properly
+  data,
+  list,
+  exact=T, #default
+  na.fix=F,
+  method="pearson",
+  na.offset=1, ##can be changed
+  n.groups=5, ##default, can be changed
+  sep.by.group=T, ##will facetwrap
+  ylims=F ##can give a vector
+){
+  p <- ExtractGenes(data,list,exact=exact,col.groups = n.groups, na.fix=na.fix, hide.plot = TRUE, method=method)
+  labs <- extractClusters(data,p,extractSamples = TRUE,num_Samples = n.groups, all.samples = colnames(data)); names(labs) <- colnames(data)
+
+  soi <- subsetGenes(data,list,exact=FALSE)
+  nafix<- na.offset
+  soi.fix <- soi
+  for (i in 1:nrow(soi.fix)) {
+    if(sum(is.na(soi.fix[i,]))>0){soi.fix[i,which(is.na(soi.fix[i,]))] <- min(soi.fix[i,],na.rm=T)-nafix}}
+  soi.melt <- melt(t(soi.fix)); colnames(soi.melt) <- c("Sample","Gene","value")
+  soi.labs <- as.data.frame(soi.melt); soi.labs$labs <- rep(labs,nrow(soi))
+
+  if (sep.by.group==F) {
+    if (ylims==F) {
+      ggplot(soi.labs,aes(Gene,value,group=Sample,col=labs))+geom_line(size=1)
+    }else {soi.labs$value <- scales::squish(soi.labs$value,ylims)
+    ggplot(soi.labs,aes(Gene,value,group=Sample,col=labs))+geom_line(size=1)}
+
+  }
+  if (sep.by.group==T) {
+    if (ylims==F) {
+      ggplot(soi.labs,aes(Gene,value,group=Sample,col=labs))+geom_line(size=1)+facet_grid(~labs) + ylab("Relative Expression") +
+        theme_bw() + theme(strip.background = element_blank(), axis.text.x = element_text(angle = 45, size=18, hjust = 1),
+                           strip.text = element_text(size=25), axis.text.y=element_text(size=20))
+    }else {soi.labs$value <- scales::squish(soi.labs$value,ylims)
+    ggplot(soi.labs,aes(Gene,value,group=Sample,col=labs))+geom_line(size=1)+facet_grid(~labs) + ylab("Relative Expression") +
+      theme_bw() + theme(strip.background = element_blank(), axis.text.x = element_text(angle = 45, size=18, hjust=1),
+                         strip.text = element_text(size=25), axis.text.y=element_text(size=20))}
+
+  }
+
+}
+
+
+expressionCutoffs <- function(                  ##used to assess ganglia in heartB
+  data, ##datset, genes should be in rows,
+  groups=0, ##if null returns expression cutoffs for full dataset, otherwise list groups of interest
+  cutoff=0.75, ##default cutoff
+  midpoint = 0 ##default midpoint
+){
+  if(length(levels(groups))==0){
+    summary <- list()
+    above<-c()
+    below<-c()
+    for (i in 1:nrow(data)){
+      if(sum(!is.na(data[i,]))>(ncol(data)*2/3)){                   ##means more than 2/3 have to be number and not NA
+        if((sum(data[i,]>midpoint,na.rm=T)/sum(!is.na(data[i,])))>cutoff){above<-c(above,rownames(data)[i])}
+
+        if((sum(data[i,]<midpoint,na.rm=T)/sum(!is.na(data[i,])))>cutoff){below<-c(below,rownames(data)[i])}
+      }
+    }
+    summary[[paste("Genes", cutoff,"Percent Above Midpoint")]] <- above
+    summary[[paste("Genes", cutoff,"Percent Below Midpoint")]] <- below
+    return(summary)
+    #setNames(list(paste("Genes Above Midpoint at",cutoff)=above,paste("Genes Below Midpoint at",cutoff)=below)
+  }
+  #}
+  if (length(levels(groups))!=0) {
+    fulllist <- list()
+    for (g in 1:length(levels(groups))) {
+      subset <- data[,which(groups==levels(groups)[g])]
+      above<-c()
+      below<-c()
+      summary <- list()
+      for (i in 1:nrow(data)){
+        if(sum(!is.na(subset[i,]))>(ncol(subset)*2/3)){                   ##means more than 2/3 have to be number and not NA
+          if((sum(subset[i,]>midpoint,na.rm=T)/sum(!is.na(subset[i,])))>cutoff){
+            above<-c(above,rownames(subset)[i])
+          }
+          if((sum(subset[i,]<midpoint,na.rm=T)/sum(!is.na(subset[i,])))>cutoff){
+            below<-c(below,rownames(subset)[i])
+          }
+        }
+      }
+      summary[[paste("Genes Above Midpoint at",cutoff,"in",levels(groups)[g])]] <- above
+      summary[[paste("Genes Below Midpoint at",cutoff,"in",levels(groups)[g])]] <- below
+      # fulllist <- list(fulllist,list(paste("Genes Above Midpoint at",cutoff,"in",levels(groups)[g])=above,paste("Genes Below Midpoint at",cutoff,"in",levels(groups)[g])=below))
+      fulllist <- list(fulllist,summary)
+      #fulllist[["Genes in",paste(levels(groups)[g])]] <- summary
+    }
+    return(fulllist) }
+}
+
+
+createXML <- function(
+  samples, #vector of sample names
+  X, #vector of coordinates for x
+  Y, #vector of coordinates for y
+  Z, #vector of coordinates for z
+  colors, #vector the same length as sample names, with one color for each sample
+  d, #vector of diameters
+  sections, #vector of section IDs
+  out.file ##name of file to output
+){
+
+  # Create XML data with the points for the cells grouped into markers
+  out.xml.data <- NULL
+  for ( samp.i in 1:length(samples) ) {   ##i fixed this to change the Circle Number with Each Maker Type"
+    out.xml.data <- paste(out.xml.data, '<marker type="FilledCircle" color=\"', rgb(t(col2rgb(colors[samp.i])/255)), '\" name=\"', samples[samp.i], '\" varicosity=\"false\">\n', sep='' )
+    out.xml.data <- paste(out.xml.data, '  <point x=\"', X[samp.i], '\" y=\"', Y[samp.i], '\" z=\"', Z[samp.i], '\" d=\"', d[samp.i], '\" sid=\"S', sections[samp.i], '\"/>\n', sep='')
+    out.xml.data <- paste(out.xml.data, '</marker>\n')
+  }
+  out.xml.data <- paste(out.xml.data, '</mbf>')
+  # Write the XML data to output file
+  #cat(out.xml.data, file=out.file)
+  return(out.xml.data)
+}
+
+
+
+initializeBiomark <- function(
+  file ##path to excel file of document
+){
+  raw <- read.xlsx(paste(file), sheet = 1, rows = c(12:108), cols = c(2:98), rowNames = T)
+  flags <- read.xlsx(paste(file), sheet = 1, rows = c(114:210), cols = c(2:98), rowNames = T)
+
+  raw[which(flags == "Flag", arr.ind = T)] <- NA
+  raw[which(raw == 999, arr.ind = T)] <- NA  ##just in case shouldn't be necessary
+
+  return(raw)
+}
+
+
+
+
+View3D <- function(
+  X, #vector of coordinates for X
+  Y, #vector of coordinates for Y
+  Z, #vector of coordinates for Z
+  colors, ##vector of colors
+  main= NULL,
+  box=FALSE,
+  axes=FALSE,
+  tick=FALSE,
+  labels=FALSE,
+  x.lab ="",
+  y.lab="",
+  z.lab="",
+  size= 2, ##can overwrite the size of the points
+  axis.color="grey", ##color of axis
+  useDefault = FALSE, #can be overwritten, use if don't know usermatrix, zoom, windowrect
+  zoom=0.75, #zoom, can be overwritten
+  userMatrix=matrix(c( -0.999968529,-0.001579670, 0.007774456,0,0.007591867,0.093966849,0.995546341,0,-0.001486613,0.995586455,-0.093832962,0,0,0,0,1),4,4), #can be overwritten, should write function to get
+  windowRect = c(380,103,1006,645) ##same as above
+){
+  if(useDefault==FALSE){
+    open3d(zoom = 0.75, userMatrix = userMatrix, windowRect=windowRect)
+    plot3d(x=X,y=Y,z=Z,col=colors, type="s", size=size, box=box, axes=axes,xlab=x.lab,ylab=y.lab, zlab=z.lab)
+    axes3d(edge="Z+",tick=tick,labels=labels,col=axis.color,lwd=2,alpha=0.7)
+    axes3d(edge="X-",tick=tick,labels=labels,col=axis.color,lwd=2,alpha=0.7)
+    axes3d(edge="Y+",tick=tick,labels=labels,col=axis.color,lwd=2,alpha=0.7)
+    bgplot3d({plot.new();title(main = main, line = 0)})
+  }
+
+  if(useDefault==TRUE){
+    open3d()
+    plot3d(x=X,y=Y,z=Z,col=colors, type="s", size=size, box=box, axes=axes,xlab=x.lab,ylab=y.lab, zlab=z.lab)
+    axes3d(edge="Z+",tick=tick,labels=labels,col=axis.color,lwd=2,alpha=0.7)
+    axes3d(edge="X-",tick=tick,labels=labels,col=axis.color,lwd=2,alpha=0.7)
+    axes3d(edge="Y+",tick=tick,labels=labels,col=axis.color,lwd=2,alpha=0.7)
+    bgplot3d({plot.new();title(main = main, line = 0)})
+  }
+
+}
+
+
+
+plot.genes <- function(
+  data,
+  list,
+  exact = T,
+  ncol = 4,
+  scales = "free_y",
+  set.width = TRUE
+){
+  if (exact == TRUE) {
+    if (length(grep("_", list)) == length(list)) {
+      dat.to.plot <- data[which(rownames(data) %in% list),]; rownames(dat.to.plot) <- colsplit(rownames(dat.to.plot),"_",c("ENS","Gene"))$Gene
+    }else{
+      dat.to.plot <- data[which(colsplit(rownames(data),"_",c("ENS","Gene"))$Gene %in% list),];rownames(dat.to.plot) <- colsplit(rownames(dat.to.plot),"_",c("ENS","Gene"))$Gene
+    }
+  }else{
+    dat.to.plot <- data[grep(paste(list, collapse="|"),rownames(data)),]; rownames(dat.to.plot) <- colsplit(rownames(dat.to.plot),"_",c("ENS","Gene"))$Gene
+  }
+  temp.annotations <- params$annotations
+  temp.annotations <- temp.annotations[match(colnames(data),
+                                             rownames(temp.annotations)), , drop = FALSE]
+  datatoplot <- data.frame(Age=factor(temp.annotations$Age),Strain=temp.annotations$Strain,t(dat.to.plot) )
+
+  summary <- melt(summarise_all(group_by(datatoplot,Age,Strain), list(function(x)(mean(x)))))
+  sd <- melt(summarise_all(group_by(datatoplot,Age,Strain), list(function(x)(sd(x)/sqrt(length(x))))))
+  summaryfull <- cbind(summary, sd$value); colnames(summaryfull) <- c("Age","Strain","gene","mean","sd")
+  p <- ggplot(summaryfull, aes(x=Age, y=mean, group=Strain, col=Strain))+
+    theme(panel.grid = element_blank(), panel.background = element_rect(fill="white"), panel.border = element_rect(color = "black", fill=NA), strip.background = element_blank(),
+          strip.text = element_text(size=25), axis.text.x = element_text(size=15), axis.text.y = element_text(size=15), axis.title = element_text(size=30))+
+    geom_line(size=2) +
+    geom_point() +
+    geom_errorbar(aes(ymin=mean-sd, ymax=mean+sd),width=0.1, size=1)+
+    labs(x="Age (weeks)", y=expression("log"[2]*"Expression"))+
+    scale_color_manual(values=c("blue","red"))+
+    facet_wrap(~gene,ncol = ncol , scales= scales)
+
+  if (set.width == TRUE) {
+    grid.arrange(set_panel_size(p, width=unit(5,"cm"), height=unit(5,"cm")))
+  }else{ return(p)}
+}
+
+
+plot.genes.all.regions <- function(
+  data,
+  list,
+  exact = T,
+  scales = "free_y",
+  flip = FALSE,
+  wrap = FALSE,
+  compact = TRUE,
+  ncol = 4
+){
+  if (exact == TRUE) {
+    if (length(grep("_", list)) == length(list)) {
+      dat.to.plot <- data[which(rownames(data) %in% list),]; rownames(dat.to.plot) <- colsplit(rownames(dat.to.plot),"_",c("ENS","Gene"))$Gene
+    }else{
+      dat.to.plot <- data[which(colsplit(rownames(data),"_",c("ENS","Gene"))$Gene %in% list),];rownames(dat.to.plot) <- colsplit(rownames(dat.to.plot),"_",c("ENS","Gene"))$Gene
+    }
+  }else{
+    dat.to.plot <- data[grep(paste(list, collapse="|"),rownames(data)),]; rownames(dat.to.plot) <- colsplit(rownames(dat.to.plot),"_",c("ENS","Gene"))$Gene
+  }
+  temp.annotations <- params$annotations
+  temp.annotations <- temp.annotations[match(colnames(data),
+                                             rownames(temp.annotations)), , drop = FALSE]
+
+
+  datatoplot <- data.frame(Age=factor(temp.annotations$Age),Strain=temp.annotations$Strain,Region=temp.annotations$Region,t(dat.to.plot) )
+
+  summary <- melt(summarise_all(group_by(datatoplot,Age,Strain,Region), list(function(x)(mean(x)))))
+  sd <- melt(summarise_all(group_by(datatoplot,Age,Strain,Region), list(function(x)(sd(x)/sqrt(length(x))))))
+  summaryfull <- cbind(summary, sd$value); colnames(summaryfull) <- c("Age","Strain","Region","gene","mean","sd")
+
+  p <- ggplot(summaryfull, aes(x=Age, y=mean, group=Strain, col=Strain))+
+    theme(panel.grid = element_blank(), panel.background = element_rect(fill="white"), panel.border = element_rect(color = "black", fill=NA), strip.background = element_blank(),
+          strip.text = element_text(size=25), axis.text.x = element_text(size=15), axis.text.y = element_text(size=15), axis.title = element_text(size=30))+
+    geom_line(size=2) +
+    geom_point() +
+    geom_errorbar(aes(ymin=mean-sd, ymax=mean+sd),width=0.1, size=1)+
+    labs(x="Age (weeks)", y=expression("log"[2]*"Expression"))+
+    scale_color_manual(values=c("blue","red"))
+  if (flip == TRUE) {
+    if (wrap == FALSE) {p <- p +facet_grid(Region~gene, scales=scales)}
+    if (wrap == TRUE) {p <- p + facet_wrap(Region~gene, scales=scales, nrow = 3)
+      if (compact == TRUE) {
+        p <- p + theme(strip.text = element_blank()) + ylab("CVLM   NTS   RVLM") + ggtitle(paste(c(levels(summaryfull$gene)), collapse = " ")) + theme(plot.title = element_text(size = 30, hjust = 0.5))
+      }}
+  }
+
+  if (flip == FALSE) {
+    if (wrap == FALSE) {p <- p +facet_grid(gene~Region, scales=scales)}
+    if (wrap == TRUE) {p <- p + facet_wrap(gene~Region, scales=scales, ncol = 3)
+    if (compact == TRUE) {
+      p <- p + theme(strip.text = element_blank()) + ggtitle("CVLM        NTS       RVLM") + ylab(paste(rev(c(levels(summaryfull$gene))), collapse = " ")) + theme(plot.title = element_text(size = 30, hjust = 0.5))
+    }}
+  }
+
+
+  return(p)
+}

@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1603386990894.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "179|2|199|0|\n201|61|228|0|\n265|2|404|4|\n448|2|859|4|\n867|2|884|0|\n897|2|940|0|\n951|2|983|0|\n992|2|1056|0|\n1066|2|1169|0|\n1186|2|1292|0|\n1307|2|1370|0|\n1407|2|1434|0|\n1443|2|1465|0|\n1475|2|1514|0|\n1524|2|1585|0|\n1605|2|1694|0|\n1715|2|1836|0|\n1885|74|1972|2|\n",
+    "hash" : "1495830570",
+    "id" : "32942874",
+    "lastKnownWriteTime" : 1603403861,
+    "last_content_update" : 1603403905641,
+    "path" : "C:/Users/axm323/Dropbox (SBG)/SHR-Work/Alison-DataVis-Package/dataVisEasy/R/Package-Code5-Compiled.R",
+    "project_path" : "R/Package-Code5-Compiled.R",
+    "properties" : {
+        "cursorPosition" : "2246,64",
+        "scrollLine" : "2239"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

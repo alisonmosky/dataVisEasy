@@ -8,7 +8,16 @@ Create a Customizable Heatmap of Expression Data while Separating the Data to be
 Creates a heatmap of supplied expression data with options to subset for specific genes/variables and with a variety of customizable options for aesthetics. Draws from params list object for parameters such as the range of the plotted data, the colors used. Annotations are drawn from annotations for samples/observations and annotations.genes for genes/variables both stored in the params list object(although other options are available, see below). See params for more information on these parameters and how to specify them.
 }
 \usage{
-myHeatmapByAnnotation(data, list = NULL, exact = TRUE, groupings, groupings.gaps = NULL, groupings.genes = FALSE, groupings.genes.gaps = NULL, method = "pearson", linkage = "complete", NA.handling = "pairwise.complete.obs", clust.rows = TRUE, clust.cols = TRUE, row.groups = NA, col.groups = NA, gaps.row = TRUE, gaps.row.spec = NULL, gaps.col = TRUE, gaps.col.spec = NULL, gap.width = 1, main = NULL, order.by.gene = NULL, order.by.sample = NULL, fontsize.row = 10, fontsize.col = 10, show.rownames = T, show.colnames = F, treeheight.row = 20, treeheight.col = 20, cell.width = NA, cell.height = NA, hide.plot = FALSE, na.fix = FALSE, na.offset = 2, is.raw.Ct = FALSE, show.legend = TRUE, show.annotations = TRUE, drop.annot.levels = TRUE)
+myHeatmapByAnnotation(data, list = NULL, exact = TRUE, groupings, groupings.gaps = NULL,
+  groupings.genes = FALSE, groupings.genes.gaps = NULL, method = "pearson",
+  linkage = "complete", NA.handling = "pairwise.complete.obs", clust.rows = TRUE,
+  clust.cols = TRUE, row.groups = NA, col.groups = NA, gaps.row = TRUE,
+  gaps.row.spec = NULL, gaps.col = TRUE, gaps.col.spec = NULL, gap.width = 1, main = NULL,
+  order.by.gene = NULL, order.by.sample = NULL, fontsize.row = 10, fontsize.col = 10,
+  show.rownames = T, show.colnames = F, treeheight.row = 20, treeheight.col = 20,
+  cell.width = NA, cell.height = NA, hide.plot = FALSE, na.fix = FALSE, na.offset = 2,
+  is.raw.Ct = FALSE, show.legend = TRUE, show.annotations = TRUE,
+  drop.annot.levels = TRUE,  annotation.names.row = TRUE, annotation.names.col = TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -122,6 +131,12 @@ logical: should annotation legend be shown
 }
   \item{drop.annot.levels}{
 logial: should annotations not included in the output heatmap be shown in the annotation legend.
+}
+  \item{annotation.names.row}{
+logial value showing if the names for row annotation tracks should be drawn
+}
+  \item{annotation.names.col}{
+logial value showing if the names for column annotation tracks should be drawn
 }
 }
 \details{

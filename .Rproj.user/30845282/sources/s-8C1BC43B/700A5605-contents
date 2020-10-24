@@ -1,0 +1,718 @@
+#####Generate Figures#####
+#this is written as an accompanyment to All_Pig_Analysis6.R and allows to set some specifications to generate consistent figures
+#this allows multiple options for gaps, types of groupings, and cell width to generate figures that are spatially consistent 
+
+
+#####Scripts to make Figures for RAGP Paper####
+library(pheatmap)
+library(pcaMethods)
+library(ggplot2)
+library(cluster)
+library(gtools)
+library(ggbeeswarm)
+library(rgl)
+library(reshape2)
+library(RColorBrewer)
+library(ggpubr)
+library(plyr)
+library(dplyr)
+
+
+`%notin%` <- Negate(`%in%`)
+
+prefix <- "C://users/axm323/"
+prefix <- "D://"
+
+source(paste0(prefix,"/Dropbox (SBG)/SHR-Work/Alison-DataVis-Package/qPCR_data_Functions11.R"))
+
+####Import####
+
+common.norm <- as.matrix(read.table("All_RAGP_common_genes_negddct.txt", sep="\t", header=T));colnames(common.norm) <- gsub("\\.","-",colnames(common.norm))
+norm <- as.matrix(read.table("All_RAGP_negddct.txt", sep="\t", header=T));colnames(norm) <- gsub("\\.","-",colnames(norm))
+negdct <- as.matrix(read.table("All_RAGP_alldata_negdct.txt", sep = "\t", header=T)); colnames(negdct) <- gsub("\\.","-", colnames(negdct))
+all.norm <- as.matrix(read.table("All_RAGP_alldata_negddct.txt", sep="\t", header=T));colnames(all.norm) <- gsub("\\.","-",colnames(all.norm))
+all.raw <- as.matrix(read.table("All_RAGP_raw.txt", sep="\t", header=T));colnames(all.raw) <- gsub("\\.","-",colnames(all.raw))
+
+all.annots <- read.table("Annotations_PR1534_PR1643_PR1705_PR1729_CellStates_New.txt", sep="\t", header=T)  ##Rcut of 0.45
+
+data <- as.matrix(norm)
+
+samples <- colnames(data)
+genes <- rownames(data)
+
+########################################################################
+####Set up color scale and annotations for heatmap based on data set####
+########################################################################
+scale.range <- c(-1,1)
+assessScale(data,scale.range)
+
+annotations <- all.annots[all.annots$Sample_ID %in% samples,]
+annotations <- annotations[match(samples,annotations$Sample_ID),]
+annotations$Sex <- mapvalues(annotations$Animal, from=c("PR1534","PR1643","PR1705","PR1729"), to=c("Male","Female","Male","Female"))
+annot_samp <- data.frame(#Section=as.factor(annotations$Section), 
+  #Sub_State=as.factor(annotations$Sub_State),
+  Connectivity=as.factor(annotations$Cell_Type),
+  Animal=droplevels(as.factor(annotations$Animal)),
+  #Sex=as.factor(annotations$Sex),
+  State=as.factor(annotations$State)
+); 
+rownames(annot_samp) <- annotations$Sample_ID
+section.cols <- colorRampPalette(c("lightblue","blue","darkblue"))(length(levels(annot_samp$Section))); names(section.cols) <- levels(annot_samp$Section)
+state.cols <- brewer.pal(6,"Set1"); names(state.cols) <- LETTERS[1:6]
+substate.cols <- c("red","red",state.cols); names(substate.cols) <- c("A1","A2","A3",LETTERS[2:6])
+annot_cols <- list('Connectivity'=c("FB"="blue","CV"="violet","NONE"="grey"),
+                   #'Section'=c(section.cols), 
+                   'Animal'=c("PR1534"="#0571b0","PR1643"="#ca0020","PR1705"="#92c5de","PR1729"="#f4a582"),
+                   #'Sex'=c("Male"="blue", "Female"="red"),
+                   #"Sub_State"= c(substate.cols),
+                   "State"=c(state.cols)
+)
+
+
+
+##################################
+####Run Through Basic Heatmaps####
+##################################
+
+myHeatmapData(data, clust.rows = T)
+separateBygroup(data, rownames(data), groupings = as.factor(annotations$Cell_Type), na.fix=T)
+separateBygroup(data, rownames(data), groupings = droplevels(as.factor(annotations$Animal)), na.fix=T)
+separateBygroup(data, rownames(data), groupings = as.factor(annotations$State))
+separateBygroup(data, rownames(data), groupings = as.factor(annotations$Sub_State))
+
+
+##############################
+####Make Heatmap Varieties####
+##############################
+
+#which samples to use 
+
+#full dataset
+use.data <- data
+use.annots <- annotations
+
+#without PR1729
+use.data <- data[,which(annotations$Animal != "PR1729")]
+use.annots <- annotations[which(annotations$Animal != "PR1729"),]
+
+#Gap options
+gaps <- cumsum(table(use.annots$State))  ##separate the states
+gaps <- cumsum(table(use.annots$Sub_State)) ##separate the substates
+
+nspaces <- 3
+gaps <- sort(rep(cumsum(table(use.annots$State))[-length(cumsum(table(use.annots$State)))],nspaces))
+gaps <- c(cumsum(table(use.annots$Sub_State))[1:2],sort(rep(cumsum(table(use.annots$State))[-length(cumsum(table(use.annots$State)))],nspaces)))
+
+
+
+cellwidth <- .5
+
+##all states 
+separateBygroup(use.data, rownames(use.data), groupings = use.annots$State, gaps.col.spec = gaps )
+separateBygroup(use.data, rownames(use.data), groupings = use.annots$Sub_State, gaps.col.spec = gaps )
+separateBygroup(use.data, rownames(use.data), groupings = use.annots$Sub_State, gaps.col.spec = gaps , cell.width = cellwidth)
+
+separateBygroup(use.data, rownames(use.data), groupings = makefactorgroup(use.annots, use.annots$Sex, use.annots$State))
+separateBygroup(use.data, rownames(use.data), groupings = makefactorgroup(use.annots, use.annots$Cell_Type, use.annots$State))
+
+##make order same for all four animals 
+p <- separateBygroup(use.data, rownames(use.data), groupings = use.annots$State, gaps.col.spec = gaps, show.colnames = T, row.groups=7 )
+pig3mat <- ExtractMatrix(use.data, p)
+pig3gaps <- extractGaps(use.data, p, extractRows = TRUE, extractCols = FALSE, num_Rows = 7)
+use.data <- data; use.annots <- annotations
+pig4mat <- use.data[match(rownames(pig3mat), rownames(use.data)),]
+separateBygroup(pig4mat, rownames(pig4mat), groupings = use.annots$State, gaps.col.spec = gaps, clust.rows = F, gaps.row = pig3gaps)
+
+separateBygroup(pig4mat, rownames(pig4mat)[c(TRUE,FALSE,FALSE)], groupings = use.annots$State, gaps.col.spec = gaps, clust.rows = F)
+separateBygroup(pig4mat, rownames(pig4mat)[c(FALSE,TRUE,FALSE)], groupings = use.annots$State, gaps.col.spec = gaps, clust.rows = F)
+separateBygroup(pig4mat, rownames(pig4mat)[c(FALSE,FALSE,TRUE)], groupings = use.annots$State, gaps.col.spec = gaps, clust.rows = F)
+
+##zoom in on one state
+state.of.choice <- "A"
+use.data.sub <- subsetSamples(use.data, group=use.annots$State, take.out=state.of.choice)
+use.annots.sub <- use.annots[which(use.annots$State==state.of.choice),]
+separateBygroup(use.data.sub, rownames(use.data), groupings = makefactorgroup(use.annots.sub, use.annots.sub$Sex, use.annots.sub$State))
+separateBygroup(use.data.sub, rownames(use.data), groupings = makefactorgroup(use.annots.sub, use.annots.sub$Cell_Type, use.annots.sub$State))
+separateBygroup(use.data.sub, rownames(use.data), groupings = use.annots.sub$Animal)
+
+################################
+####Generate Heatmap Subsets####
+################################
+
+groups <- use.annots$State  ##pick group to separate if necessary 
+
+###for any list 
+list <- 
+  
+  
+###Choose from available lists (See All_Pig_Analysis5 for more specific stuff and groupings)
+list <- c("Th","Dbh","Maoa","Maob","Comt","Pnmt","Slc6a2","Slc6a4","Slc6a3","Dat",
+            "Net","Ddc", "Slc6a2 (Net)", "Slc6a3 (Dat)", "Slc6a4 (Sert)")  ##catecholaminergic pathway 
+
+list <- c("Ache","Chat","ChT","Slc18a3", "Slc18a3 (Vacht)")  ##cholinergic pathway 
+
+list <- c("Sst","Npy","Gal","Cck","Npff","Glp1","Kng1..Bdk.","Chat","Th","Dbh",
+          "Pnmt","Trh","Tac1","Nppa","Nppb","Nppc","BNP","Ddc","Bdk") ##neurotransmitters and peptides 
+
+ions <- c("Cacn","Kcn","Scn","Hcn")  ##broad ion channels 
+ions2 <- c("Cacna","Hcn1","Hcn2","Hcn4","Scn","Kcni","Kcna","Kcnc","Kcnj","Kcnr")  ##filtering for specific ion channels with higher expression
+
+list <- "Chr"  ##cholinergic receptors
+list <- "Adr"  ##adrenergic recetpros 
+list <- c("Drd","Htr","Adr")  ##neurotransmitter receptors 
+list <- "Gabr" ##gaba receptors 
+
+##run heatmaps 
+
+ExtractGenes(use.data, list)  ##run list, exact matches 
+ExtractGenes(use.data, list, exact=F)
+
+separateBygroup(use.data,list, groupings=groups, gaps.col.spec = gaps, na.fix=T, treeheight.row = 10, fontsize.row = 20)
+separateBygroup(use.data,list, groupings=groups, gaps.col.spec = gaps, na.fix=T, treeheight.row = 10, fontsize.row = 20, exact=F)
+
+#########################################
+####Generate Other Necessary Heatmaps####
+#########################################
+
+##cholinergs and catechols together 
+list <- c("Slc18a3 (Vacht)","Ache","Chat","ChT","Th","Ddc","Dbh","Pnmt","Comt","Maoa","Maob","Slc6a3 (Dat)","Slc6a4 (Sert)")
+mat <- subsetGenes(use.data, list); mat <- mat[match(list, rownames(mat)),]
+separateBygroup(mat,list, clust.row=F,groupings=groups, gaps.col.spec = gaps, na.fix=T, gaps.row = rep(4,5), treeheight.row = 10, fontsize.row = 20)
+
+
+##ion channels 
+ion.mat <- subsetGenes(use.data, c("Kcn","Hcn","Scn","Cacn"), exact=F); ion.mat <- ion.mat[order(rownames(ion.mat)),]; ionmatna <- apply(ion.mat,1, function(x)(sum(is.na(x))))
+ion.mat2 <- ion.mat[match(c("Scn1a","Hcn2","Hcn4","Kcna1","Kcnab1","Kcnc1","Kcnip1","Kcnj3","Kcnn4","Kcnrg","Kcns3","Cacna1a","Cacna1b","Cacna1c","Cacna1d","Cacna1g","Cacna1i"), rownames(ion.mat)),] #[-which(ionmatna > 250),]
+row.gaps <- cumsum(table(substring(rownames(ion.mat2), first=1, last=2))[c(4,2,3,1)])
+separateBygroup(ion.mat2, rownames(ion.mat2), clust.row=F, groupings=groups, gaps.row = row.gaps,
+                fontsize.row = 20, cell.width = .75, cell.height = 28, gap.width = 3)
+ExtractGenes(ion.mat2, rownames(ion.mat2), clust.rows = F, gaps.row=row.gaps)
+
+gab.mat <- subsetGenes(use.data, c("Gabr","Gri"), exact=F); gab.mat <- gab.mat[c(10:nrow(gab.mat),1:9),]
+separateBygroup(gab.mat, rownames(gab.mat), clust.row=F, groupings=groups, gaps.row = 7,
+                fontsize.row = 20, cell.width = .75, cell.height = 30, gap.width = 3)
+##neurotransmitters and receptors together 
+neurot <- c("Sst","Npy","Gal","Cck","Npff","Glp1","Kng1..Bdk.","Trh","Tac1","Nppa","Nppb","Nppc",   "Oxt", "Vip","Agt","Crh", "Gcg", "Grp", "Hcrt", "Hrh", "Nmu", 
+            "BNP","Bdk") #,"Ddc", "Pnmt","Chat","Th","Dbh")
+neuror <- c(paste0(neurot,"r"),"Npr","Cckbr","Cckar","Tacr1","Adr","Chr","Npy.r")
+
+t <- ExtractGenes(data, neurot, show.colnames = T)
+tmat <- ExtractMatrix(data,t, clustered.cols = F)
+
+r.adr <- ExtractGenes(data,"Adr", exact=F, show.colnames = T)
+r.adr.mat <- ExtractMatrix(data,r.adr, clustered.cols=F)
+
+r.chol <- ExtractGenes(data, "Chr", exact=F, show.colnames = T)
+r.chol.mat <- ExtractMatrix(data,r.chol, clustered.cols = F)
+
+r.pep <- ExtractGenes(data, c( paste0(neurot,"r"),"Sstr","Npy.r","Galr","Cckar","Cckbr","Npffr","Glp1r","Bdkr","Trhr","Tacr1","Npr"), exact=F, show.colnames = T)
+r.pep.mat <- ExtractMatrix(data,r.pep, clustered.cols = F)
+
+hcn <- ExtractGenes(data,"Hcn",exact=F, show.colnames = T, clust.cols = F)
+hcn.mat <- subsetGenes(data,"Hcn",exact=F)
+
+comb.mat <- rbind(tmat,r.chol.mat[nrow(r.chol.mat):1,],r.adr.mat, r.pep.mat[order(rownames(r.pep.mat)),]) #, hcn.mat)
+gaps <- cumsum(c(nrow(tmat), nrow(r.chol.mat), nrow(r.adr.mat))) #, nrow(r.pep.mat)))
+ExtractGenes(comb.mat, rownames(comb.mat), clust.rows = F, gaps.row=sort(c(rep(gaps,2), rep(nrow(tmat),3))), col.groups = 12, fontsize.row = 15)
+ExtractGenes(comb.mat, rownames(comb.mat), clust.rows = F, gaps.row=sort(c(rep(gaps,2), rep(nrow(tmat),3))), col.groups = 12, 
+             treeheight.col=10, fontsize.row = 10, cell.width = .85, cell.height = 10)
+
+
+
+r <- ExtractGenes(data, c(neuror,"Npr","Cckbr","Cckar","Tacr1"), exact=F, show.colnames = T)
+rmat <- ExtractMatrix(data,r, clustered.cols=F)
+
+rtmat <- rbind(tmat, rmat)
+ExtractGenes(rtmat, rownames(rtmat), clust.rows = F, gaps.row = nrow(tmat))
+
+#############################
+####Scatter for two Genes####
+#############################
+is.raw <- F
+nafix=2
+gen1<- "Chat"
+gen2<- "Th"
+color.by <- "Stain"
+use.data <- norm
+
+dat1<-use.data[which(rownames(use.data) %in% gen1),]; if (is.raw==F & nafix!=F) {dat1[which(is.na(dat1))] <- (min(dat1, na.rm=T)-nafix)};if (is.raw==T & nafix!=F) {dat1[which(is.na(dat1))]<- (max(dat1, na.rm=T)+nafix)}
+dat2<-use.data[which(rownames(use.data) %in% gen2),]; if (is.raw==F & nafix!=F) {dat2[which(is.na(dat2))] <- (min(dat2, na.rm=T)-nafix)};if (is.raw==T & nafix!=F) {dat2[which(is.na(dat2))]<- (max(dat2, na.rm=T)+nafix)}
+
+#dat1[which(dat1 < -5)] <- -5; dat2[which(dat2 < -5)] <- -5
+
+dat.to.plot <- data.frame(Gene1= dat1, Gene2= dat2,Stain=annotations$Cell_Type, Section=annotations$Section, State=annotations$State, Animal=annotations$Animal, Sex=annotations$Sex)
+
+if (color.by == "Stain"){cols <- as.factor(dat.to.plot$Stain);colors <- c("violet","blue", "gray")}
+if (color.by == "Section"){cols <- as.factor(dat.to.plot$Section);colors <- section.cols}
+if (color.by == "State") {cols <- as.factor(dat.to.plot$State); colors <- annot_cols$State}
+if (color.by == "Animal") {cols <- as.factor(dat.to.plot$Animal); colors <- annot_cols$Animal}
+if (color.by == "Sex") {cols <- as.factor(dat.to.plot$Sex); colors <- annot_cols$Sex}
+
+if (is.raw==T) {
+  ggplot(dat.to.plot, aes(x=Gene1,y=Gene2,fill=cols))+ geom_point(pch=21,color="black",size=5)  + 
+    scale_fill_manual(values=colors) +labs(x=paste(gen1), y= paste(gen2)) +ggtitle(paste(gen2, "vs.",gen1)) +
+    theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40), 
+                       axis.text = element_text(size=25),axis.title = element_text(size=30), legend.position = "none")+
+    scale_x_reverse() + scale_y_reverse()
+} else {
+  ggplot(dat.to.plot, aes(x=dat1,y=dat2,fill=cols))+ geom_point(pch=21,color="black",size=5)  + 
+    scale_fill_manual(values=colors) +labs(x=paste(gen1), y= paste(gen2)) + ggtitle(paste(gen2, "vs.",gen1)) +
+    theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40), 
+                       axis.text = element_text(size=25),axis.title = element_text(size=30), legend.position = "none") #  + ylim(c(-5, 5))
+}
+
+##to relayer....
+dat.to.plotnone <- dat.to.plot[dat.to.plot$Stain=="NONE",]
+dat.to.plot.all <- dat.to.plot[dat.to.plot$Stain != "NONE",]
+
+ggplot()+  geom_abline(slope=1, size=1.5) + geom_point(data=dat.to.plotnone, aes(x=Gene1,y=Gene2),fill="grey",pch=21,color="black",size=4)  +  
+  geom_point(data=dat.to.plot.all, aes(x=Gene1,y=Gene2,fill=Stain),pch=21,color="black",size=4) +
+  scale_fill_manual(values=colors)  + xlab(bquote(paste(.(gen1)," Expression (-"*Delta*Delta*"Ct)"))) + ylab(bquote(paste(.(gen2)," Expression (-"*Delta*Delta*"Ct)"))) +
+  theme_bw() + theme(panel.grid = element_blank(), 
+                     axis.text = element_text(size=25),axis.title.x = element_text(size=20), axis.title.y = element_text(size=30), legend.position = "none") #+ xlim(-12,6) + ylim(-12,6)
+##########################
+####Beeswarm for Genes####
+##########################
+is.raw <- F
+nafix=T
+list <- c("Th","Dbh","Npy","PGP9.5","NeuN", "Chat")
+color.by <- "State"
+
+data.to.plot <- norm
+dat<-data.to.plot[which(rownames(data.to.plot) %in% list),]; if (is.raw==F & nafix!=F) {dat[which(is.na(dat))] <- (min(dat, na.rm=T)-nafix)};if (is.raw==T & nafix!=F) {dat[which(is.na(dat))]<- (max(dat, na.rm=T)+nafix)}
+
+# dat<-data.to.plot[grep(paste(list, collapse="|"),rownames(data.to.plot)),]; if (is.raw==F & nafix!=F) {dat[which(is.na(dat))] <- (min(dat, na.rm=T)-nafix)};if (is.raw==T & nafix!=F) {dat[which(is.na(dat))]<- (max(dat, na.rm=T)+nafix)}
+ dat <- scales::squish(dat,c(-3,3))
+
+dat.to.plot <- data.frame(Stain=as.factor(annotations$Cell_Type), Section=as.factor(annotations$Section), State=as.factor(annotations$State), Animal=as.factor(annotations$Animal), Sex=as.factor(annotations$Sex)); rownames(dat.to.plot) <- colnames(data)
+dat.to.plot <- cbind.data.frame(t(dat), dat.to.plot)
+dat.to.plot <- melt(dat.to.plot, id.vars = c("Stain","Section","State","Animal", "Sex"))
+
+if (color.by == "Stain"){cols <- as.factor(dat.to.plot$Stain);colors <- c("violet","blue", "gray")}
+if (color.by == "Section"){cols <- as.factor(dat.to.plot$Section);colors <- section.cols}
+if (color.by == "State") {cols <- as.factor(dat.to.plot$State); colors <- annot_cols$State}
+if (color.by == "Animal") {cols <- as.factor(dat.to.plot$Animal); colors <- annot_cols$Animal}
+if (color.by == "Sex") {cols <- as.factor(dat.to.plot$Sex); colors <- annot_cols$Sex}
+
+# dat.to.plot$variable <- factor(dat.to.plot$variable, levels=c("PGP9.5","NeuN","Chat","Th","Dbh", "Npy"))
+# dat.to.plot$variable <- factor(dat.to.plot$variable, levels=c("NeuN","PGP9.5","Map2","Chat","Th","Dbh", "Npy","Gal","Sst"))
+
+if(is.raw==T){
+  ggplot(dat.to.plot, aes(x=variable,y=value,fill=cols, group=Animal))+ geom_quasirandom(pch=21,color="black", dodge.width = 0.8, size=3) + 
+    scale_fill_manual(values=colors) + #ggtitle(paste(list)) +
+    theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40), 
+                       strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = "none",
+                       axis.title = element_text(size=20), axis.text.x = element_text(size=25)) + ylab("Raw Ct Value") + scale_y_reverse()
+}else{
+  ggplot(dat.to.plot, aes(x=variable,y=value,fill=cols, group=State))+ geom_quasirandom(pch=21,color="black", dodge.width = 0.8, size=3) + 
+    scale_fill_manual(values=colors) + #ggtitle(paste(list)) +
+    theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40), 
+                       strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = "none",
+                       axis.title = element_text(size=20), axis.text.x = element_text(size=25), axis.text.y=element_text(size=15)) + ylab("Normalized Expression Level") #+facet_wrap(, ncol = 1)
+  
+}
+
+##facets for normalized
+p <- ggplot(dat.to.plot, aes(x=State,y=value,fill=cols))+ geom_quasirandom(pch=21,color="black", dodge.width = 0.8) + 
+  scale_fill_manual(values=colors) + #ggtitle(paste(list)) +
+  theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40), 
+                     strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = "none",
+                     axis.title = element_text(size=20), axis.text.x = element_text(size=25), axis.text.y=element_text(size=15)) + 
+  ylab("Normalized Expression Level") +facet_wrap(~variable, ncol = 1, scales = "free_y"); p
+
+grid.arrange(set_panel_size(p, width=unit(5,"cm"), height=unit(5,"cm")))
+
+##facets for raw
+p <- ggplot(dat.to.plot, aes(x=Animal,y=value,fill=cols))+ geom_quasirandom(pch=21,color="black", dodge.width = 0.8) + 
+  scale_fill_manual(values=colors) + #ggtitle(paste(list)) +
+  theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40), 
+                     strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = "none",
+                     axis.title = element_text(size=20), axis.text.x = element_text(size=15, angle=45, hjust=1), axis.text.y=element_text(size=15)) + 
+  ylab("Expression (Ct)") +facet_wrap(~variable, ncol = 1) +scale_y_reverse(); p
+
+
+grid.arrange(set_panel_size(p, width=unit(5,"cm"), height=unit(5,"cm")))
+
+# #library(ggpubr)
+# 
+# g <- ggbarplot(dat.to.plot, x="variable",y="value", add=c("median_mad","jitter"), add.params=list(shape=21),fill="Animal", color="Animal", position = position_dodge(0.8))
+# 
+# 
+# g+color_palette(colors)+fill_palette(colors) + scale_y_reverse()
+# 
+# 
+# g2 <- ggbarplot(dat.to.plot, x="variable", y="value", add=c("median_mad"), fill="Animal", position=position_dodge(0.8))
+# 
+# g2 + geom_quasirandom(aes(fill=cols),col="black", dodge.width = 0.8, pch=21) + color_palette(colors) + fill_palette(colors) + scale_y_reverse()
+# 
+# ggline(dat.to.plot, x="variable",y="value", add=c("median_mad"), color="Animal")+color_palette(colors)
+# 
+# 
+# ggboxplot(dat.to.plot, x="variable", y="value", color="Animal", add=c("jitter")) + color_palette(colors) + scale_y_reverse()
+
+# ####filler code if combining -ddct ranges and abundance 
+# 
+# data.to.plot <- norm
+# dat<-data.to.plot[which(rownames(data.to.plot) %in% list),]; #dat[which(is.na(dat))] <- 0
+# 
+# data.to.add <- all.raw
+# dat.add<-data.to.add[which(rownames(data.to.add) %in% list),];# if (is.raw==F & nafix!=F) {dat[which(is.na(dat))] <- (min(dat, na.rm=T)-nafix)};if (is.raw==T & nafix!=F) {dat[which(is.na(dat))]<- (max(dat, na.rm=T)+nafix)}
+# dat.to.add <- data.frame(Stain=as.factor(annotations$Cell_Type), Section=as.factor(annotations$Section), State=as.factor(annotations$State), Animal=as.factor(annotations$Animal)); rownames(dat.to.add) <- colnames(data)
+# dat.to.add <- cbind.data.frame(t(dat.add), dat.to.add)
+# dat.to.add <- melt(dat.to.add, id.vars = c("Stain","Section","State","Animal"))
+# 
+# means2 <- dat.to.add %>% group_by(variable) %>% summarise(avg=median(value, na.rm=T))
+# altered2 <- apply(dat,2,function(x)(x+(30-means2$avg)))
+# altered2[which(is.na(dat))] <- 0 
+# dat.to.plot <- data.frame(Stain=as.factor(annotations$Cell_Type), Section=as.factor(annotations$Section), State=as.factor(annotations$State), Animal=as.factor(annotations$Animal)); rownames(dat.to.plot) <- colnames(data)
+# dat.to.plot <- cbind.data.frame(t(altered2), dat.to.plot)
+# dat.to.plot <- melt(dat.to.plot, id.vars = c("Stain","Section","State","Animal"))
+
+##########################################################
+####Beeswarm Showing Range and Abundance Across 4 RAGP####
+##########################################################
+
+##if using -ddct ranges and abundance but using average raw cts 
+is.raw <- TRUE
+nafix=2
+list <- c("Th","Dbh","PGP9.5","NeuN", "Chat", "Npy") #,"Npy", "Gal","Sst")
+color.by <- "Animal"
+
+data.to.plot <- norm
+dat<-data.to.plot[which(rownames(data.to.plot) %in% list),]; #dat[which(is.na(dat))] <- 0
+
+data.to.add <- all.raw
+dat.add<-data.to.add[which(rownames(data.to.add) %in% list),]; dat.add <- dat.add[match(rownames(dat.add), rownames(dat)),]
+dat.to.add <- data.frame(Stain=as.factor(annotations$Cell_Type), Section=as.factor(annotations$Section), State=as.factor(annotations$State), Animal=as.factor(annotations$Animal), Sex=as.factor(annotations$Sex)); rownames(dat.to.add) <- colnames(data)
+dat.to.add <- cbind.data.frame(t(dat.add), dat.to.add)
+dat.to.add <- melt(dat.to.add, id.vars = c("Stain","Section","State","Animal","Sex"))
+
+means2 <- dat.to.add %>% group_by(variable) %>% dplyr::summarise(avg=median(value, na.rm=T))
+means2
+altered2 <- apply(dat,2,function(x)(-x+(means2$avg)))
+altered2[which(is.na(dat))] <- max(altered2, na.rm = T)+2
+dat.to.plot <- data.frame(Stain=as.factor(annotations$Cell_Type), Section=as.factor(annotations$Section), State=as.factor(annotations$State), Animal=as.factor(annotations$Animal), Sex=as.factor(annotations$Sex)); rownames(dat.to.plot) <- colnames(data)
+dat.to.plot <- cbind.data.frame(t(altered2), dat.to.plot)
+dat.to.plot <- melt(dat.to.plot, id.vars = c("Stain","Section","State","Animal","Sex"))
+
+if (color.by == "Stain"){cols <- as.factor(dat.to.plot$Stain);colors <- c("violet","blue", "gray")}
+if (color.by == "Section"){cols <- as.factor(dat.to.plot$Section);colors <- section.cols}
+if (color.by == "State") {cols <- as.factor(dat.to.plot$State); colors <- annot_cols$State}
+if (color.by == "Animal") {cols <- as.factor(dat.to.plot$Animal); colors <- annot_cols$Animal}
+if (color.by == "Sex") {cols <- as.factor(dat.to.plot$Sex); colors <- annot_cols$Sex}
+
+#dat.to.plot$variable <- factor(dat.to.plot$variable, levels=c("PGP9.5","NeuN","Chat","Th","Dbh", "Npy"))
+#dat.to.plot$variable <- factor(dat.to.plot$variable, levels=c("NeuN","PGP9.5","Map2","Chat","Th","Dbh"))#, "Npy","Gal","Sst"))
+
+p <- ggplot(dat.to.plot, aes(x=variable,y=value,fill=cols, group=Animal))+ geom_quasirandom(pch=21,color="black", dodge.width = 0.8) + 
+    scale_fill_manual(values=colors) + #ggtitle(paste(list)) +
+    theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40), 
+                       strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = "none",
+                       axis.title = element_text(size=20), axis.text.x = element_text(size=25), axis.text.y = element_text(size=15)) + ylab("Expression (Ct)") + scale_y_reverse(); p
+
+
+p <- ggplot(dat.to.plot, aes(x=Stain,y=value,fill=cols))+ geom_quasirandom(pch=21,color="black", dodge.width = 0.8) + 
+  scale_fill_manual(values=colors) + #ggtitle(paste(list)) +
+  theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
+                     strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = "none",
+                     axis.title = element_text(size=20), axis.text.x = element_text(size=20), axis.text.y = element_text(size = 15)) +
+                     facet_wrap(variable~., nrow=1) + ylab("Expression (Ct)") + scale_y_reverse(); p
+grid.arrange(set_panel_size(p,width=unit(5,"cm"), height=unit(5,"cm")))
+
+p <- ggplot(dat.to.plot, aes(x=Stain,y=value,fill=cols))+ geom_quasirandom(pch=21,color="black", dodge.width = 0.8) + 
+  scale_fill_manual(values=colors) + #ggtitle(paste(list)) +
+  theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
+                     strip.text = element_text(size=20), strip.background = element_blank(), legend.position = "none",
+                     axis.title = element_text(size=20), axis.text.x = element_text(size=13), axis.text.y = element_text(size = 15)) +
+  facet_grid(variable~.) + ylab("Expression (Ct)") + scale_y_reverse(); p
+
+grid.arrange(set_panel_size(p,width=unit(3,"cm"), height=unit(3,"cm")))
+
+
+
+##########################################################
+####Beeswarm Showing Range and Abundance for Each RAGP####
+##########################################################
+
+##if using -ddct ranges and abundance but using average raw cts 
+is.raw <- TRUE
+nafix=2
+list <- c("Th","Dbh","PGP9.5","NeuN", "Chat", "Map2") #,"Npy", "Gal","Sst")
+color.by <- "Animal"
+
+data.to.plot <- norm
+dat<-data.to.plot[which(rownames(data.to.plot) %in% list),]; #dat[which(is.na(dat))] <- 0
+
+data.to.add <- all.raw
+dat.add<-data.to.add[which(rownames(data.to.add) %in% list),]; dat.add <- dat.add[match(rownames(dat.add), rownames(dat)),]
+dat.to.add <- data.frame(Stain=as.factor(annotations$Cell_Type), Section=as.factor(annotations$Section), State=as.factor(annotations$State), Animal=as.factor(annotations$Animal), Sex=as.factor(annotations$Sex)); rownames(dat.to.add) <- colnames(data)
+dat.to.add <- cbind.data.frame(t(dat.add), dat.to.add)
+dat.to.add <- melt(dat.to.add, id.vars = c("Stain","Section","State","Animal","Sex"))
+
+means1534 <- dat.to.add %>% filter(Animal=="PR1534") %>% group_by(variable) %>% summarise(avg=median(value, na.rm=T)); means1534
+means1643 <- dat.to.add %>% filter(Animal=="PR1643") %>% group_by(variable) %>% summarise(avg=median(value, na.rm=T)); means1643
+means1705 <- dat.to.add %>% filter(Animal=="PR1705") %>% group_by(variable) %>% summarise(avg=median(value, na.rm=T)); means1705
+means1729 <- dat.to.add %>% filter(Animal=="PR1729") %>% group_by(variable) %>% summarise(avg=median(value, na.rm=T)); means1729
+altered1534 <- apply(dat[,which(annotations$Animal=="PR1534")],2,function(x)(-x+(means1534$avg))); altered1534[which(is.na(dat[which(annotations$Animal=="PR1534")]))] <- max(altered1534, na.rm = T)+2
+altered1643 <- apply(dat[,which(annotations$Animal=="PR1643")],2,function(x)(-x+(means1643$avg))); altered1643[which(is.na(dat[which(annotations$Animal=="PR1643")]))] <- max(altered1643, na.rm = T)+2
+altered1705 <- apply(dat[,which(annotations$Animal=="PR1705")],2,function(x)(-x+(means1705$avg))); altered1705[which(is.na(dat[which(annotations$Animal=="PR1705")]))] <- max(altered1705, na.rm = T)+2
+altered1729 <- apply(dat[,which(annotations$Animal=="PR1729")],2,function(x)(-x+(means1729$avg))); altered1729[which(is.na(dat[which(annotations$Animal=="PR1729")]))] <- max(altered1729, na.rm = T)+2
+
+
+dat.to.plot <- data.frame(Stain=as.factor(annotations$Cell_Type), Section=as.factor(annotations$Section), State=as.factor(annotations$State), Animal=as.factor(annotations$Animal), Sex=as.factor(annotations$Sex)); rownames(dat.to.plot) <- colnames(data)
+dat.to.plot <- cbind.data.frame(rbind(t(altered1534), t(altered1643), t(altered1705), t(altered1729)), dat.to.plot)
+dat.to.plot <- melt(dat.to.plot, id.vars = c("Stain","Section","State","Animal","Sex"))
+
+if (color.by == "Stain"){cols <- as.factor(dat.to.plot$Stain);colors <- c("violet","blue", "gray")}
+if (color.by == "Section"){cols <- as.factor(dat.to.plot$Section);colors <- section.cols}
+if (color.by == "State") {cols <- as.factor(dat.to.plot$State); colors <- annot_cols$State}
+if (color.by == "Animal") {cols <- as.factor(dat.to.plot$Animal); colors <- annot_cols$Animal}
+if (color.by == "Sex") {cols <- as.factor(dat.to.plot$Sex); colors <- annot_cols$Sex}
+
+#dat.to.plot$variable <- factor(dat.to.plot$variable, levels=c("PGP9.5","NeuN","Chat","Th","Dbh", "Npy"))
+#dat.to.plot$variable <- factor(dat.to.plot$variable, levels=c("NeuN","PGP9.5","Map2","Chat","Th","Dbh"))#, "Npy","Gal","Sst"))
+
+p <- ggplot(dat.to.plot, aes(x=variable,y=value,fill=cols, group=Animal))+ geom_quasirandom(pch=21,color="black", dodge.width = 0.8) + 
+  scale_fill_manual(values=colors) + #ggtitle(paste(list)) +
+  theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40), 
+                     strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = "none",
+                     axis.title = element_text(size=20), axis.text.x = element_text(size=25), axis.text.y = element_text(size=15)) + ylab("Expression (Ct)") + scale_y_reverse(); p
+
+
+p <- ggplot(dat.to.plot, aes(x=Sex,y=value,fill=cols))+ geom_quasirandom(pch=21,color="black", dodge.width = 0.8) + 
+  scale_fill_manual(values=colors) + #ggtitle(paste(list)) +
+  theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40), 
+                     strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = "none",
+                     axis.title = element_text(size=20), axis.text.x = element_text(size=20), axis.text.y = element_text(size = 15)) + 
+  facet_wrap(~variable, ncol=2) + ylab("Expression (Ct)") + scale_y_reverse(); p
+
+grid.arrange(set_panel_size(p,width=unit(5,"cm"), height=unit(5,"cm")))
+
+
+
+######################
+####Density Plots#####
+######################
+
+gene <- "Map2"
+
+dat.to.use <- all.raw
+
+dat <- cbind(Exp=dat.to.use[which(rownames(dat.to.use)==gene),], use.annots)
+
+ggplot(dat, aes(x=Exp, fill=Animal)) + geom_density(alpha=0.5) + theme_bw() + ggtitle((paste("Raw Expression for", gene))) + theme(plot.title = element_text(hjust=0.5, size=25)) + scale_x_reverse()
+
+ggplot(dat, aes(x=Exp, fill=Animal)) + geom_density(alpha=0.5) + theme_bw() + ggtitle((paste("Expression for", gene))) + theme(plot.title = element_text(hjust=0.5, size=25)) #+ scale_x_reverse()
+
+
+
+geneset <- "Npy"
+dat <- all.raw[grep(geneset,rownames(all.raw)),]; #dat[is.na(dat)] <- 40
+melt.dat <- melt(dat)
+ggplot(melt.dat, aes(x=value, fill=Var1)) + geom_density(alpha=0.5) + ggtitle(paste("Raw Expression of", geneset,"Genes")) + theme_bw()
+
+####for a list
+
+###
+is.raw <- F
+nafix=F
+list <- c("Th","Dbh","Npy","PGP9.5","NeuN", "Chat")
+color.by <- "State"
+
+data.to.plot <- norm
+dat<-data.to.plot[which(rownames(data.to.plot) %in% list),]; if (is.raw==F & nafix!=F) {dat[which(is.na(dat))] <- (min(dat, na.rm=T)-nafix)};if (is.raw==T & nafix!=F) {dat[which(is.na(dat))]<- (max(dat, na.rm=T)+nafix)}
+
+# dat<-data.to.plot[grep(paste(list, collapse="|"),rownames(data.to.plot)),]; if (is.raw==F & nafix!=F) {dat[which(is.na(dat))] <- (min(dat, na.rm=T)-nafix)};if (is.raw==T & nafix!=F) {dat[which(is.na(dat))]<- (max(dat, na.rm=T)+nafix)}
+#dat <- scales::squish(dat,c(-3,3))
+
+dat.to.plot <- data.frame(Stain=as.factor(annotations$Cell_Type), Section=as.factor(annotations$Section), State=as.factor(annotations$State), Animal=as.factor(annotations$Animal), Sex=as.factor(annotations$Sex)); rownames(dat.to.plot) <- colnames(data)
+dat.to.plot <- cbind.data.frame(t(dat), dat.to.plot)
+dat.to.plot <- melt(dat.to.plot, id.vars = c("Stain","Section","State","Animal", "Sex"))
+
+if (color.by == "Stain"){cols <- as.factor(dat.to.plot$Stain);colors <- c("violet","blue", "gray")}
+if (color.by == "Section"){cols <- as.factor(dat.to.plot$Section);colors <- section.cols}
+if (color.by == "State") {cols <- as.factor(dat.to.plot$State); colors <- annot_cols$State}
+if (color.by == "Animal") {cols <- as.factor(dat.to.plot$Animal); colors <- annot_cols$Animal}
+if (color.by == "Sex") {cols <- as.factor(dat.to.plot$Sex); colors <- c("Male"="blue", "Female"="red")}
+
+# dat.to.plot$variable <- factor(dat.to.plot$variable, levels=c("PGP9.5","NeuN","Chat","Th","Dbh", "Npy"))
+# dat.to.plot$variable <- factor(dat.to.plot$variable, levels=c("NeuN","PGP9.5","Map2","Chat","Th","Dbh", "Npy","Gal","Sst"))
+
+if(is.raw==T){
+  ggplot(dat.to.plot, aes(x=value,fill=cols, group=eval(parse(text = color.by))))+ geom_density(alpha=0.5) + facet_wrap(~variable, scales="free") +
+    scale_fill_manual(values=colors) + #ggtitle(paste(list)) +
+    theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40), 
+                       strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = "none",
+                       axis.title = element_text(size=20)) + xlab("Raw Ct Value") + scale_y_reverse()
+}else{
+  ggplot(dat.to.plot, aes(x=value,fill=cols, group=eval(parse(text = color.by))))+ geom_density(alpha=0.5) +  facet_wrap(~variable, scales="free") +
+    scale_fill_manual(values=colors) + #ggtitle(paste(list)) +
+    theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40), 
+                       strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = "none",
+                       axis.title = element_text(size=20), axis.text.x = element_text(size=15)) + xlab("Normalized Expression Level") +ylab("Density") #+facet_wrap(, ncol = 1)
+  
+}
+
+##facets for normalized
+p <- ggplot(dat.to.plot, aes(x=value,fill=cols, group=eval(parse(text = color.by))))+ geom_density(alpha=0.5) +  facet_wrap(~variable, scales="free_y", ncol=1) +
+  scale_fill_manual(values=colors) + #ggtitle(paste(list)) +
+  theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40), 
+                     strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = "none",
+                     axis.title = element_text(size=20)) + xlab("Normalized Expression Level"); p
+
+grid.arrange(set_panel_size(p, width=unit(5,"cm"), height=unit(5,"cm")))
+
+##facets for raw
+p <- ggplot(dat.to.plot, aes(x=value,fill=cols, group=eval(parse(text = color.by))))+ geom_density(alpha=0.5) +  facet_wrap(~variable, scales="free_y", ncol=1) +
+  scale_fill_manual(values=colors) + #ggtitle(paste(list)) +
+  theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40), 
+                     strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = "none",
+                     axis.title = element_text(size=20)) + xlab("Expression (Ct)") + scale_y_reverse(); p
+
+grid.arrange(set_panel_size(p, width=unit(5,"cm"), height=unit(5,"cm")))
+
+
+
+
+####Combining density and beeswarm 
+
+##for normalized 
+p <- ggplot(dat.to.plot)+ geom_density(aes(x=value,fill=Sex, group=Sex),alpha=0.5) +  
+  geom_quasirandom(aes(x=value, y=Sex, fill=as.factor(dat.to.plot$Animal), group=Animal), groupOnX = FALSE, pch=21, dodge.width = 0.8) +
+  facet_wrap(~variable, scales="free_y", ncol=2) +
+  scale_fill_manual(values=c("Male"="blue", "Female"="red",annot_cols$Animal)) + #ggtitle(paste(list)) +
+  theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40), 
+                     strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = "none",
+                     axis.title = element_text(size=20)) + xlab("Normalized Expression Level"); p 
+grid.arrange(set_panel_size(p, width=unit(5,"cm"), height=unit(5,"cm")))
+
+##for raw
+p <- ggplot(dat.to.plot)+ geom_density(aes(x=value,fill=Sex, group=Sex),alpha=0.5) +  
+  geom_quasirandom(aes(x=value, y=Sex, fill=Animal, group=Animal), groupOnX = FALSE, pch=21, dodge.width = 0.8) +
+  facet_wrap(~variable, scales="free_y", ncol=2) +
+  scale_fill_manual(values=c("Male"="blue", "Female"="red",annot_cols$Animal)) + #ggtitle(paste(list)) +
+  theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40), 
+                     strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = "none",
+                     axis.title = element_text(size=20)) + xlab("Expression (Ct)") + scale_x_reverse(); p 
+grid.arrange(set_panel_size(p, width=unit(5,"cm"), height=unit(5,"cm")))
+
+####catecholaminergic-Cholinergic Pathway
+
+list <- c("Th","Dbh","Maoa","Maob","Comt","Pnmt","Slc6a2","Slc6a4","Slc6a3",
+          "Net","Ddc", "Slc6a2 (Net)", "Slc6a3 (Dat)", "Slc6a4 (Sert)","Ache","Chat","ChT","Slc18a3", "Slc18a3 (Vacht)") 
+
+set <- subsetGenes(norm, list)
+
+order <- c("Slc18a3 (Vacht)", "Ache","Chat","ChT","Th","Ddc","Dbh","Pnmt","Comt","Maoa","Maob","Slc6a3 (Dat)", "Slc6a4 (Sert)")
+
+set <- set[match(order, rownames(set)),]
+
+ExtractGenes(set, rownames(set), clust.rows=F, gaps.row = rep(4,4), fontsize.row = 20)
+
+ExtractGenes(set, rownames(set), clust.rows=F, gaps.row = rep(4,4), order.by.gene = "Chat", fontsize.row = 20)
+
+separateBygroup(set, rownames(set),clust.rows = F, gaps.row=rep(4,4), groupings=use.annots$State, fontsize.row = 20 , gaps.col = gaps)
+
+########################
+####3D Density Plots####
+########################
+
+pr16.coords.all <- read.table("D://Dropbox (SBG)/SPARC-Data-Acquisition/Pig 1643/PR1643/PR1643_Coordinates_picked-unpicked_separate-markers_grouped_20200618.txt", sep="\t", header=T)
+pr16.coords.all$Stain <- mapvalues(pr16.coords.all$Marker, from=c("5","8","11"), to=c("Other","CV","FB"));# pr16.coords.all$Stain <- as.character(pr16.coords.all$Stain)
+
+pr16.coords.all2 <- pr16.coords.all[-which(pr16.coords.all$Marker=="5"),] 
+
+axis <- "Z"
+ggplot(pr16.coords.all2, aes(x=eval(parse(text=axis)), fill=Stain, col=Stain)) + geom_density(alpha=0.3, size=1) + scale_fill_manual(values=c("violet","blue")) + 
+  scale_color_manual(values=c("violet","blue")) +
+  theme_bw() + theme(panel.grid = element_blank(), axis.text = element_blank(), axis.ticks = element_blank(), legend.position = "none", 
+                     panel.border = element_blank(), axis.title = element_blank()) + 
+  xlab(paste("Density Along the", axis," Axis")) + ylab("Density")
+#################################
+####Percent Expression Graphs####
+#################################
+
+list <- c("Chat","Dbh","Th","PGP9.5","NeuN","Npy", "Map2","Sst","Gal", "Npff")
+
+
+limit <- 15
+dat.to.use <- all.raw #[,which(annot_samp$Animal != "PR1729")]
+
+subset <- dat.to.use[which(rownames(dat.to.use) %in% list),]
+
+##adjust 1729 Chat
+subset["Chat",which(annotations$Animal=="PR1729")] <- subset["Chat",which(annotations$Animal=="PR1729")] - 7  ##differnce of ~7 Ct in medians from other animals
+
+percentdetected <- apply(subset,1,function(x)(sum(!is.na(x))/length(x)))
+percenthigh <- apply(subset,1,function(x)(sum(x < limit, na.rm=T)/length(x)))
+
+report <- rbind(percentdetected, percenthigh)
+
+rep.melt <- melt(report)
+rep.melt$Var2 <- factor(rep.melt$Var2, levels = c("NeuN","PGP9.5","Map2","Chat","Th","Dbh","Npy","Gal","Sst","Npff"))
+
+ggplot(rep.melt, aes(x=Var2, y=value, fill=Var1, label=sprintf("%0.2f",as.numeric(as.matrix(rep.melt$value))))) + geom_bar(stat="identity",position="dodge", width=0.5)+ theme_minimal() + 
+  ylab("Fraction Samples With Detectable Expression") + 
+  geom_text(size=5, position=position_dodge(width=.7,preserve = "total"), angle=45, aes(y=value+0.05)) +
+  theme(axis.title.y = element_text(size=20), axis.title.x = element_blank(), axis.text.x = element_text(size=25, angle = 45, hjust = 1), axis.text.y = element_text(size=20)) 
+
+ggplot(rep.melt, aes(x=Var2, y=value*100, fill=Var1, label=sprintf("%0.0f",as.numeric(as.matrix(rep.melt$value)*100)))) + geom_bar(stat="identity",position="dodge", width=0.5)+ theme_minimal() + 
+  ylab("Percent Samples With Detectable Expression") + 
+  geom_text(size=5, position=position_dodge(width=.7,preserve = "total"), angle=45, aes(y=value*100+5)) +
+  theme(axis.title.y = element_text(size=20), axis.title.x = element_blank(), axis.text.x = element_text(size=25, angle = 45, hjust = 1), axis.text.y = element_text(size=20), legend.position = "none") #legend.position = c(.2,-0.2), 
+legend.title = element_blank(), legend.text = element_text(size=15), legend.direction = "vertical") + scale_fill_discrete(labels=c("Percent Detectable Expression", "Percent High Expression"))
+
+
+############################
+####tsne of ion channels####
+############################
+##ion channels 
+ion.mat <- subsetGenes(use.data, c("Kcn","Hcn","Scn","Cacn"), exact=F); ion.mat <- ion.mat[order(rownames(ion.mat)),]; ionmatna <- apply(ion.mat,1, function(x)(sum(is.na(x))))
+ion.mat2 <- ion.mat[-which(ionmatna > 250),]
+
+# percent.sd <- .1
+# 
+# data.to.tsne <- t(ion.mat2)
+# for (i in 1:ncol(data.to.tsne)) {
+#   data.to.tsne[which(is.na(data.to.tsne[,i])),i] <- (min(data.to.tsne[,i],na.rm=T)-sd(data.to.tsne[,i],na.rm=T)*percent.sd)
+# }
+# tsne.samps <- Rtsne(data.to.tsne,perplexity=20)
+# tsne.samps.coords <- tsne.samps$Y ; rownames(tsne.samps.coords) <- rownames(data.to.tsne)
+# 
+# plot(tsne.samps.coords, pch=16, cex=2,main=paste("tSNE Ion Channels Across 4 RAGP"))
+# 
+# write.table(tsne.samps.coords,"tSNE_coords_Ion_Channels_4pigscommon.txt", sep="\t", quote=F)
+tsne.samps.coords <- read.table("tSNE_coords_Ion_Channels_4pigscommon.txt", sep="\t", header=T)
+
+dat.to.tsne <- data.frame(tsne.samps.coords, annotations$Cell_Type, annotations$Animal, annotations$State, annotations$Sub_State); colnames(dat.to.tsne) <- c("tsne.X","tsne.Y","Stain","Animal","State","Sub_State")
+color.by <- "State"
+if (color.by == "Stain"){cols <- as.factor(dat.to.tsne$Stain);colors <- c("violet","blue")}
+if (color.by == "Animal") {cols <- as.factor(dat.to.tsne$Animal); colors <- annot_cols$Animal}
+if (color.by == "State") {cols <- as.factor(dat.to.tsne$State); colors <- annot_cols$State}
+if (color.by == "Sub_State") {cols <- as.factor(dat.to.tsne$Sub_State); colors <- annot_cols$Sub_State}
+
+ggplot(dat.to.tsne, aes(x=tsne.X,y=tsne.Y,fill=cols))+ geom_point(pch=21,color="black",size=6)  + 
+  scale_fill_manual(values=colors) +labs(x="tnse.X", y= "tsne.Y") +ggtitle(paste("tSNE Colored For",color.by)) +
+  theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40), 
+                     axis.text = element_text(size=25),axis.title = element_text(size=30))
+
+
+ggplot(dat.to.tsne, aes(x=tsne.X,y=tsne.Y, fill=cols))+ geom_point(pch=21,color="black",size=6)  + 
+  scale_fill_manual(values=colors) +
+  theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40), 
+                     axis.text = element_text(size=25),axis.title = element_text(size=30)) + theme(axis.title = element_blank(), axis.text = element_blank())
+
+
+color.by <- "Kcnip1"
+genedat<-data[which(rownames(data)==color.by),]
+cols <- myColorRamp4(c("blue","lightblue","gray","indianred","firebrick"),genedat)
+plot(tsne.samps.coords, pch=21, bg=cols, cex=3, main=paste("tSNE of All RAGPs Colored for",color.by), xlab=("tSNE X"), ylab=("tSNE Y"), cex.lab=1.5, cex.main=2)
+
+dat.to.tsne <- data.frame(tsne.samps.coords, annotations$Cell_Type, annotations$Animal, annotations$State, annotations$Sub_State,cols); colnames(dat.to.tsne) <- c("tsne.X","tsne.Y","Stain","Animal","State","Sub_State")
+
+
+ggplot(dat.to.tsne, aes(x=tsne.X,y=tsne.Y, fill=cols))+ geom_point(pch=21,color="black",size=6)  + 
+  scale_fill_manual(values=colors) + ggtitle(paste(color.by)) +
+  theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=50), 
+                     axis.title = element_blank(), 
+                     axis.text = element_blank()) + scale_fill_identity()

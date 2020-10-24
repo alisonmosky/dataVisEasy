@@ -8,7 +8,9 @@ Pavlidis Template Matching
 a simple implementation of Pavlidis Template Matching that searches for correlations above a specified threshold within the supplied input data. Templates can be annotations, genes or samples, or a cusotm template can be provided.
 }
 \usage{
-PTM(data, match.template, set.high, custom.template = NA, Find.Match.For = "genes", cutoff = 0.05, cut.by = "pvals", method = "pearson", NA.handling = "pairwise.complete.obs", return.vals = FALSE)
+PTM(data, match.template, set.high, custom.template = NA, Find.Match.For = "genes",
+  cutoff = 0.05, cut.by = "pvals", method = "pearson",
+  NA.handling = "pairwise.complete.obs", return.vals = FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{

@@ -1,0 +1,210 @@
+library(dplyr)
+library(reshape2)
+################################
+####Line Graphs for Gene Set####
+################################
+geneset <- "Sst"
+
+n.groups=5
+p <- ExtractGenes(data,geneset,exact=F,col.groups = n.groups, na.fix=T)
+labs <- extractClusters(data,p,extractSamples = TRUE,num_Samples = n.groups, all.samples = colnames(data)); names(labs) <- colnames(data)
+
+
+soi <- subsetGenes(data,geneset,exact=FALSE)
+nafix<- .5
+soi.fix <- soi
+for (i in 1:nrow(soi.fix)) {
+  if(sum(is.na(soi.fix[i,]))>0){soi.fix[i,which(is.na(soi.fix[i,]))] <- min(soi.fix[i,],na.rm=T)-nafix}}
+soi.melt <- melt(t(soi.fix)); colnames(soi.melt) <- c("Sample","Gene","value")
+soi.labs <- as.data.frame(soi.melt); soi.labs$labs <- rep(labs,nrow(soi))
+
+ggplot(soi.labs,aes(Gene,value,group=Sample,col=labs))+geom_line(size=1) + ylim(c(-2,2))
+ggplot(soi.labs,aes(Gene,value,group=Sample,col=labs))+geom_line(size=1)+facet_grid(~labs) + ylim(c(-3,3))
+
+
+#############################
+####Plot Gene Expressions####
+#############################
+
+pdf("PR1643_Raw_Gene_Expression_Ranges.pdf")
+par(mfrow=c(2,2))
+for(i in 1:nrow(data)){
+  gene <- data[i,]
+  gene <- gene[order(gene)]
+  percentdetected <- sum(!is.na(gene))/length(gene)
+  gene <- gene[which(!is.na(gene))]
+  median <- median(gene, na.rm=T)
+  mad <- mad(gene, na.rm=T)*1.25
+  upper <- median - 2
+  lower <- median + 2
+  
+  if(sum(is.na(gene))<length(gene)){
+    plot(x=1:length(gene), y=gene, ylim=rev(range(gene, na.rm=T)), ylab="Raw Ct", xlab="nSamples", main=paste(rownames(data)[i], "\nFraction Samples Detected:",round(percentdetected,2),
+                    "\nHigh:",round(sum(gene < upper)/length(gene),2), "_Middle:",round(sum(gene > upper & gene < lower)/length(gene),2),"_Low:",round(sum(gene > lower)/length(gene),2)))
+    abline(h=upper, col="green4",lwd=3 )
+    abline(h=lower, col="red", lwd=3)
+  }
+}
+dev.off()
+
+############
+####tsne####
+############
+library(Rtsne)
+percent.sd <- .1
+
+dat.to.tsne <- t(data)
+for (i in 1:ncol(dat.to.tsne)) {
+  dat.to.tsne[which(is.na(dat.to.tsne[,i])),i] <- (min(dat.to.tsne[,i],na.rm=T)-sd(dat.to.tsne[,i],na.rm=T)*percent.sd)
+  }
+tsne.samps <- Rtsne(dat.to.tsne,perplexity=20)
+tsne.samps.coords <- tsne.samps$Y ; rownames(tsne.samps.coords) <- rownames(dat.to.tsne)
+
+plot(tsne.samps.coords, pch=16, cex=2,main=paste("tSNE of PR1643"))
+
+pdf("PR1643_tsne_colored.pdf")
+par(mfrow=c(2,2))
+par(cex=0.4)
+par(mar=c(3,3,2,2), oma=c(0.5,0.5,0.5,0.5))
+par(tcl= -0.25)
+par(mgp = c(2,0.5,0))
+for (i in 1:nrow(data)) {
+  gene <- data[i,]
+  cols <- myColorRamp4(c("blue","lightblue","gray","indianred","firebrick"),gene)
+  plot(tsne.samps.coords, pch=21, bg=cols, cex=3, main=paste("tSNE of PR1643 RAGP Colored for",rownames(data)[i]))
+  
+}
+dev.off()
+
+#############################################
+####Important Scatters to Make Every Time####
+#############################################
+
+list <- c("Th","Npy","Gal","Dbh","Cxcr4","Chat","PGP9.5")
+gene.data <- data[which(rownames(data) %in% list),]
+gene.datafix <- t(gene.data)
+for (i in 1:ncol(gene.datafix)) {
+  if(sum(is.na(gene.datafix[,i]))>0){gene.datafix[which(is.na(gene.datafix[,i])),i] <- min(gene.datafix[,i],na.rm=T)-nafix}}
+allgenes.data <- as.data.frame(gene.datafix); allgenes.data <- cbind(allgenes.data,Stain=annotations$Cell_Type,Section=annotations$Section)
+
+pdf("PR1643_Plots_of_Important_Genes.pdf")
+par(mfrow=c(2,2))
+par(cex=0.4)
+par(mar=c(3,3,2,2), oma=c(0.5,0.5,0.5,0.5))
+par(tcl= -0.25)
+par(mgp = c(2,0.5,0))
+for (i in c("Stain","Section")) {
+  if (i== "Stain"){cols <- as.factor(allgenes.data$Stain);colors <- c("violet","blue")}
+  if (i == "Section"){cols <- as.factor(allgenes.data$Section);colors <- section.cols}
+  for (g1 in 1:length(list)) {
+    g1.dat <- allgenes.data[,which(colnames(allgenes.data)==list[g1])]
+    for (g2 in g1:length(list)) {
+      g2.dat <- allgenes.data[,which(colnames(allgenes.data)==list[g2])]
+      if(g1 != g2){
+        plot(g1.dat,g2.dat, bg=colors[cols], pch=21,col="black",cex=3,xlab = paste(list[g1]), ylab=paste(list[g2]), main=paste(list[g2],"vs.",list[g1]))
+        
+        # ggplot(allgenes.data, aes(x=g1.dat,y=g2.dat,fill=cols))+ geom_point(pch=21,color="black",size=5)  + scale_fill_manual(values=colors) +
+        #   labs(x=paste(list[g1]), y= paste(list[g2])) +ggtitle(paste(list[g2],"vs.",list[g1])) +theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40), 
+        #     axis.text = element_text(size=25),axis.title = element_text(size=30), legend.position = "none")
+        
+      }
+      
+    }
+    
+  }
+}
+dev.off()
+
+
+#############################
+####Scatter for two Genes####
+#############################
+is.raw <- F
+nafix=2
+gen1<- "Sstr1"
+gen2<- "Sstr2"
+color.by <- "Section"
+
+dat1<-data[which(rownames(data) %in% gen1),]; if (is.raw==F & nafix!=F) {dat1[which(is.na(dat1))] <- (min(dat1, na.rm=T)-nafix)};if (is.raw==T & nafix!=F) {dat1[which(is.na(dat1))]<- (max(dat1, na.rm=T)+nafix)}
+dat2<-data[which(rownames(data) %in% gen2),]; if (is.raw==F & nafix!=F) {dat2[which(is.na(dat2))] <- (min(dat2, na.rm=T)-nafix)};if (is.raw==T & nafix!=F) {dat2[which(is.na(dat2))]<- (max(dat2, na.rm=T)+nafix)}
+
+dat.to.plot <- data.frame(Gene1= dat1, Gene2= dat2,Stain=annotations$Cell_Type, Section=annotations$Section)
+
+if (color.by == "Stain"){cols <- as.factor(dat.to.plot$Stain);colors <- c("violet","blue")}
+if (color.by == "Section"){cols <- as.factor(dat.to.plot$Section);colors <- section.cols}
+
+if (is.raw==T) {
+  ggplot(dat.to.plot, aes(x=dat1,y=dat2,fill=cols))+ geom_point(pch=21,color="black",size=5)  + 
+    scale_fill_manual(values=colors) +labs(x=paste(gen1), y= paste(gen2)) +ggtitle(paste(gen2, "vs.",gen1)) +
+    theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40), 
+                       axis.text = element_text(size=25),axis.title = element_text(size=30), legend.position = "none")+
+    scale_x_reverse() + scale_y_reverse()
+} else {ggplot(dat.to.plot, aes(x=dat1,y=dat2,fill=cols))+ geom_point(pch=21,color="black",size=5)  + 
+    scale_fill_manual(values=colors) +labs(x=paste(gen1), y= paste(gen2)) +ggtitle(paste(gen2, "vs.",gen1)) +
+    theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40), 
+                       axis.text = element_text(size=25),axis.title = element_text(size=30), legend.position = "none") }
+
+
+
+####Scatter Ligand vs receptor expression, RAW####
+nafix=2
+is.raw=F
+color.by="Section"
+goi <- "Npy"
+
+set <- subsetGenes(data,goi,exact=F)
+receptors <- set[which(rownames(set) != goi),]
+if(is.raw==T){receptor.min <- apply(receptors,2,function(x)(min(x,na.rm=T))); receptor.min[which(receptor.min=="Inf")] <- NA}
+if(is.raw==F){receptor.min <- apply(receptors, 2, function(x)(max(x,na.rm=T))); receptor.min[which(receptor.min=="Inf")] <- NA}
+
+lig<-data[which(rownames(data) %in% goi),]; if (nafix !=F & is.raw==T) {lig[which(is.na(lig))]<- (max(lig, na.rm=T) +nafix)}; if (nafix !=F & is.raw==F) {lig[which(is.na(lig))]<- (min(lig, na.rm=T) -nafix)} 
+rec <- receptor.min; if (nafix !=F & is.raw==T) {rec[which(is.na(rec))]<- (max(rec, na.rm=T)+nafix)} ;if (nafix !=F & is.raw==F) {rec[which(is.na(rec))]<- (min(rec, na.rm=T)-nafix)}
+
+dat.to.plot <- data.frame(Ligand= lig, Receptor= rec,Stain=annotations$Cell_Type, Section=annotations$Section)
+
+
+if (color.by == "Stain"){cols <- as.factor(dat.to.plot$Stain);colors <- c("violet","blue")}
+if (color.by == "Section"){cols <- as.factor(dat.to.plot$Section);colors <- section.cols}
+
+if(is.raw==T) {
+  ggplot(dat.to.plot, aes(x=Ligand,y=Receptor,fill=cols))+ geom_point(pch=21,color="black",size=5)  + 
+  scale_fill_manual(values=colors) +labs(x=paste(goi), y= paste(goi,"Receptor")) +ggtitle(paste("Receptor vs",goi)) +
+  theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),legend.position = "none", 
+                     axis.text = element_text(size=25),axis.title = element_text(size=30)) + scale_x_reverse() + scale_y_reverse() #+xlim(c(10,5))+ylim(c(10,5))
+} else {ggplot(dat.to.plot, aes(x=Ligand,y=Receptor,fill=cols))+ geom_point(pch=21,color="black",size=5)  + 
+    scale_fill_manual(values=colors) +labs(x=paste(goi), y= paste(goi,"Receptor")) +ggtitle(paste("Receptor vs",goi)) +
+    theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40), legend.position = "none", 
+                       axis.text = element_text(size=25),axis.title = element_text(size=30))}
+
+
+plot3d(set[1,],set[2,],set[3,])
+
+
+goi <- "Npy"
+percent.sd <- .1
+set <- subsetGenes(data, goi, exact=F)
+
+dat.to.tsne <- t(set)
+for (i in 1:ncol(dat.to.tsne)) {
+  dat.to.tsne[which(is.na(dat.to.tsne[,i])),i] <- (min(dat.to.tsne[,i],na.rm=T)-sd(dat.to.tsne[,i],na.rm=T)*percent.sd)
+}
+tsne.samps <- Rtsne(dat.to.tsne,perplexity=20)
+tsne.samps.coords <- tsne.samps$Y ; rownames(tsne.samps.coords) <- rownames(dat.to.tsne)
+
+plot(tsne.samps.coords, pch=16, cex=2,main=paste("tSNE of PR1643"))
+
+
+
+pdf("PR1643_tsne_colored.pdf")
+par(mfrow=c(2,2))
+par(cex=0.4)
+par(mar=c(3,3,2,2), oma=c(0.5,0.5,0.5,0.5))
+par(tcl= -0.25)
+par(mgp = c(2,0.5,0))
+for (i in 1:nrow(data)) {
+  gene <- data[i,]
+  cols <- myColorRamp4(c("blue","lightblue","gray","indianred","firebrick"),gene)
+  plot(tsne.samps.coords, pch=21, bg=cols, cex=3, main=paste("tSNE of PR1643 RAGP Colored for",rownames(data)[i]))
+  
+}
+dev.off()

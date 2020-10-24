@@ -8,7 +8,11 @@ Create a Beeswarm Plot for a Set of Genes
 Create highly customizable beeswarm plots for a given set of genes. Includes options to color for and group by various annotations as well as to facet the genes.
 }
 \usage{
-beeswarmGenes(data, list, exact = TRUE, is.raw.Ct = FALSE, na.fix = 2, squishy = FALSE, color.by = "blue", custom.color.vec = FALSE, groupby.x = NULL, custom.group.vec = FALSE, facet.wrap = FALSE, ncols = 2, scales = "free_y", legend.position = "none", axis.text.x.size = 25, point.size = 3, transparency = 1, percent.mad = 0.5)
+beeswarmGenes(data, list, exact = TRUE, is.raw.Ct = FALSE, na.fix = 2,
+  squishy = FALSE, color.by = "blue", custom.color.vec = FALSE, groupby.x = NULL,
+  custom.group.vec = FALSE, facet.wrap = FALSE, ncols = 2, scales = "free_y",
+  legend.position = "none", axis.text.x.size = 25, point.size = 3, transparency = 1,
+  percent.mad = 0.5)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{

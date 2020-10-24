@@ -8,7 +8,8 @@ Density Plots for a Set of Genes
 Create highly customizable density plots for a given set of genes. Includes options to color for and group by various annotations.
 }
 \usage{
-DensityGenes(data, list, exact = TRUE, color.by = "blue", is.raw.Ct = FALSE, na.fix = 2, transparency = 0.5, ncols = 2, scales = "free", legend.position = "right")
+DensityGenes(data, list, color.by = "blue", exact = TRUE, is.raw.Ct = FALSE,
+  na.fix = 2, transparency = 0.5, ncols = 2, scales = "free", legend.position = "right")
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -18,11 +19,11 @@ numeric data matrix with samples/observations in the columns and genes/variables
   \item{list}{
 character vector of genes/variables to be pulled out of the data matrix for viewing
 }
-  \item{exact}{
-whether or not to search for exact or inexact matches of 'list' in 'data'. If exact = T (default) heatmap will plot genes/variables that exactly match the list supplied. If set to FALSE, will search for inexact matches.
-}
   \item{color.by}{
 How the plots are colored and grouped. There are several different options that this argument can take. If set to a single color (the default, blue), one density plot will be shown in the indicated color. The name of an annotation can be provided that must match the colnames of the annotations dataframe stored in the params list object. If the colors of this annotation are also specified in annot_cols, also stored in the params list object, those colors will be used for the indicated levels of the annotation. If the colors are not provided, default colors will be used. In this case, multiple overlapping density plots will be shown separating the annotations. Useful for seeing if the range of data differs between different groups of samples.
+}
+  \item{exact}{
+whether or not to search for exact or inexact matches of 'list' in 'data'. If exact = T (default) heatmap will plot genes/variables that exactly match the list supplied. If set to FALSE, will search for inexact matches.
 }
   \item{is.raw.Ct}{
 logical. If set to TRUE, will reverse the scale of the data to indicate low values as high expression as in the case of raw Ct values from qPCR, in this case, missing values will also be set to a high value to reflect low expression level

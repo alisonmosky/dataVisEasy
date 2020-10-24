@@ -12,7 +12,7 @@ initiate_params(parameters)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-\item{params}{the parameters}
+\item{parameters}{the parameters}
 }
 \details{
 

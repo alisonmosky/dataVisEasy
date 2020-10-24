@@ -1,0 +1,24 @@
+{
+    "id": "2CDD8C09",
+    "path": "D:/Dropbox (SBG)/SHR-Work/Alison-DataVis-Package/Extra_Functions.R",
+    "project_path": null,
+    "type": "r_source",
+    "hash": "1363893261",
+    "contents": "",
+    "dirty": false,
+    "created": 1603313888209.0,
+    "source_on_save": false,
+    "relative_order": 1,
+    "properties": {
+        "cursorPosition": "217,0",
+        "scrollLine": "193"
+    },
+    "folds": "228|2|259|0|\n267|2|309|0|\n321|2|334|0|\n340|2|348|0|\n372|2|391|0|\n402|2|433|0|\n445|2|492|0|\n",
+    "lastKnownWriteTime": 1603334264,
+    "encoding": "ISO8859-1",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1603334264722,
+    "read_only": false,
+    "read_only_alternatives": []
+}

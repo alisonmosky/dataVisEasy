@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1603396120031.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "1473328395",
+    "id" : "4B015EC7",
+    "lastKnownWriteTime" : 1603399371,
+    "last_content_update" : 1603399371037,
+    "path" : "C:/Users/axm323/Dropbox (SBG)/SHR-Work/Integration/Integrative_Combined_Analysis.R",
+    "project_path" : null,
+    "properties" : {
+        "cursorPosition" : "76,45",
+        "scrollLine" : "68"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

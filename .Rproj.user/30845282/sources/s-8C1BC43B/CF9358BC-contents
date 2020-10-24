@@ -1,0 +1,107 @@
+library(rgl)
+library(ggplot2)
+library(dplyr)
+library(reshape2)
+library(pheatmap)
+
+myColorRamp4 <- function(colors, values) {
+  out <- rep(rgb(0,0,0),length(values))
+  for(i in 1:length(values)){
+    if(is.na(values[i])){
+    } else{
+      if (values[i]<median(values,na.rm=T)-0.75*mad(values,na.rm=T)){
+        v <- (values[i] - min(values,na.rm=T))/diff(range(values,na.rm=T))
+        x <- colorRamp(colors[1:2])(v)
+        out[i] <- rgb(x[,1], x[,2], x[,3], maxColorValue = 255)}
+      
+      if (values[i]>median(values,na.rm=T)-0.75*mad(values,na.rm=T) & values[i]<0){
+        v <- (values[i] - min(values,na.rm=T))/diff(range(values,na.rm=T))
+        x <- colorRamp(colors[2:3])(v)
+        out[i] <- rgb(x[,1], x[,2], x[,3], maxColorValue = 255)}
+      
+      if (values[i]<median(values,na.rm=T)+0.75*mad(values,na.rm=T) & values[i]>0){
+        v <- (values[i] - min(values,na.rm=T))/diff(range(values,na.rm=T))
+        x <- colorRamp(colors[3:4])(v)
+        out[i] <- rgb(x[,1], x[,2], x[,3], maxColorValue = 255)}
+      
+      if (values[i]>median(values,na.rm=T)+0.75*mad(values,na.rm=T)){
+        v <- (values[i] - min(values,na.rm=T))/diff(range(values,na.rm=T))
+        x <- colorRamp(colors[4:5])(v)
+        out[i] <- rgb(x[,1], x[,2], x[,3], maxColorValue = 255)}
+    }
+  }
+  return(out)
+}
+
+View3D <- function(
+  X, #vector of coordinates for X
+  Y, #vector of coordinates for Y
+  Z, #vector of coordinates for Z
+  colors, ##vector of colors 
+  main= NULL,
+  box=FALSE, 
+  axes=FALSE,
+  tick=FALSE,
+  labels=FALSE,
+  size= 2, ##can overwrite the size of the points 
+  axis.color="grey", ##color of axis
+  useDefault = FALSE, #can be overwritten, use if don't know usermatrix, zoom, windowrect
+  zoom=0.75, #zoom, can be overwritten
+  userMatrix=matrix(c( -0.999968529,-0.001579670, 0.007774456,0,0.007591867,0.093966849,0.995546341,0,-0.001486613,0.995586455,-0.093832962,0,0,0,0,1),4,4), #can be overwritten, should write function to get
+  windowRect = c(380,103,1006,645) ##same as above 
+){
+  # gene<-dat$Dbh
+  # gene1<-colnames(dat)[which(dat[21,]==gene[21])]
+  # 
+  # 
+  # cols <- myColorRamp4(c("blue","lightblue","gray","indianred","firebrick"), gene) #Change gene name here
+  if(useDefault==FALSE){
+    open3d(zoom = 0.75, userMatrix = userMatrix, windowRect=windowRect)
+    plot3d(x=X,y=Y,z=Z,col=colors, type="s", size=size, box=box, axes=axes,xlab="",ylab="", zlab="")
+    axes3d(edge="Z+",tick=tick,labels=labels,col=axis.color,lwd=2,alpha=0.7)
+    axes3d(edge="X-",tick=tick,labels=labels,col=axis.color,lwd=2,alpha=0.7)
+    axes3d(edge="Y+",tick=tick,labels=labels,col=axis.color,lwd=2,alpha=0.7)
+    bgplot3d({plot.new();title(main = main, line = 0)})
+  }
+  
+  if(useDefault==TRUE){
+    open3d()
+    plot3d(x=X,y=Y,z=Z,col=colors, type="s", size=size, box=box, axes=axes,xlab="",ylab="", zlab="")
+    axes3d(edge="Z+",tick=tick,labels=labels,col=axis.color,lwd=2,alpha=0.7)
+    axes3d(edge="X-",tick=tick,labels=labels,col=axis.color,lwd=2,alpha=0.7)
+    axes3d(edge="Y+",tick=tick,labels=labels,col=axis.color,lwd=2,alpha=0.7)
+    bgplot3d({plot.new();title(main = main, line = 0)}) 
+  }
+  
+}
+
+
+
+full <- as.matrix(read.table("PR1643_trimmeddata_negddct_common.txt", sep="\t", header=T))
+annots <- read.table("PR1643_Single_Cell_Annotations.txt", sep="\t", header=T)
+colnames(full) <- gsub("\\.","-",colnames(full))
+data <- full
+samples <- colnames(data)
+genes <- rownames(data)
+annotations <- annots[annots$Sample_ID %in% samples,]
+annotations <- annotations[match(samples,annotations$Sample_ID),]; rownames(annotations) <- annotations$Sample_ID
+
+
+
+####################
+#####View in 3D#####
+####################
+
+coords <- read.table("PR1643_Coordinates2.txt", sep="\t", header=T)
+
+coordinates <- coords[coords$Sample_ID %in% samples,]
+coordinates <- coordinates[match(samples,coordinates$Sample_ID),]
+
+gene<-"Cacna1a"                                                                    ##########Change Gene Name Here
+genedat<-data[which(rownames(data)==gene),]
+
+cols <- myColorRamp4(c("blue","lightblue","gray","indianred","firebrick"), genedat) 
+
+View3D(X=coordinates$X,Y=coordinates$Y, Z=coordinates$Z,cols, main=paste(gene))
+
+

@@ -11,8 +11,8 @@ parameters <- list(scale.range = c(-1,1),
                expression_gradient.colors = c("blue","lightblue","gray","indianred","firebrick"))
 
 
-initiate_params <- function(params){
-  assign("params",params,envir =  .GlobalEnv)
+initiate_params <- function(parameters){
+  assign("params",parameters,envir =  .GlobalEnv)
 }
 
 
@@ -31,7 +31,7 @@ set_n.colors.range <- function(n){#unlockBinding("params", env = as.environment(
 set_annotations <- function(annotations){
   params$annotations <<- annotations
   if (sum(is.na(params$annotations) != 0)) {
-    if (length(annotations) ==1 ) {
+    if ( (length(annotations) == 1) & (is.null(nrow(annotations)) == TRUE) ) {
       params$annotations <<- NA
     }else{
     params$annotations[is.na(params$annotations)] <<- "No_Annot"
@@ -67,7 +67,7 @@ set_annot_samps <- function(annotations= NULL){
 set_annotations.genes <- function(annotations.genes){
   params$annotations.genes <<- annotations.genes
   if (sum(is.na(params$annotations.genes) != 0)) {
-    if (length(annotations.genes) == 1) {
+    if ( (length(annotations.genes) == 1) & (is.null(nrow(annotations.genes)) == TRUE) ) {
       params$annotations.genes <<- NA
     }else {
     params$annotations.genes[is.na(params$annotations.genes)] <<- "No_Annot"
@@ -103,7 +103,6 @@ set_annot_genes <- function(annotations = NULL){
 }
 
 
-
 set_annot_cols <- function(annot_cols){
   params$annot_cols <<- annot_cols
   suppressWarnings( if (is.na(annot_cols)) { params$annot_cols <<- NA})
@@ -135,7 +134,7 @@ set_expression_gradient.colors <- function(colors){
   }else{stop('must be a vector of colors of length 5')}}
 
 #########
-"%notin%" <- function(x, table) !(match(x, table, nomatch = 0) > 0)
+'%notin%' <- function(x, table){ !(match(x, table, nomatch = 0) > 0)}
 
 assessScale <- function(     ###Returns percent of data above, below, and within range of scale for heatmap
   data ##data to be assessed,
@@ -260,7 +259,9 @@ myHeatmap <- function(  ##basic heatmap, can subset for gene list
   show.legend=TRUE,
   show.annotations=TRUE,
   is.raw.Ct=FALSE, ##if true, will reverse color scale to show yellow as high expressing
-  drop.annot.levels=TRUE
+  drop.annot.levels=TRUE,
+  annotation.names.row = TRUE,
+  annotation.names.col = TRUE
 ){
 
   if (is.null(main)==TRUE){
@@ -397,7 +398,7 @@ myHeatmap <- function(  ##basic heatmap, can subset for gene list
            cluster_rows = clust.rows, cluster_cols = clust.cols, cutree_rows = row.groups, cutree_cols = col.groups, gaps_row = gaps.row, gaps_col = gaps.col,
            cellwidth = cell.width, cellheight = cell.height, fontsize_row = fontsize.row, fontsize_col = fontsize.col, show_rownames = show.rownames,show_colnames = show.colnames,
            treeheight_row = heightrow ,treeheight_col = heightcol, silent = hide.plot, legend=show.legend, annotation_legend = show.annotations,
-           annotation_row=temp.annot_genes, drop_levels = drop.annot.levels)
+           annotation_row=temp.annot_genes, drop_levels = drop.annot.levels, annotation_names_row = annotation.names.row, annotation_names_col = annotation.names.col)
 
 
     }
@@ -441,7 +442,9 @@ myHeatmapByAnnotation <- function(
   is.raw.Ct=FALSE,
   show.legend=TRUE,
   show.annotations=TRUE,
-  drop.annot.levels = TRUE
+  drop.annot.levels = TRUE,
+  annotation.names.row = TRUE,
+  annotation.names.col = TRUE
 ){
 
 
@@ -851,7 +854,7 @@ myHeatmapByAnnotation <- function(
            cluster_rows = clust.rows, cluster_cols = clust.cols, cutree_rows = row.groups, cutree_cols = col.groups, gaps_row = gaps.row, gaps_col = gaps.col,fontsize_row = fontsize.row, fontsize_col = fontsize.col,
            cellwidth = cell.width, cellheight = cell.height, show_rownames = show.rownames,show_colnames = show.colnames,
            treeheight_row = heightrow ,treeheight_col = heightcol, silent=hide.plot, legend=show.legend, annotation_legend = show.annotations,
-           annotation_row=temp.annot_genes, drop_levels = drop.annot.levels)
+           annotation_row=temp.annot_genes, drop_levels = drop.annot.levels, annotation_names_row = annotation.names.row, annotation_names_col = annotation.names.col)
 
     }
 
@@ -879,6 +882,7 @@ ExtractMatrix <- function(   ##from clustered heatmap, will extract the exact ma
 
   return(ordered)
 }
+
 
 extractClusters <- function(  ##will extract cluster groups from clustered heatmaps
   data, ##should be the same data as what was used to generate the heatmap, used to extract the correct gene order
@@ -1177,28 +1181,30 @@ myPCA <- function(
   PCs.to.plot = c("PC1","PC2"),
   legend.position = "right",
   main = NULL,
+  point.size =5,
+  transparency = 1,
   percent.mad =0.5
 ){
 
   if (to.pca == "samples") {
 
     temp.annotations <- params$annotations
-    temp.annotations <- temp.annotations[match(colnames(data), rownames(temp.annotations)),, drop = FALSE]
 
 
     pca <- pcaMethods::pca(t(data), nPcs = nPcs)
     pca.scrs <- pcaMethods::scores(pca)
     pca.ldgs <- pcaMethods::loadings(pca)
 
-    pca.data <- data.frame(pca.scrs,temp.annotations)
+
 
     if (color.by %in% rownames(data) | sum(custom.color.vec != FALSE) > 0) {
+      pca.data <- pca.scrs
       if (color.by %in% rownames(data)) {
         genedat<- data[which(rownames(data)==color.by),]
         cols <- myColorRamp5(params$expression_gradient.colors,genedat, percent.mad = percent.mad)
       } else{ cols <- custom.color.vec}
 
-      p <- ggplot(pca.data, aes(x=eval(parse(text = PCs.to.plot[1])),y=eval(parse(text = PCs.to.plot[2])),fill=cols))+ geom_point(pch=21,color="black",size=5)  +
+      p <- ggplot(pca.data, aes(x=eval(parse(text = PCs.to.plot[1])),y=eval(parse(text = PCs.to.plot[2])),fill=cols))+ geom_point(pch=21,color="black",size=point.size, alpha = transparency)  +
         scale_fill_identity() +labs(x=paste(PCs.to.plot[1]), y= paste(PCs.to.plot[2])) + ggtitle(main) +
         theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
                            axis.text = element_text(size=25),axis.title = element_text(size=30), legend.position = legend.position)
@@ -1211,7 +1217,9 @@ myPCA <- function(
           if (sum(colnames(data) %notin% rownames(temp.annotations)) != 0 ) {
             stop('colnames of input data do not match rownames of annotations, cannot link annotations to data')}
 
-          temp.annotations <- temp.annotations[match(colnames(data), rownames(temp.annotations)),]
+          temp.annotations <- temp.annotations[match(colnames(data), rownames(temp.annotations)),, drop = FALSE]
+          #temp.annotations <- temp.annotations[match(colnames(data), rownames(temp.annotations)),]
+          pca.data <- data.frame(pca.scrs,temp.annotations)
         })
 
         if (color.by %in% names(params$annot_cols)) {
@@ -1219,14 +1227,14 @@ myPCA <- function(
           colors <- params$annot_cols[[which(names(params$annot_cols) == color.by)]]
         }else{
           cols <- as.factor(pca.data[,which(colnames(pca.data) == color.by)])
-          colors <- hue_pal()(length(levels(cols)))
+          colors <- scales::hue_pal()(length(levels(cols)))
         }
 
       } else{ cols <- color.by; colors <- color.by}
 
 
-      p <- ggplot(pca.data, aes(x=eval(parse(text = PCs.to.plot[1])),y=eval(parse(text = PCs.to.plot[2])),fill=cols))+ geom_point(pch=21,color="black",size=5)  +
-        scale_fill_manual(values=colors) +labs(x=paste(PCs.to.plot[1]), y= paste(PCs.to.plot[2])) + ggtitle(main) +
+      p <- ggplot(pca.data, aes(x=eval(parse(text = PCs.to.plot[1])),y=eval(parse(text = PCs.to.plot[2])),fill=cols))+ geom_point(pch=21,color="black",size=point.size, alpha = transparency)  +
+        scale_fill_manual(values=colors) +labs(x=paste(PCs.to.plot[1]), y= paste(PCs.to.plot[2]), fill=color.by) + ggtitle(main) +
         theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
                            axis.text = element_text(size=25),axis.title = element_text(size=30), legend.position = legend.position)
     }
@@ -1235,19 +1243,18 @@ myPCA <- function(
   if (to.pca == "genes") {
 
     temp.annotations.genes <- params$annotations.genes
-    temp.annotations.genes <- temp.annotations.genes[match(rownames(data), rownames(temp.annotations.genes)),, drop = FALSE]
-
 
     pca <- pcaMethods::pca((data), nPcs = nPcs)
     pca.scrs <- pcaMethods::scores(pca)
     pca.ldgs <- pcaMethods::loadings(pca)
 
-    pca.data <- data.frame(pca.scrs,temp.annotations.genes)
+
 
     if (sum(custom.color.vec != FALSE) > 0) {
+      pca.data <- data.frame(pca.scrs)
       cols <- custom.color.vec
 
-      p <- ggplot(pca.data, aes(x=eval(parse(text = PCs.to.plot[1])),y=eval(parse(text = PCs.to.plot[2])),fill=cols))+ geom_point(pch=21,color="black",size=5)  +
+      p <- ggplot(pca.data, aes(x=eval(parse(text = PCs.to.plot[1])),y=eval(parse(text = PCs.to.plot[2])),fill=cols))+ geom_point(pch=21,color="black",size=point.size, alpha = transparency)  +
         scale_fill_identity() +labs(x=paste(PCs.to.plot[1]), y= paste(PCs.to.plot[2])) + ggtitle(main) +
         theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
                            axis.text = element_text(size=25),axis.title = element_text(size=30), legend.position = legend.position)
@@ -1260,21 +1267,23 @@ myPCA <- function(
           if (sum(rownames(data) %notin% rownames(temp.annotations.genes)) != 0 ) {
             stop('rownames of input data do not match rownames of annotations, cannot link annotations to data')}
 
-          temp.annotations.genes <-temp.annotations.genes[match(rownames(data), rownames(temp.annotations.genes)),]
+          temp.annotations.genes <- temp.annotations.genes[match(rownames(data), rownames(temp.annotations.genes)),, drop = FALSE]
+          pca.data <- data.frame(pca.scrs,temp.annotations.genes)
+          #temp.annotations.genes <-temp.annotations.genes[match(rownames(data), rownames(temp.annotations.genes)),]
         })
         if (color.by %in% names(params$annot_cols)) {
           cols <- as.factor(pca.data[,which(colnames(pca.data) == color.by)])
           colors <- params$annot_cols[[which(names(params$annot_cols) == color.by)]]
         }else{
           cols <- as.factor(pca.data[,which(colnames(pca.data) == color.by)])
-          colors <- hue_pal()(length(levels(cols)))
+          colors <- scales::hue_pal()(length(levels(cols)))
         }
 
       } else{ cols <- color.by; colors <- color.by}
 
 
-      p <- ggplot(pca.data, aes(x=eval(parse(text = PCs.to.plot[1])),y=eval(parse(text = PCs.to.plot[2])),fill=cols))+ geom_point(pch=21,color="black",size=5)  +
-        scale_fill_manual(values=colors) +labs(x=paste(PCs.to.plot[1]), y= paste(PCs.to.plot[2])) + ggtitle(main) +
+      p <- ggplot(pca.data, aes(x=eval(parse(text = PCs.to.plot[1])),y=eval(parse(text = PCs.to.plot[2])),fill=cols))+ geom_point(pch=21,color="black",size=point.size, alpha = transparency)  +
+        scale_fill_manual(values=colors) +labs(x=paste(PCs.to.plot[1]), y= paste(PCs.to.plot[2]), fill=color.by) + ggtitle(main) +
         theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
                            axis.text = element_text(size=25),axis.title = element_text(size=30), legend.position = legend.position)
     }
@@ -1690,6 +1699,8 @@ scatterGenes <- function(
   data,
   gene1,
   gene2,
+  custom.x = FALSE,
+  custom.y = FALSE,
   is.raw.Ct = FALSE, ##if data is raw and axis should be flipped, set to TRUE
   na.fix = 2,
   color.by= "blue",  ##can be a color, gene, otherwise utilize annot_samps and annot_cols
@@ -1704,18 +1715,20 @@ scatterGenes <- function(
   percent.mad = 0.5
 ){
 
-  if (gene1 %notin% rownames(data)) {stop('gene1 not found in rownames data')}
-  if (gene2 %notin% rownames(data)) {stop('gene2 not found in rownames data')}
+  if (length(custom.x) == 1 & custom.x[1] == FALSE) {
+    if (gene1 %notin% rownames(data)) {stop('gene1 not found in rownames data')}
+    dat1<-data[which(rownames(data) %in% gene1),]; if (is.raw.Ct==F & na.fix!=F) {dat1[which(is.na(dat1))] <- (min(dat1, na.rm=T)-na.fix)};if (is.raw.Ct==T & na.fix!=F) {dat1[which(is.na(dat1))]<- (max(dat1, na.rm=T)+na.fix)}
+  }else{dat1 <- custom.x; gene1 <- "Custom X"   }
 
-  dat1<-data[which(rownames(data) %in% gene1),]; if (is.raw.Ct==F & na.fix!=F) {dat1[which(is.na(dat1))] <- (min(dat1, na.rm=T)-na.fix)};if (is.raw.Ct==T & na.fix!=F) {dat1[which(is.na(dat1))]<- (max(dat1, na.rm=T)+na.fix)}
-  dat2<-data[which(rownames(data) %in% gene2),]; if (is.raw.Ct==F & na.fix!=F) {dat2[which(is.na(dat2))] <- (min(dat2, na.rm=T)-na.fix)};if (is.raw.Ct==T & na.fix!=F) {dat2[which(is.na(dat2))]<- (max(dat2, na.rm=T)+na.fix)}
+  if (length(custom.y) == 1 & custom.y[1] == FALSE) {
+    if (gene2 %notin% rownames(data)) {stop('gene2 not found in rownames data')}
+    dat2<-data[which(rownames(data) %in% gene2),]; if (is.raw.Ct==F & na.fix!=F) {dat2[which(is.na(dat2))] <- (min(dat2, na.rm=T)-na.fix)};if (is.raw.Ct==T & na.fix!=F) {dat2[which(is.na(dat2))]<- (max(dat2, na.rm=T)+na.fix)}
+  }else{dat2 <- custom.y; gene2 <- "Custom Y"}
+
 
   temp.annotations <- params$annotations
-  temp.annotations <- temp.annotations[match(colnames(data), rownames(temp.annotations)),, drop = FALSE]
-
 
   dat.to.plot <- data.frame(Gene1= dat1, Gene2= dat2); dat.to.plot <- cbind(dat.to.plot, temp.annotations)
-
 
   if (color.by %in% rownames(data) | sum(custom.color.vec != FALSE) > 0) {
     if (color.by %in% rownames(data)) {
@@ -1727,53 +1740,31 @@ scatterGenes <- function(
       suppressWarnings( if (squish1 != FALSE) {dat.to.plot$Gene1 <-  scales::squish(dat.to.plot$Gene1,squish1)} )
       suppressWarnings( if (squish2 != FALSE) {dat.to.plot$Gene2 <-  scales::squish(dat.to.plot$Gene2,squish2)} )
 
-      if (is.raw.Ct==T) {
-        p <- ggplot(dat.to.plot, aes(x=Gene1,y=Gene2,fill=cols))+ geom_point(pch=21,color="black",size=5, alpha = transparency)  +
-          scale_fill_identity() +labs(x=paste(gene1), y= paste(gene2)) +ggtitle(paste(gene2, "vs.",gene1)) +
-          theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
-                             axis.text = element_text(size=25),axis.title = element_text(size=30), legend.position = legend.position)+
-          scale_x_reverse() + scale_y_reverse()
-      } else {
-        p <- ggplot(dat.to.plot, aes(x=Gene1,y=Gene2,fill=cols))+ geom_point(pch=21,color="black",size=5, alpha = transparency)  +
-          scale_fill_identity() +labs(x=paste(gene1), y= paste(gene2)) + ggtitle(paste(gene2, "vs.",gene1)) +
-          theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
-                             axis.text = element_text(size=25),axis.title = element_text(size=30), legend.position = legend.position)
-      }
+      p <- ggplot(dat.to.plot, aes(x=Gene1,y=Gene2,fill=cols))+ geom_point(pch=21,color="black",size=5, alpha = transparency)  +
+        scale_fill_identity() +labs(x=paste(gene1), y= paste(gene2)) +ggtitle(paste(gene2, "vs.",gene1)) +
+        theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
+                           axis.text = element_text(size=25),axis.title = element_text(size=30),
+                           legend.position = legend.position)
+
+      if (is.raw.Ct==T) {p <- p + scale_x_reverse() + scale_y_reverse()}
     }
 
+    if ((xlimits || ylimits) == TRUE) {p <- p + xlim(c(xlimits)) + ylim(c(ylimits))}
 
-    if ((xlimits || ylimits) == TRUE) {
-      # if (squish.to.lims != FALSE) {dat.to.plot$Gene1 <-  scales::squish(dat.to.plot$Gene1,xlimits)
-      # dat.to.plot$Gene2 <-  scales::squish(dat.to.plot$Gene2,ylimits)}
-
-      if (is.raw.Ct==T) {
-        p <- ggplot(dat.to.plot, aes(x=Gene1,y=Gene2,fill=cols))+ geom_point(pch=21,color="black",size=5, alpha = transparency)  +
-          scale_fill_identity() +labs(x=paste(gene1), y= paste(gene2)) +ggtitle(paste(gene2, "vs.",gene1)) +
-          theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
-                             axis.text = element_text(size=25),axis.title = element_text(size=30), legend.position = legend.position)+
-          xlim(c(xlimits)) + ylim(c(ylimits)) #+ scale_x_reverse() + scale_y_reverse()
-
-      } else {
-        p <- ggplot(dat.to.plot, aes(x=Gene1,y=Gene2,fill=cols))+ geom_point(pch=21,color="black",size=5, alpha = transparency)  +
-          scale_fill_identity() +labs(x=paste(gene1), y= paste(gene2)) + ggtitle(paste(gene2, "vs.",gene1)) +
-          theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
-                             axis.text = element_text(size=25),axis.title = element_text(size=30), legend.position = legend.position) + xlim(c(xlimits)) + ylim(c(ylimits))
-      }
-    }
   } else{
 
     if (color.by %in% colnames(temp.annotations)) {
-        if (sum(colnames(data) %notin% rownames(temp.annotations)) != 0 ) {
-          stop('colnames of input data do not match rownames of annotations, cannot link annotations to data')
-        }
-        temp.annotations <- temp.annotations[match(colnames(data), rownames(temp.annotations)),, drop = FALSE]
+      if (sum(colnames(data) %notin% rownames(temp.annotations)) != 0 ) {
+        stop('colnames of input data do not match rownames of annotations, cannot link annotations to data')
+      }
+      temp.annotations <- temp.annotations[match(colnames(data), rownames(temp.annotations)),, drop = FALSE]
 
       if (color.by %in% names(params$annot_cols)) {
         cols <- as.factor(dat.to.plot[,which(colnames(dat.to.plot) == color.by)])
         colors <- params$annot_cols[[which(names(params$annot_cols) == color.by)]]
       }else{
         cols <- as.factor(dat.to.plot[,which(colnames(dat.to.plot) == color.by)])
-        colors <- hue_pal()(length(levels(cols)))
+        colors <- scales::hue_pal()(length(levels(cols)))
       }
     } else{ cols <- color.by; colors <- color.by}
 
@@ -1782,43 +1773,20 @@ scatterGenes <- function(
       suppressWarnings( if (squish1 != FALSE) {dat.to.plot$Gene1 <-  scales::squish(dat.to.plot$Gene1,squish1)} )
       suppressWarnings( if (squish2 != FALSE) {dat.to.plot$Gene2 <-  scales::squish(dat.to.plot$Gene2,squish2)} )
 
-      if (is.raw.Ct==T) {
-        p <- ggplot(dat.to.plot, aes(x=Gene1,y=Gene2,fill=cols))+ geom_point(pch=21,color="black",size=point.size, alpha = transparency)  +
-          scale_fill_manual(values=colors) +labs(x=paste(gene1), y= paste(gene2)) +ggtitle(paste(gene2, "vs.",gene1)) +
-          theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
-                             axis.text = element_text(size=25),axis.title = element_text(size=30), legend.position = legend.position)+
-          scale_x_reverse() + scale_y_reverse()
-      } else {
-        p <- ggplot(dat.to.plot, aes(x=Gene1,y=Gene2,fill=cols))+ geom_point(pch=21,color="black",size=point.size, alpha = transparency)  +
-          scale_fill_manual(values=colors) +labs(x=paste(gene1), y= paste(gene2)) + ggtitle(paste(gene2, "vs.",gene1)) +
-          theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
-                             axis.text = element_text(size=25),axis.title = element_text(size=30), legend.position = legend.position)
-      }
+      p <- ggplot(dat.to.plot, aes(x=Gene1,y=Gene2,fill=cols))+ geom_point(pch=21,color="black",size=point.size, alpha = transparency)  +
+        scale_fill_manual(values=colors) +labs(x=paste(gene1), y= paste(gene2)) +ggtitle(paste(gene2, "vs.",gene1)) + labs(fill=color.by) +
+        theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
+                           axis.text = element_text(size=25),axis.title = element_text(size=30), legend.position = legend.position)
+
+      if (is.raw.Ct==T) {p <- p + scale_x_reverse() + scale_y_reverse()}
     }
 
-
-    if ((xlimits || ylimits) == TRUE) {
-      # if (squish.to.lims != FALSE) {dat.to.plot$Gene1 <-  scales::squish(dat.to.plot$Gene1,xlimits)
-      # dat.to.plot$Gene2 <-  scales::squish(dat.to.plot$Gene2,ylimits)}
-
-      if (is.raw.Ct==T) {
-        p <- ggplot(dat.to.plot, aes(x=Gene1,y=Gene2,fill=cols))+ geom_point(pch=21,color="black",size=point.size, alpha = transparency)  +
-          scale_fill_manual(values=colors) +labs(x=paste(gene1), y= paste(gene2)) +ggtitle(paste(gene2, "vs.",gene1)) +
-          theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
-                             axis.text = element_text(size=25),axis.title = element_text(size=30), legend.position = legend.position)+
-          xlim(c(xlimits)) + ylim(c(ylimits)) #+ scale_x_reverse() + scale_y_reverse()
-
-      } else {
-        p <- ggplot(dat.to.plot, aes(x=Gene1,y=Gene2,fill=cols))+ geom_point(pch=21,color="black",size=point.size, alpha = transparency)  +
-          scale_fill_manual(values=colors) +labs(x=paste(gene1), y= paste(gene2)) + ggtitle(paste(gene2, "vs.",gene1)) +
-          theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
-                             axis.text = element_text(size=25),axis.title = element_text(size=30), legend.position = legend.position) + xlim(c(xlimits)) + ylim(c(ylimits))
-      }
-    }
+    if ((xlimits || ylimits) == TRUE) {p <- p + xlim(c(xlimits)) + ylim(c(ylimits))}
   }
 
   return(p)
 }
+
 
 
 beeswarmGenes <- function( ##can save as ggplot object and add layers afterwards if more specifications need to be changed
@@ -1843,17 +1811,17 @@ beeswarmGenes <- function( ##can save as ggplot object and add layers afterwards
 ){
 
   ###set up, get genes, squish scale if needed, set groupby.x == FALSE if it doesnt match with colors
-  if (exact == TRUE) {dat<-data[which(rownames(data) %in% list),]
-    if (length(dat) == 0 ) {stop('exact matches for list not found in rownames data')}
-    if (is.raw.Ct==F & na.fix!=F) {dat[which(is.na(dat))] <- (min(dat, na.rm=T)-na.fix)};if (is.raw.Ct==T & na.fix!=F) {dat[which(is.na(dat))]<- (max(dat, na.rm=T)+na.fix)}}
-  if (exact == FALSE) {dat<-data[grep(paste(list, collapse = "|"),rownames(data)),]
-    if (length(dat) == 0 ) {stop('inexact matches for list not found in rownames data')}
-    if (is.raw.Ct==F & na.fix!=F) {dat[which(is.na(dat))] <- (min(dat, na.rm=T)-na.fix)};if (is.raw.Ct==T & na.fix!=F) {dat[which(is.na(dat))]<- (max(dat, na.rm=T)+na.fix)}}
+  if (exact == TRUE) {dat<-data[which(rownames(data) %in% list),, drop = FALSE]
+  if (length(dat) == 0 ) {stop('exact matches for list not found in rownames data')}
+  if (is.raw.Ct==F & na.fix!=F) {dat[which(is.na(dat))] <- (min(dat, na.rm=T)-na.fix)};if (is.raw.Ct==T & na.fix!=F) {dat[which(is.na(dat))]<- (max(dat, na.rm=T)+na.fix)}}
+  if (exact == FALSE) {dat<-data[grep(paste(list, collapse = "|"),rownames(data)),, drop = FALSE]
+  if (length(dat) == 0 ) {stop('inexact matches for list not found in rownames data')}
+  if (is.raw.Ct==F & na.fix!=F) {dat[which(is.na(dat))] <- (min(dat, na.rm=T)-na.fix)};if (is.raw.Ct==T & na.fix!=F) {dat[which(is.na(dat))]<- (max(dat, na.rm=T)+na.fix)}}
 
 
   ####if data is not all samples, subset annotations appropriately
   temp.annotations <- params$annotations
-  temp.annotations <- temp.annotations[match(colnames(data), rownames(temp.annotations)),, drop = FALSE]
+  #temp.annotations <- temp.annotations[match(colnames(data), rownames(temp.annotations)),, drop = FALSE]
 
   suppressWarnings( if (is.na(temp.annotations) == FALSE) {
     if (sum(colnames(dat) %notin% rownames(temp.annotations)) != 0 ) {
@@ -1903,52 +1871,45 @@ beeswarmGenes <- function( ##can save as ggplot object and add layers afterwards
     if ((is.null(groupby.x) == FALSE)) {  ##groupby has either been set to false by user or by previous tested condition (same as color, taken care of above)
       if (groupby.x != FALSE) {  ##set group to specification
         if (facet.wrap == FALSE) {
+          p <- ggplot(dat.to.plot, aes(x=variable,y=value,fill=cols, group=eval(parse(text=groupby.x))))+ geom_quasirandom(pch=21,color="black", dodge.width = 0.8, size=point.size, alpha = transparency) +
+            scale_fill_identity() + #ggtitle(paste(list)) +
+            theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
+                               strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = legend.position,
+                               axis.title.y = element_text(size=20), axis.title.x=element_blank(), axis.text.x = element_text(size=axis.text.x.size))
+
           if(is.raw.Ct==T){
-            (p <- ggplot(dat.to.plot, aes(x=variable,y=value,fill=cols, group=eval(parse(text=groupby.x))))+ geom_quasirandom(pch=21,color="black", dodge.width = 0.8, size=point.size, alpha = transparency) +
-               scale_fill_identity() + #ggtitle(paste(list)) +
-               theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
-                                  strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = legend.position,
-                                  axis.title.y = element_text(size=20), axis.title.x=element_blank(), axis.text.x = element_text(size=axis.text.x.size)) + ylab("Raw Ct Value") + scale_y_reverse() )
+            p <- p + ylab("Raw Ct Value") + scale_y_reverse()
           }else{
-            (p <- ggplot(dat.to.plot, aes(x=variable,y=value,fill=cols, group=eval(parse(text=groupby.x))))+ geom_quasirandom(pch=21,color="black", dodge.width = 0.8, size=point.size, alpha = transparency) +
-               scale_fill_identity() + #ggtitle(paste(list)) +
-               theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
-                                  strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = legend.position,
-                                  axis.title.y = element_text(size=20), axis.title.x=element_blank(), axis.text.x = element_text(size=axis.text.x.size)) + ylab("Normalized Expression Level") )
+            p <- p + ylab("Normalized Expression Level")
           }
         }
 
         if (facet.wrap == TRUE) {
-          if(is.raw.Ct==T){
-            (p <- ggplot(dat.to.plot, aes(x=eval(parse(text=groupby.x)),y=value,fill=cols,group=eval(parse(text=groupby.x))))+ geom_quasirandom(pch=21,color="black", dodge.width = 0.8, alpha = transparency) +
-               scale_fill_identity() + #ggtitle(paste(list)) +
-               theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
-                                  strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = legend.position,
-                                  axis.title.y = element_text(size=20), axis.title.x=element_blank(), axis.text.x = element_text(size=axis.text.x.size)) + ylab("Raw Ct Value") + scale_y_reverse() +
-               facet_wrap(~variable, ncol=ncols, scales = scales) )
-          }else{
-            (p <- ggplot(dat.to.plot, aes(x=eval(parse(text=groupby.x)),y=value,fill=cols,group=eval(parse(text=groupby.x))))+ geom_quasirandom(pch=21,color="black", dodge.width = 0.8, size=point.size,alpha = transparency) +
-               scale_fill_identity() + #ggtitle(paste(list)) +
-               theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
-                                  strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = legend.position,
-                                  axis.title.y = element_text(size=20), axis.title.x=element_blank(), axis.text.x = element_text(size=axis.text.x.size)) + ylab("Normalized Expression Level") +
-               facet_wrap(~variable, ncol=ncols, scales = scales) )
+          p <- ggplot(dat.to.plot, aes(x=eval(parse(text=groupby.x)),y=value,fill=cols,group=eval(parse(text=groupby.x))))+ geom_quasirandom(pch=21,color="black", dodge.width = 0.8, alpha = transparency) +
+            scale_fill_identity() + #ggtitle(paste(list)) +
+            theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
+                               strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = legend.position,
+                               axis.title.y = element_text(size=20), axis.title.x=element_blank(), axis.text.x = element_text(size=axis.text.x.size))
 
+          if(is.raw.Ct==T){
+            p <- p + ylab("Raw Ct Value") + scale_y_reverse() + facet_wrap(~variable, ncol=ncols, scales = scales)
+          }else{
+            p <- p + ylab("Normalized Expression Level") + facet_wrap(~variable, ncol=ncols, scales = scales)
           }
         }
+
       }else{ ##no groupings, and no facet
+
+        p <- ggplot(dat.to.plot, aes(x=variable,y=value,fill=cols))+ geom_quasirandom(pch=21,color="black", size=point.size) +
+          scale_fill_identity() + #ggtitle(paste(list)) +
+          theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
+                             strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = legend.position,
+                             axis.title.y = element_text(size=20), axis.title.x=element_blank(), axis.text.x = element_text(size=axis.text.x.size))
+
         if(is.raw.Ct==T){
-          (p <- ggplot(dat.to.plot, aes(x=variable,y=value,fill=cols))+ geom_quasirandom(pch=21,color="black", size=point.size) +
-             scale_fill_identity() + #ggtitle(paste(list)) +
-             theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
-                                strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = legend.position,
-                                axis.title.y = element_text(size=20), axis.title.x=element_blank(), axis.text.x = element_text(size=axis.text.x.size)) + ylab("Raw Ct Value") + scale_y_reverse() )
+          p <- p + ylab("Raw Ct Value") + scale_y_reverse()
         }else{
-          (p <- ggplot(dat.to.plot, aes(x=variable,y=value,fill=cols))+ geom_quasirandom(pch=21,color="black", size=point.size, alpha = transparency) +
-             scale_fill_identity() + #ggtitle(paste(list)) +
-             theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
-                                strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = legend.position,
-                                axis.title.y = element_text(size=20), axis.title.x=element_blank(), axis.text.x = element_text(size=axis.text.x.size)) + ylab("Normalized Expression Level") )
+          p <- p + ylab("Normalized Expression Level")
         }
       }
 
@@ -1988,7 +1949,7 @@ beeswarmGenes <- function( ##can save as ggplot object and add layers afterwards
         colors <- params$annot_cols[[which(names(params$annot_cols) == color.by)]]
       }else{
         cols <- as.factor(dat.to.plot[,which(colnames(dat.to.plot) == color.by)])
-        colors <- hue_pal()(length(levels(cols)))
+        colors <- scales::hue_pal()(length(levels(cols)))
       }
 
     } else{ cols <- color.by; colors <- color.by} ##single color
@@ -1998,93 +1959,82 @@ beeswarmGenes <- function( ##can save as ggplot object and add layers afterwards
     if ( (is.null(groupby.x) == TRUE) & (color.by %in% colnames(temp.annotations))) {
 
       if (facet.wrap == FALSE) {
-        if(is.raw.Ct==T){
-          (p <- ggplot(dat.to.plot, aes(x=variable,y=value,fill=cols, group=eval(parse(text=color.by))))+ geom_quasirandom(pch=21,color="black", dodge.width = 0.8, size=point.size, alpha = transparency) +
-             scale_fill_manual(values=colors) + #ggtitle(paste(list)) +
-             theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
-                                strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = legend.position,
-                                axis.title.y = element_text(size=20), axis.title.x=element_blank(), axis.text.x = element_text(size=axis.text.x.size)) + ylab("Raw Ct Value") + scale_y_reverse() )
-        }else{
-          (p <- ggplot(dat.to.plot, aes(x=variable,y=value,fill=cols, group=eval(parse(text=color.by))))+ geom_quasirandom(pch=21,color="black", dodge.width = 0.8, size=point.size, alpha = transparency) +
-             scale_fill_manual(values=colors) + #ggtitle(paste(list)) +
-             theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
-                                strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = legend.position,
-                                axis.title.y = element_text(size=20), axis.title.x=element_blank(), axis.text.x = element_text(size=axis.text.x.size)) + ylab("Normalized Expression Level") )
 
+        p <- ggplot(dat.to.plot, aes(x=variable,y=value,fill=cols, group=eval(parse(text=color.by))))+ geom_quasirandom(pch=21,color="black", dodge.width = 0.8, size=point.size, alpha = transparency) +
+          scale_fill_manual(values=colors) + labs(fill=color.by) +#ggtitle(paste(list)) +
+          theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
+                             strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = legend.position,
+                             axis.title.y = element_text(size=20), axis.title.x=element_blank(), axis.text.x = element_text(size=axis.text.x.size))
+
+        if(is.raw.Ct==T){
+          p <- p + ylab("Raw Ct Value") + scale_y_reverse()
+        }else{
+          p <- p + ylab("Normalized Expression Level")
         }
       }
 
       if (facet.wrap == TRUE) {
-        if(is.raw.Ct==T){
-          (p <- ggplot(dat.to.plot, aes(x=eval(parse(text=color.by)),y=value,fill=cols))+ geom_quasirandom(pch=21,color="black", dodge.width = 0.8, size=point.size, alpha = transparency) +
-             scale_fill_manual(values=colors) + #ggtitle(paste(list)) +
-             theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
-                                strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = legend.position,
-                                axis.title.y = element_text(size=20), axis.title.x=element_blank(), axis.text.x = element_text(size=axis.text.x.size)) + ylab("Raw Ct Value") + scale_y_reverse() +
-             facet_wrap(~variable, ncol=ncols, scales = scales) )
-        }else{
-          (p <- ggplot(dat.to.plot, aes(x=eval(parse(text=color.by)),y=value,fill=cols))+ geom_quasirandom(pch=21,color="black", dodge.width = 0.8, size=point.size, alpha = transparency) +
-             scale_fill_manual(values=colors) + #ggtitle(paste(list)) +
-             theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
-                                strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = legend.position,
-                                axis.title.y = element_text(size=20), axis.title.x=element_blank(), axis.text.x = element_text(size=axis.text.x.size)) + ylab("Normalized Expression Level") +
-             facet_wrap(~variable, ncol=ncols, scales = scales) )
 
+        p <- ggplot(dat.to.plot, aes(x=eval(parse(text=color.by)),y=value,fill=cols))+ geom_quasirandom(pch=21,color="black", dodge.width = 0.8, size=point.size, alpha = transparency) +
+          scale_fill_manual(values=colors) + labs(fill=color.by) +#ggtitle(paste(list)) +
+          theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
+                             strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = legend.position,
+                             axis.title.y = element_text(size=20), axis.title.x=element_blank(), axis.text.x = element_text(size=axis.text.x.size))
+
+        if(is.raw.Ct==T){
+          p <- p + ylab("Raw Ct Value") + scale_y_reverse() + facet_wrap(~variable, ncol=ncols, scales = scales)
+        }else{
+          p <- p + ylab("Normalized Expression Level") + facet_wrap(~variable, ncol=ncols, scales = scales)
         }
       }
-
     }
 
 
     if ((is.null(groupby.x) == FALSE)) {
       if (groupby.x != FALSE) {  ##group by specified grouping
+
         if (facet.wrap == FALSE) {
+
+          p <- ggplot(dat.to.plot, aes(x=variable,y=value,fill=cols, group=eval(parse(text=groupby.x))))+ geom_quasirandom(pch=21,color="black", dodge.width = 0.8, size=point.size, alpha = transparency) +
+            scale_fill_manual(values=colors) + labs(fill=color.by) +#ggtitle(paste(list)) +
+            theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
+                               strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = legend.position,
+                               axis.title.y = element_text(size=20), axis.title.x=element_blank(), axis.text.x = element_text(size=axis.text.x.size))
+
           if(is.raw.Ct==T){
-            (p <- ggplot(dat.to.plot, aes(x=variable,y=value,fill=cols, group=eval(parse(text=groupby.x))))+ geom_quasirandom(pch=21,color="black", dodge.width = 0.8, size=point.size, alpha = transparency) +
-               scale_fill_manual(values=colors) + #ggtitle(paste(list)) +
-               theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
-                                  strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = legend.position,
-                                  axis.title.y = element_text(size=20), axis.title.x=element_blank(), axis.text.x = element_text(size=axis.text.x.size)) + ylab("Raw Ct Value") + scale_y_reverse() )
+            p <- p + ylab("Raw Ct Value") + scale_y_reverse()
           }else{
-            (p <- ggplot(dat.to.plot, aes(x=variable,y=value,fill=cols, group=eval(parse(text=groupby.x))))+ geom_quasirandom(pch=21,color="black", dodge.width = 0.8, size=point.size, alpha = transparency) +
-               scale_fill_manual(values=colors) + #ggtitle(paste(list)) +
-               theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
-                                  strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = legend.position,
-                                  axis.title.y = element_text(size=20), axis.title.x=element_blank(), axis.text.x = element_text(size=axis.text.x.size)) + ylab("Normalized Expression Level") )
+            p <- p + ylab("Normalized Expression Level")
           }
         }
 
         if (facet.wrap == TRUE) {
-          if(is.raw.Ct==T){
-            (p <- ggplot(dat.to.plot, aes(x=eval(parse(text=groupby.x)),y=value,fill=cols,group=eval(parse(text=groupby.x))))+ geom_quasirandom(pch=21,color="black", dodge.width = 0.8, size=point.size, alpha = transparency) +
-               scale_fill_manual(values=colors) + #ggtitle(paste(list)) +
-               theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
-                                  strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = legend.position,
-                                  axis.title.y = element_text(size=20), axis.title.x=element_blank(), axis.text.x = element_text(size=axis.text.x.size)) + ylab("Raw Ct Value") + scale_y_reverse() +
-               facet_wrap(~variable, ncol=ncols, scales = scales) )
-          }else{
-            (p <- ggplot(dat.to.plot, aes(x=eval(parse(text=groupby.x)),y=value,fill=cols,group=eval(parse(text=groupby.x))))+ geom_quasirandom(pch=21,color="black", dodge.width = 0.8, size=point.size, alpha = transparency) +
-               scale_fill_manual(values=colors) + #ggtitle(paste(list)) +
-               theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
-                                  strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = legend.position,
-                                  axis.title.y = element_text(size=20), axis.title.x=element_blank(), axis.text.x = element_text(size=axis.text.x.size)) + ylab("Normalized Expression Level") +
-               facet_wrap(~variable, ncol=ncols, scales = scales) )
 
+          p <- ggplot(dat.to.plot, aes(x=eval(parse(text=groupby.x)),y=value,fill=cols,group=eval(parse(text=groupby.x))))+ geom_quasirandom(pch=21,color="black", dodge.width = 0.8, size=point.size, alpha = transparency) +
+            scale_fill_manual(values=colors) + labs(fill=color.by) +#ggtitle(paste(list)) +
+            theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
+                               strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = legend.position,
+                               axis.title.y = element_text(size=20), axis.title.x=element_blank(), axis.text.x = element_text(size=axis.text.x.size))
+
+          if(is.raw.Ct==T){
+            p <- p + ylab("Raw Ct Value") + scale_y_reverse() + facet_wrap(~variable, ncol=ncols, scales = scales)
+          }else{
+            p <- p + ylab("Normalized Expression Level") + facet_wrap(~variable, ncol=ncols, scales = scales)
           }
         }
+
       }else{  ##set to false, no grouping and no faceting
+
+        p <- ggplot(dat.to.plot, aes(x=variable,y=value,fill=cols))+ geom_quasirandom(pch=21,color="black", size=point.size, alpha = transparency) +
+          scale_fill_manual(values=colors) + labs(fill=color.by) +#ggtitle(paste(list)) +
+          theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
+                             strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = legend.position,
+                             axis.title.y = element_text(size=20), axis.title.x=element_blank(), axis.text.x = element_text(size=axis.text.x.size))
+
         if(is.raw.Ct==T){
-          (p <- ggplot(dat.to.plot, aes(x=variable,y=value,fill=cols))+ geom_quasirandom(pch=21,color="black", size=point.size, alpha = transparency) +
-             scale_fill_manual(values=colors) + #ggtitle(paste(list)) +
-             theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
-                                strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = legend.position,
-                                axis.title.y = element_text(size=20), axis.title.x=element_blank(), axis.text.x = element_text(size=axis.text.x.size)) + ylab("Raw Ct Value") + scale_y_reverse() )
+          p <- p + ylab("Raw Ct Value") + scale_y_reverse()
         }else{
-          (p <- ggplot(dat.to.plot, aes(x=variable,y=value,fill=cols))+ geom_quasirandom(pch=21,color="black", size=point.size, alpha = transparency) +
-             scale_fill_manual(values=colors) + #ggtitle(paste(list)) +
-             theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
-                                strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = legend.position,
-                                axis.title.y = element_text(size=20), axis.title.x=element_blank(), axis.text.x = element_text(size=axis.text.x.size)) + ylab("Normalized Expression Level") )
+          p <- p + ylab("Normalized Expression Level")
         }
       }
 
@@ -2092,7 +2042,6 @@ beeswarmGenes <- function( ##can save as ggplot object and add layers afterwards
   }
   return(p)
 }
-
 
 
 volcano <- function(
@@ -2109,7 +2058,7 @@ volcano <- function(
   show.genes = NULL,
   point.size = 2,
   transparency = 1,
-  legened.position = "right"
+  legend.position = "right"
 ){
 
   ####if data is not all samples, subset annotations appropriately
@@ -2148,7 +2097,7 @@ volcano <- function(
   names(pvals) <- rownames(data); names(log2foldchanges) <- rownames(data)
 
 
-  volcano.summary <- data.frame("LFC"=log2foldchanges,"FoldChange"=2^(log2foldchanges), pvals,"-log10pvals"=-log10(pvals))
+  volcano.summary <- data.frame("LFC"=log2foldchanges,"FoldChange"=2^(log2foldchanges), pvals,"neg-log10pvals"=-log10(pvals))
 
 
   group <- rep("No Sig",nrow(volcano.summary))
@@ -2164,7 +2113,7 @@ volcano <- function(
     mat <- cbind(mat, My.Genes)
   }
 
-  p <- ggplot(mat,aes(x=LFC, y=-log10(pvals), col=Color)) + geom_point(size=2) +
+  p <- ggplot(mat,aes(x=LFC, y=-log10(pvals), col=Color)) + geom_point(size=point.size, alpha = transparency) +
     theme(panel.grid = element_blank(), panel.background = element_rect(fill="white"), panel.border = element_rect(color = "black", fill=NA), strip.background = element_blank(),
           strip.text = element_text(size=25), axis.text.x = element_text(size=15), axis.text.y = element_text(size=15), axis.title = element_text(size=20), plot.title = element_text(size=15, hjust = 0.5), legend.position = legend.position) +
     xlab("Log2 Fold Change") + ylab("-log10(Pvalue)") + scale_color_manual(name = paste(paste0("FC.cut = ", FC.cut), paste0("Pval.cut = ", pval.cut), sep="\n"), values=c("Downregulated"=downreg.color,"Upregulated"=upreg.color,"No Sig"=nosig.color)) +
@@ -2189,22 +2138,22 @@ DensityGenes <- function(
   legend.position = "right"
 ){
 
-  if (exact == TRUE) {dat<-data[which(rownames(data) %in% list),]
-    if (length(dat) == 0 ) {stop('exact matches for list not found in rownames data')}
-    if (is.raw.Ct==F & na.fix!=F) {dat[which(is.na(dat))] <- (min(dat, na.rm=T)-na.fix)};if (is.raw.Ct==T & na.fix!=F) {dat[which(is.na(dat))]<- (max(dat, na.rm=T)+na.fix)}}
-  if (exact == FALSE) {dat<-data[grep(paste(list, collapse = "|"),rownames(data)),]
-    if (length(dat) == 0 ) {stop('inexact matches for list not found in rownames data')}
-    if (is.raw.Ct==F & na.fix!=F) {dat[which(is.na(dat))] <- (min(dat, na.rm=T)-na.fix)};if (is.raw.Ct==T & na.fix!=F) {dat[which(is.na(dat))]<- (max(dat, na.rm=T)+na.fix)}}
+  if (exact == TRUE) {dat<-data[which(rownames(data) %in% list),, drop = FALSE]
+  if (length(dat) == 0 ) {stop('exact matches for list not found in rownames data')}
+  if (is.raw.Ct==F & na.fix!=F) {dat[which(is.na(dat))] <- (min(dat, na.rm=T)-na.fix)};if (is.raw.Ct==T & na.fix!=F) {dat[which(is.na(dat))]<- (max(dat, na.rm=T)+na.fix)}}
+  if (exact == FALSE) {dat<-data[grep(paste(list, collapse = "|"),rownames(data)),, drop = FALSE]
+  if (length(dat) == 0 ) {stop('inexact matches for list not found in rownames data')}
+  if (is.raw.Ct==F & na.fix!=F) {dat[which(is.na(dat))] <- (min(dat, na.rm=T)-na.fix)};if (is.raw.Ct==T & na.fix!=F) {dat[which(is.na(dat))]<- (max(dat, na.rm=T)+na.fix)}}
 
 
   temp.annotations <- params$annotations
 
   if (color.by %in% colnames(temp.annotations)) {
 
-      if (sum(colnames(dat) %notin% rownames(temp.annotations)) != 0 ) {
-        stop('colnames of input data do not match rownames of annotations, cannot link annotations to data')
-      }
-      temp.annotations <- temp.annotations[match(colnames(dat), rownames(temp.annotations)),, drop = FALSE]
+    if (sum(colnames(dat) %notin% rownames(temp.annotations)) != 0 ) {
+      stop('colnames of input data do not match rownames of annotations, cannot link annotations to data')
+    }
+    temp.annotations <- temp.annotations[match(colnames(dat), rownames(temp.annotations)),, drop = FALSE]
 
 
     dat.to.plot <- data.frame(t(dat)); dat.to.plot <- cbind(dat.to.plot, temp.annotations)
@@ -2217,22 +2166,19 @@ DensityGenes <- function(
       colors <- params$annot_cols[[which(names(params$annot_cols) == color.by)]]
     }else{
       cols <- as.factor(dat.to.plot[,which(colnames(dat.to.plot) == color.by)])
-      colors <- hue_pal()(length(levels(cols)))
+      colors <- scales::hue_pal()(length(levels(cols)))
     }
 
-    if(is.raw.Ct==T){
-      p <- ggplot(dat.to.plot, aes(x=value,fill=cols, group=eval(parse(text = color.by))))+ geom_density(alpha = transparency) + facet_wrap(~variable, ncol=ncols, scales=scales) +
-        scale_fill_manual(values=colors) + #ggtitle(paste(list)) +
-        theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
-                           strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = legend.position,
-                           axis.title = element_text(size=20)) + xlab("Raw Ct Value") + ylab("Denstiy") + scale_y_reverse()
-    }else{
-      p <- ggplot(dat.to.plot, aes(x=value,fill=cols, group=eval(parse(text = color.by))))+ geom_density(alpha = transparency) +  facet_wrap(~variable, ncol=ncols, scales=scales) +
-        scale_fill_manual(values=colors) + #ggtitle(paste(list)) +
-        theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
-                           strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = legend.position,
-                           axis.title = element_text(size=20), axis.text.x = element_text(size=15)) + xlab("Normalized Expression Level") +ylab("Density")
+    p <- ggplot(dat.to.plot, aes(x=value,fill=cols, group=eval(parse(text = color.by))))+ geom_density(alpha = transparency) + facet_wrap(~variable, ncol=ncols, scales=scales) +
+      scale_fill_manual(values=colors) + labs(fill=color.by) + #ggtitle(paste(list)) +
+      theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
+                         strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = legend.position,
+                         axis.title = element_text(size=20), axis.text.x = element_text(size = 15))
 
+    if(is.raw.Ct==T){
+      p <- p + xlab("Raw Ct Value") + ylab("Denstiy") + scale_y_reverse()
+    }else{
+      p <- p + xlab("Normalized Expression Level") + ylab("Density")
     }
   } else{ cols <- color.by; colors <- color.by
 
@@ -2241,22 +2187,22 @@ DensityGenes <- function(
   dat.to.plot <- melt(dat.to.plot, id.vars = colnames(temp.annotations))
   suppressWarnings(if (is.na(temp.annotations) == TRUE) {
     dat.to.plot <- dat.to.plot[-which(dat.to.plot$variable == "temp.annotations"),]
-    })
+  })
+
+  p <- ggplot(dat.to.plot, aes(x=value,fill=cols))+ geom_density(alpha = transparency) + facet_wrap(~variable, ncol=ncols, scales=scales) +
+    scale_fill_manual(values=colors) + #ggtitle(paste(list)) +
+    theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
+                       strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = legend.position,
+                       axis.title = element_text(size=20), axis.text.x = element_text(size = 15))
 
   if(is.raw.Ct==T){
-    p <- ggplot(dat.to.plot, aes(x=value,fill=cols))+ geom_density(alpha = transparency) + facet_wrap(~variable, ncol=ncols, scales=scales) +
-      scale_fill_manual(values=colors) + #ggtitle(paste(list)) +
-      theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
-                         strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = legend.position,
-                         axis.title = element_text(size=20)) + xlab("Raw Ct Value") + ylab("Denstiy") + scale_y_reverse()
+    p <- p + xlab("Raw Ct Value") + ylab("Denstiy") + scale_y_reverse()
   }else{
-    p <- ggplot(dat.to.plot, aes(x=value,fill=cols))+ geom_density(alpha = transparency) +  facet_wrap(~variable, ncol=ncols, scales=scales) +
-      scale_fill_manual(values=colors) + #ggtitle(paste(list)) +
-      theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
-                         strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = legend.position,
-                         axis.title = element_text(size=20), axis.text.x = element_text(size=15)) + xlab("Normalized Expression Level") +ylab("Density")
+    p <- p + xlab("Normalized Expression Level") + ylab("Density")
 
-  }}
+  }
+  }
   return(p)
 }
+
 

@@ -8,7 +8,11 @@ Create a Scatter Plot Between Two Genes
 Creates a scatter plot between two genes within a supplied data matrix. Many customizable options to color according to expression levels or annotations.
 }
 \usage{
-scatterGenes(data, gene1, gene2, is.raw.Ct = FALSE, na.fix = 2, color.by = "blue", custom.color.vec = FALSE, xlimits = FALSE, ylimits = FALSE, squish1 = FALSE, squish2 = FALSE, point.size = 5, transparency = 1,legend.position = "none", percent.mad = 0.5)
+scatterGenes(data, gene1, gene2, custom.x = FALSE, custom.y = FALSE,
+  is.raw.Ct = FALSE, na.fix = 2, color.by = "blue",
+  custom.color.vec = FALSE, xlimits = FALSE, ylimits = FALSE, squish1 = FALSE,
+  squish2 = FALSE, point.size = 5, transparency = 1,legend.position = "none",
+  percent.mad = 0.5)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -20,6 +24,12 @@ first gene to be plotted, must be present in rownames of input data
 }
   \item{gene2}{
 second gene to be plotted, must be present in rownames of input data
+}
+  \item{custom.x}{
+custom values to be plotted on the x axis, MUST be same length and order as input data. If both custom.x and custom.y are supplied and the user wishes to color by annotation (example if tSNE coordiates are being supplied), must provide accompanying data matrix so that annotations can be properly subsetted. If wishing to use as simple scatterplot without coloring linked to annotations or expression levels, set data = NULL.
+}
+  \item{custom.y}{
+custom values to be plotted on the y axis, MUST be same length and order as input data. If both custom.x and custom.y are supplied and the user wishes to color by annotation (example if tSNE coordiates are being supplied), must provide accompanying data matrix so that annotations can be properly subsetted. If wishing to use as simple scatterplot without coloring linked to annotations or expression levels, set data = NULL.
 }
   \item{is.raw.Ct}{
 logical: If set to TRUE, will reverse the scale of the data to indicate low values as high expression as in the case of raw Ct values from qPCR, in this case, missing values will also be set to a high value to reflect low expression level.

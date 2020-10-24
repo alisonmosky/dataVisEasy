@@ -8,7 +8,9 @@ Extract the clusters from a Clustered Heatmap
 Provided a clustered heatmap, and a number of groups the dendrogram should be split into, will return a vector detailing which genes/samples are in each cluster. Particularly helpful after setting row.groups or column.groups in the heatmap functions and the groupings of the genes or samples in these groups need to be identified.
 }
 \usage{
-extractClusters(data, heatmap, extractGenes = FALSE, GeneGroup_Name = NULL, extractSamples = TRUE, SampleGroup_Name = NULL, num_Gene.groups = 5, num_Sample.groups = 5, all.genes = NULL, all.samples = NULL)
+extractClusters(data, heatmap, extractGenes = FALSE, GeneGroup_Name = NULL,
+  extractSamples = TRUE, SampleGroup_Name = NULL, num_Gene.groups = 5,
+  num_Sample.groups = 5, all.genes = NULL, all.samples = NULL)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{

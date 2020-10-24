@@ -1,0 +1,410 @@
+library(pheatmap)
+library(pcaMethods)
+library(ggplot2)
+library(cluster)
+library(gtools)
+library(ggbeeswarm)
+library(rgl)
+library(reshape2)
+library(VennDiagram)
+library(RColorBrewer)
+library(tidyr)
+library(plotrix)
+library(plyr)
+library(dplyr)
+library(clusterProfiler)
+library(DOSE)
+library(openxlsx)
+library(RColorBrewer)
+futile.logger::flog.threshold(futile.logger::ERROR, name = "VennDiagramLogger")
+
+
+prefix <- "D://"
+
+# source(paste0(prefix,"/Dropbox (SBG)/SHR-Work/Alison-DataVis-Package/Package-Code5.R"))
+library(dataVisEasy)
+source(paste0(prefix,"/Dropbox (SBG)/SHR-Work/Alison-DataVis-Package/Extra_Functions.R"))
+
+
+###################################
+####Import Info for Each Region####
+###################################
+
+###import NTS
+{NTS.LFC <- read.table("D://Dropbox (SBG)/SHR-Work/NTS-Analysis/Exp_analysis/DESEQ/Results-filtered-deseq/NTS_LFC_All_Contrasts.txt", sep = "\t", header = T);rownames(NTS.LFC) <- gsub("\\.","-", rownames(NTS.LFC))
+NTS.Q <- read.table("D://Dropbox (SBG)/SHR-Work/NTS-Analysis/Exp_analysis/DESEQ/Results-filtered-deseq/NTS_Q-Value_Adjusted_rld3.5_cut_All_Contrasts.txt", sep = "\t", header = T);rownames(NTS.Q) <- gsub("\\.","-", rownames(NTS.Q))
+
+NTS <- read.table(paste0(prefix,"/Dropbox (SBG)/SHR-Work/NTS-Analysis/Exp_analysis/DESEQ/Results-filtered-deseq/NTS_rld_table.txt"), sep="\t", header=T); colnames(NTS) <- gsub("\\.","-", colnames(NTS)); rownames(NTS) <- gsub("\\.","-", rownames(NTS))
+NTS.Z.sep <- read.table("D://Dropbox (SBG)/SHR-Work/NTS-Analysis/Exp_analysis/Stacking/NTS_Zscore_Strain_Separate.txt", sep="\t", header=T); colnames(NTS.Z.sep) <- gsub("\\.","-", colnames(NTS.Z.sep)); rownames(NTS.Z.sep) <- gsub("\\.","-", rownames(NTS.Z.sep))
+NTS.Z.tog <- read.table("D://Dropbox (SBG)/SHR-Work/NTS-Analysis/Exp_analysis/Stacking/NTS_Zscore_together.txt", sep="\t", header=T); colnames(NTS.Z.tog) <- gsub("\\.","-", colnames(NTS.Z.tog)); rownames(NTS.Z.tog) <- gsub("\\.","-", rownames(NTS.Z.tog))
+
+NTS.stack.sep <- read.table("D://Dropbox (SBG)/SHR-Work/NTS-Analysis/Exp_analysis/Stacking/NTS_Zscore_Strain_Separate_Comb.txt", sep="\t", header=T); colnames(NTS.stack.sep) <- gsub("\\.","-", colnames(NTS.stack.sep)); rownames(NTS.stack.sep) <- gsub("\\.","-", rownames(NTS.stack.sep))
+NTS.stack.tog <- read.table("D://Dropbox (SBG)/SHR-Work/NTS-Analysis/Exp_analysis/Stacking/NTS_Zscore_together_Comb.txt", sep="\t", header=T); colnames(NTS.stack.tog) <- gsub("\\.","-", colnames(NTS.stack.tog)); rownames(NTS.stack.tog) <- gsub("\\.","-", rownames(NTS.stack.tog))
+
+#NTS.annots <- read.csv("D://Dropbox (SBG)/SHR-Work/NTS-Analysis/Exp_analysis/NTS_Sample_Annotations.csv", row.names = 1); NTS.annots$Age <- gsub("8","08",NTS.annots$Age) %>% as.factor(); NTS.annots$Strain <- factor(NTS.annots$Strain, levels=c("W","S","Both"))
+}
+
+###import RVLM
+{RVLM.LFC <- read.table("D://Dropbox (SBG)/SHR-Work/RVLM-Analysis/Exp_analysis/DESEQ/Results/RVLM_LFC_All_Contrasts.txt", sep = "\t", header = T);rownames(RVLM.LFC) <- gsub("\\.","-", rownames(RVLM.LFC))
+RVLM.Q <- read.table("D://Dropbox (SBG)/SHR-Work/RVLM-Analysis/Exp_analysis/DESEQ/Results/RVLM_Q-Value_Adjusted_rld3.5_cut_All_Contrasts.txt", sep = "\t", header = T);rownames(RVLM.Q) <- gsub("\\.","-", rownames(RVLM.Q))
+
+RVLM <- read.table(paste0(prefix,"/Dropbox (SBG)/SHR-Work/RVLM-Analysis/Exp_analysis/DESEQ/Results/RVLM_rld_table.txt"), sep="\t", header=T); colnames(RVLM) <- gsub("\\.","-", colnames(RVLM)); rownames(RVLM) <- gsub("\\.","-", rownames(RVLM))
+RVLM.Z.sep <- read.table("D://Dropbox (SBG)/SHR-Work/RVLM-Analysis/Exp_analysis/RVLM_Zscore_Strain_Separate.txt", sep="\t", header=T); colnames(RVLM.Z.sep) <- gsub("\\.","-", colnames(RVLM.Z.sep)); rownames(RVLM.Z.sep) <- gsub("\\.","-", rownames(RVLM.Z.sep))
+RVLM.Z.tog <- read.table("D://Dropbox (SBG)/SHR-Work/RVLM-Analysis/Exp_analysis/RVLM_Zscore_together.txt", sep="\t", header=T); colnames(RVLM.Z.tog) <- gsub("\\.","-", colnames(RVLM.Z.tog)); rownames(RVLM.Z.tog) <- gsub("\\.","-", rownames(RVLM.Z.tog))
+
+RVLM.stack.sep <- read.table("D://Dropbox (SBG)/SHR-Work/RVLM-Analysis/Exp_analysis/RVLM_Zscore_Strain_Separate_Comb.txt", sep="\t", header=T); colnames(RVLM.stack.sep) <- gsub("\\.","-", colnames(RVLM.stack.sep)); rownames(RVLM.stack.sep) <- gsub("\\.","-", rownames(RVLM.stack.sep))
+RVLM.stack.tog <- read.table("D://Dropbox (SBG)/SHR-Work/RVLM-Analysis/Exp_analysis/RVLM_Zscore_Strain_Together_Comb.txt", sep="\t", header=T); colnames(RVLM.stack.tog) <- gsub("\\.","-", colnames(RVLM.stack.tog)); rownames(RVLM.stack.tog) <- gsub("\\.","-", rownames(RVLM.stack.tog))
+
+#RVLM.annots <- read.csv("D://Dropbox (SBG)/SHR-Work/RVLM-Analysis/Exp_analysis/RVLM_Sample_Annotations.csv", row.names = 1); RVLM.annots$Age <- gsub("8","08",RVLM.annots$Age) %>% as.factor(); RVLM.annots$Strain <- factor(RVLM.annots$Strain, levels=c("W","S"))
+}
+
+
+###import CVLM
+{CVLM.LFC <- read.table("D://Dropbox (SBG)/SHR-Work/CVLM-Analysis/Exp_analysis/DESEQ/Results/CVLM_LFC_All_Contrasts.txt", sep = "\t", header = T);rownames(CVLM.LFC) <- gsub("\\.","-", rownames(CVLM.LFC))
+CVLM.Q <- read.table("D://Dropbox (SBG)/SHR-Work/CVLM-Analysis/Exp_analysis/DESEQ/Results/CVLM_Q-Value_Adjusted_rld3.5_cut_All_Contrasts.txt", sep = "\t", header = T);rownames(CVLM.Q) <- gsub("\\.","-", rownames(CVLM.Q))
+
+CVLM <- read.table(paste0(prefix,"/Dropbox (SBG)/SHR-Work/CVLM-Analysis/Exp_analysis/DESEQ/Results/CVLM_rld_table.txt"), sep="\t", header=T); colnames(CVLM) <- gsub("\\.","-", colnames(CVLM)); rownames(CVLM) <- gsub("\\.","-", rownames(CVLM))
+CVLM.Z.sep <- read.table("D://Dropbox (SBG)/SHR-Work/CVLM-Analysis/Exp_analysis/CVLM_Zscore_Strain_Separate.txt", sep="\t", header=T); colnames(CVLM.Z.sep) <- gsub("\\.","-", colnames(CVLM.Z.sep)); rownames(CVLM.Z.sep) <- gsub("\\.","-", rownames(CVLM.Z.sep))
+CVLM.Z.tog <- read.table("D://Dropbox (SBG)/SHR-Work/CVLM-Analysis/Exp_analysis/CVLM_Zscore_together.txt", sep="\t", header=T); colnames(CVLM.Z.tog) <- gsub("\\.","-", colnames(CVLM.Z.tog)); rownames(CVLM.Z.tog) <- gsub("\\.","-", rownames(CVLM.Z.tog))
+
+CVLM.stack.sep <- read.table("D://Dropbox (SBG)/SHR-Work/CVLM-Analysis/Exp_analysis/CVLM_Zscore_Strain_Separate_Comb.txt", sep="\t", header=T); colnames(CVLM.stack.sep) <- gsub("\\.","-", colnames(CVLM.stack.sep)); rownames(CVLM.stack.sep) <- gsub("\\.","-", rownames(CVLM.stack.sep))
+CVLM.stack.tog <- read.table("D://Dropbox (SBG)/SHR-Work/CVLM-Analysis/Exp_analysis/CVLM_Zscore_Strain_Together_Comb.txt", sep="\t", header=T); colnames(CVLM.stack.tog) <- gsub("\\.","-", colnames(CVLM.stack.tog)); rownames(CVLM.stack.tog) <- gsub("\\.","-", rownames(CVLM.stack.tog))
+
+#CVLM.annots <- read.csv("D://Dropbox (SBG)/SHR-Work/CVLM-Analysis/Exp_analysis/CVLM_Sample_Annotations.csv", row.names = 1); CVLM.annots$Age <- gsub("8","08",CVLM.annots$Age) %>% as.factor(); CVLM.annots$Strain <- factor(CVLM.annots$Strain, levels=c("W","S"))
+}
+
+
+##Import Common Items and set Annotations####
+full <- read.table("All_Brainstem_rld_table.txt", sep="\t", header=T); colnames(full) <- gsub("\\.","-", colnames(full))
+full.Z <- read.table("All_Brainstem_Zscored_table.txt", sep = "\t", header = T); colnames(full.Z) <- gsub("\\.","-", colnames(full.Z))
+
+all.compact.1.5 <- read.table("All_COMPACT_Assignments_Qval_0.2_FC_1.5.txt", sep="\t", header=T)
+all.compact.2 <- read.table("All_COMPACT_Assignments_Qval_0.2_FC_2.txt", sep="\t", header=T)
+
+all.annots <- read.csv("D://Dropbox (SBG)/SHR-Work/Integration/All_Brainstem_Annotations.csv", row.names = 1); all.annots$Age <- gsub("8","08",all.annots$Age) %>% as.factor(); all.annots$Strain <- factor(all.annots$Strain, levels=c("W","S", "Both"))
+
+
+
+age.cols.stack <- brewer.pal(5,"Set1"); names(age.cols.stack) <- levels(all.annots$Age)
+region.cols <- brewer.pal(3, "Paired"); names(region.cols) <- c("NTS","RVLM","CVLM")
+annot_cols.stack <- list('Strain'=c('W'='blue', 'S'='red', 'Both'='purple'), 'Age'=c(age.cols.stack), 'Region'= c(region.cols))
+
+initiate_params(parameters)
+set_annotations(all.annots)
+set_annot_samps(c("Region","Strain","Age"))
+set_annot_cols(annot_cols.stack)
+
+
+##########################
+####Cell-Type-Specific####
+##########################
+cell.types.full <- read.csv("D://Dropbox (SBG)/SHR-Work/Integration/Cell_Type_Reference_Table.csv")
+cell.types <- cell.types.full[!is.na(cell.types.full$Name),]
+
+astro.genes <- cell.types$Name[!is.na(cell.types$Fold.Enriched.In.Astrocytes)]
+neuron.genes <- cell.types$Name[!is.na(cell.types$Fold.Enriched.In.Neurons) ]
+oligo.genes <- cell.types$Name[!is.na(cell.types$Fold.Enriched.In.Oligodendrocytes)]
+
+annot_cell_types <- data.frame(Cell_Type=cell.types$Cell_Type, stringsAsFactors = T); rownames(annot_cell_types) <- cell.types$Name
+annot_cols.Cell_Type <- c('None'='white', 'Neurons'='dodgerblue', 'Astrocytes'='purple4', 'Oligodendrocytes'='hotpink')
+
+update_annot_cols("Cell_Type",values.list = annot_cols.Cell_Type)
+
+gene_annots <- annot_cell_types
+gene_annots$Significant_NTS <- "Not-Sig"; gene_annots$Significant_NTS[which(rownames(gene_annots) %in% rownames(all.compact.1.5)[which(!is.na(all.compact.1.5$NTS.Strain))])] <- "Q < 0.2"
+gene_annots$Significant_RVLM <- "Not-Sig"; gene_annots$Significant_RVLM[which(rownames(gene_annots) %in% rownames(all.compact.1.5)[which(!is.na(all.compact.1.5$RVLM.Strain))])] <- "Q < 0.2"
+gene_annots$Significant_CVLM <- "Not-Sig"; gene_annots$Significant_CVLM[which(rownames(gene_annots) %in% rownames(all.compact.1.5)[which(!is.na(all.compact.1.5$CVLM.Strain))])] <- "Q < 0.2"
+
+set_annotations.genes(gene_annots)
+set_annot_genes()
+update_annot_cols("Significant_NTS", c('Not-Sig'='white', 'Q < 0.2' = 'green3')); update_annot_cols("Significant_RVLM", c('Not-Sig'='white', 'Q < 0.2' = 'green2')); update_annot_cols("Significant_CVLM", c('Not-Sig'='white', 'Q < 0.2' = 'green4'))
+
+
+
+#####
+
+list <- rownames(all.compact)[which(!is.na(all.compact$NTS.WKY.ID))]
+list <- rownames(all.compact)[which(colsplit(rownames(all.compact),"_",c("ENS","Gene"))$Gene %in% list.of.interest)]
+list <- rownames(all.compact)[grep(paste(list.of.interest, collapse="|"),colsplit(rownames(all.compact),"_",c("ENS","Gene"))$Gene)]
+
+Project_Compact(list, "NTS")
+
+################
+####Heatmaps####
+################
+
+
+to.use <- NTS.Z.sep
+gene.list <- list
+
+myHeatmap(as.matrix(NTS.stack.tog), gene.list, clust.cols = F)
+myHeatmapByAnnotation(to.use, gene.list, groupings = c("Age",  "Strain"), gaps.col.spec = annot.gaps )
+
+
+myHeatmapByAnnotation(as.matrix(NTS.med), c("Agt","Ace","Pik3r","Cybb","Cyba","Nox","Mapk"), exact=F, groupings = c("Age",  "Strain"))
+myHeatmapByAnnotation(NTS.Z.tog, c("Agt","Ace","Pik3r","Cybb","Cyba","Nox","Mapk"), exact=F, groupings = c("Age",  "Strain"), gaps.col.spec = annot.gaps )
+myHeatmapByAnnotation(NTS.stack.tog, c("Agt","Ace","Pik3r","Cybb","Cyba","Nox","Mapk"), exact=F, groupings = c("Age",  "Strain"), gaps.col.spec = c(5,5,5) )
+
+
+##########################################
+####compare differences at time points####
+##########################################
+
+q.cut <- 0.2
+region <- "NTS"
+dat <- eval(parse(text=paste0(region,".Q")))
+
+w8 <- rownames(dat)[which(dat$WS.08 < q.cut)]
+w10 <- rownames(dat)[which(dat$WS.10 < q.cut)]
+w12 <- rownames(dat)[which(dat$WS.12 < q.cut)]
+w16 <- rownames(dat)[which(dat$WS.16 < q.cut)]
+w24 <- rownames(dat)[which(dat$WS.24 < q.cut)]
+
+venn.plot <- venn.diagram(x=list(w8, w10, w12, w16, w24),
+                          category.names = c(paste("Week8 (",length(w8),")"),paste("Week10 (",length(w10),")"),
+                                             paste("Week12 (",length(w12),")"), paste("Week16 (", length(w16), ")"),
+                                             paste("Week24 (", length(w24),")")),
+                          filename = NULL, fill=brewer.pal(5,"Set1"), alpha=0.2, main = paste("Sig Genes Across Time in", region," Q <", q.cut))
+grid.draw(rectGrob()); grid.draw(venn.plot)
+
+overlaps.age <- calculate.overlap(x=list(w8,w10,w12,w16,w24))
+w8.alone <- overlaps.age$a1
+w10.alone <- overlaps.age$a2
+w12.alone <- overlaps.age$a3
+w16.alone <- overlaps.age$a4
+w24.alone <- overlaps.age$a5
+all.times <- overlaps.age$a31
+
+###dig in to 10 week timepoint
+w.10.LFC <- NTS.LFC[which(rownames(NTS.LFC) %in% w10),]
+hist(w.10.LFC$WS.10, xlim = c(-5,5), breaks = 100, ylim=c(0,100))
+
+LFC.cut <- log2(1.5)
+w.10.LFC.cut <- rownames(w.10.LFC)[which(abs(w.10.LFC$WS.10) > LFC.cut)]
+
+
+########################
+####Plot Line Graphs####
+########################
+
+dat.to.use <- NTS
+list <- rownames(NTS)[1:12]
+
+plot.genes(NTS, list)
+
+plot.genes.all.regions(full, list)
+
+
+########################
+####Pathway Analysis####
+########################
+which.list <- "rownames(strain.mirna.negcor)"
+
+input_ids <- colsplit(eval(parse(text=which.list)), "_", c("ENS","Gene"))$ENS
+
+#Convert Ensemble to GENE name and Entrez
+new_ids <- bitr(input_ids, fromType = 'ENSEMBL', toType = c('SYMBOL', 'ENTREZID'), OrgDb = 'org.Rn.eg.db')
+
+#Over-representation test
+#RUN enrichGO - For COMPACT analysis, the full gene list (AllGeneList) is the background gene list, *******
+go_enrich <- enrichGO(gene = new_ids$ENTREZID,
+                      OrgDb = org.Rn.eg.db,
+                      keyType = 'ENTREZID',
+                      ont = "ALL",
+                      #pAdjustMethod = c("bonferroni", "BH"),
+                      pAdjustMethod = "BH",
+                      #universe = names(AllGeneList),
+                      pvalueCutoff = 0.25,
+                      qvalueCutoff = 0.25,
+                      readable = TRUE)
+
+
+#enrich_summary <- as.data.frame(go_enrich@result); write.table(enrich_summary,paste0("Gene_Enrichment_Lists/Enrich_Summary_",groupname,".txt"), sep="\t", quote=F)
+dotplot(go_enrich, x="count", split = NULL, showCategory=30,  font.size = 10, title=paste("Significant Genes for", which.list))
+
+
+###################################
+####Pull out Genes from Pathway####
+###################################
+
+all.paths <- read.xlsx("D://Dropbox (SBG)/SHR-Work/Integration/GO_Pathways_Full_Enrichment_Summary.xlsx",sheet = 1)
+
+descrip <- c("GTPase")
+
+poi <- all.paths[grep(descrip,all.paths$Description),]
+
+poi <- all.paths[grep(paste(descrip,collapse = "|"),all.paths$Description),]
+
+#poi.genes <- strsplit(as.character(poi$geneID),"/")
+poi.genes <- strsplit(as.character(poi$geneID),"/") %>% purrr::reduce(c) %>% unique()
+
+###########################################
+####Pull out Genes from Gene Annotation####
+###########################################
+
+gene.annots <- read.xlsx("D://Dropbox (SBG)/SHR-Work/Integration/All_Gene_Annotations.xlsx",sheet = 1, rowNames = T)
+
+##description
+descrip <- c("ion channel", "^cation" ,"calcium", "potassium","chloride","sodium")
+
+gene.hits.table <- gene.annots[grep(descrip, gene.annots$description), ]
+gene.hits.table <- gene.annots[grep(paste(descrip,collapse = "|"), gene.annots$description),]
+
+gene.hits <- as.character(gene.hits.table$Name)
+
+##gene
+abbr <- c("Kcn","Cac","Scn")
+gene.hits.table <- gene.annots[grep(paste(abbr,collapse = "|"), gene.annots$gene_name),]
+gene.hist <- as.character(gene.hits.table$Name)
+
+
+
+#####################
+####miRNA Network####
+#####################
+miR.network <- read.csv("D://Dropbox (SBG)/SHR-Work/Integration/Summary_miR_Network_34c_204_NTS.csv")
+list <- miR.network$Name[which(miR.network$miRNA == "rno-miR-204-5p"  & miR.network$Cell_Type=="Neuron")] %>% unique()  #
+list <- miR.network$Name[which(miR.network$miRNA == "rno-miR-34c-5p"  & miR.network$Cell_Type=="Astrocyte")] %>% unique()  #
+
+list <- miR.network$Name[which((miR.network$Cell_Type == "Astrocyte" | miR.network$Cell_Type == "Neuron") & (miR.network$Reduced < 0.05 | miR.network$Full < 0.05))] %>% unique()
+
+spec.cells <- miR.network[which((miR.network$Cell_Type == "Astrocyte" | miR.network$Cell_Type == "Neuron")),]
+
+####
+miR.targets <- read.table("D://Dropbox (SBG)/SHR-Work/SHR-Work-2019/NTS_analysis/mIR-Analysis/Network_Cytoscape/Full_miRNA_Nework.txt", sep="\t", header=T)
+mir.t <- as.character(unique(miR.targets$Gene))
+
+miR.targets2 <- read.csv("D://Dropbox (SBG)/SHR-Work/miRNA-Analysis/NTS/miR204_34c_Targets.csv", header = T)  ###this is only from the network....been filtered
+network.genes <- as.character(unique(miR.targets2$Gene))
+
+
+gene.list <- list[which(list %in% spec.cells$Name[which(spec.cells$Cell_Type=="Neuron")])]
+########################################################
+####Cross Section Pathway, Cell-types, miRs, COMPACT####
+########################################################
+
+##examples
+###immune related genes
+descrip <- c("immun","inflamm" ,"leuk","cytokine-","cytokine ", "T cell", "B cell")
+immune.genes <- poi.genes
+immune.astro.genes <- immune.genes[immune.genes %in% colsplit(astro.genes, "_", c("ENS","Gene"))$Gene]
+immune.astro.mir34c.genes <- immune.astro.genes[immune.astro.genes %in% miR.network$Gene[which(miR.network$miRNA == "rno-miR-34c-5p")]]
+
+##compact for immune.genes and subset
+subset.immune <- all.compact[which(colsplit(rownames(all.compact), "_", c("ENS","Gene"))$Gene %in% immune.genes),]
+
+immune.poscor <- c( rownames(subset.immune)[grep("s01", subset.immune$NTS.SHR.Strain.ID)], rownames(subset.immune)[grep("s1", subset.immune$NTS.SHR.Time.ID)]) %>% unique()
+immune.negcor <- c( rownames(subset.immune)[grep("s0-1", subset.immune$NTS.SHR.Strain.ID)], rownames(subset.immune)[grep("s-1", subset.immune$NTS.SHR.Time.ID)]) %>% unique()
+
+immune.negcor[colsplit(immune.negcor,"_", c("ENS","Gene"))$Gene %in% immune.astro.genes]
+immune.negcor[colsplit(immune.negcor,"_", c("ENS","Gene"))$Gene %in% immune.astro.mir34c.genes]
+
+immune.poscor[colsplit(immune.poscor,"_", c("ENS","Gene"))$Gene %in% immune.astro.genes]
+immune.poscor[colsplit(immune.poscor,"_", c("ENS","Gene"))$Gene %in% immune.astro.mir34c.genes]
+
+
+
+###ion channel and excitatory genes
+descrip <- c("immun","inflamm" ,"leuk","cytokine-","cytokine ", "T cell", "B cell")
+ion.genes <- poi.genes
+ion.neuron.genes <- ion.genes[ion.genes %in% colsplit(neuron.genes,"_", c("ENS","Gene"))$Gene]
+ion.neuron.mir204.genes <- ion.neuron.genes[ion.neuron.genes %in% miR.network$Gene[which(miR.network$miRNA == "rno-miR-204-5p")]]
+
+##compact for ion.genes and subset
+subset.ion <- all.compact[which(colsplit(rownames(all.compact), "_", c("ENS","Gene"))$Gene %in% ion.genes),]
+
+ion.poscor <- c( rownames(subset.ion)[grep("s01", subset.ion$NTS.SHR.Strain.ID)], rownames(subset.ion)[grep("s1", subset.ion$NTS.SHR.Time.ID)]) %>% unique()
+ion.negcor <- c( rownames(subset.ion)[grep("s0-1", subset.ion$NTS.SHR.Strain.ID)], rownames(subset.ion)[grep("s-1", subset.ion$NTS.SHR.Time.ID)]) %>% unique()
+
+ion.negcor[colsplit(ion.negcor,"_", c("ENS","Gene"))$Gene %in% ion.neuron.genes]
+ion.negcor[colsplit(ion.negcor,"_", c("ENS","Gene"))$Gene %in% ion.neuron.mir204.genes]
+
+ion.poscor[colsplit(ion.poscor,"_", c("ENS","Gene"))$Gene %in% ion.neuron.genes]
+ion.poscor[colsplit(ion.poscor,"_", c("ENS","Gene"))$Gene %in% ion.neuron.mir204.genes]
+
+
+###set up matrix for heatmap, negative correlations
+immune.negcor.astro <- immune.negcor[colsplit(immune.negcor,"_", c("ENS","Gene"))$Gene %in% immune.astro.genes]
+immune.negcor.noastro <- immune.negcor[immune.negcor %notin% immune.negcor.astro]
+
+ion.negcor.neuron <- ion.negcor[colsplit(ion.negcor,"_", c("ENS","Gene"))$Gene %in% ion.neuron.genes]
+ion.negcor.noneuron <- ion.negcor[ion.negcor %notin% ion.negcor.neuron]
+
+annot_negcor_immune <- data.frame(Gene = c(immune.negcor.astro, immune.negcor.noastro),
+                                  Group=c(rep("Immune-Astro", length(immune.negcor.astro)), rep("Immune", length(immune.negcor.noastro))), stringsAsFactors = T)
+rownames(annot_negcor_immune) <- annot_negcor_immune$Gene
+annot_negcor_immune <- annot_negcor_immune[order(annot_negcor_immune$Gene),]
+
+annot_negcor_ion <- data.frame(Gene = c(ion.negcor.neuron, ion.negcor.noneuron),
+                               Group=c(rep("Ion-Neuron", length(ion.negcor.neuron)), rep("Ion", length(ion.negcor.noneuron))), stringsAsFactors = T)
+rownames(annot_negcor_ion) <- annot_negcor_ion$Gene
+annot_negcor_ion <- annot_negcor_ion[order(annot_negcor_ion$Gene),]
+
+
+
+imneg <- separateBygroup(NTS.Z.sep[which(rownames(NTS.Z.sep) %in% immune.negcor),], groupings=makefactorgroup(annot_samp.full, "Age","Strain"),
+                         groupings.gene = annot_negcor_immune$Group, main="Immune-Related Genes, Negative Correlation", gaps.col.spec = annot.gaps, show.colnames = T)
+imneg.mat <- ExtractMatrix(data=(NTS.Z.sep[which(rownames(NTS.Z.sep) %in% immune.negcor),]), heatmap=imneg, clustered.cols = F)
+
+ionneg <- separateBygroup(NTS.Z.sep[which(rownames(NTS.Z.sep) %in% ion.negcor),], groupings=makefactorgroup(annot_samp.full, "Age","Strain"),
+                          groupings.gene = annot_negcor_ion$Group, main="Ion-Related Genes, Negative Correlation", gaps.col.spec = annot.gaps, show.colnames = T)
+
+ionneg.mat <- ExtractMatrix(data=(NTS.Z.sep[which(rownames(NTS.Z.sep) %in% ion.negcor),]), heatmap=ionneg, clustered.cols = F)
+
+negcor.mat <- rbind(imneg.mat, ionneg.mat)
+neg.cor.annot <- rbind(annot_negcor_immune, annot_negcor_ion)
+
+separateBygroup(negcor.mat, groupings=makefactorgroup(annot_samp.full, "Age","Strain"), gaps.row.spec = sort(c(cumsum(table(neg.cor.annot$Group)), rep(length(immune.negcor),2))),
+                main="Negative Correlation", gaps.col.spec = annot.gaps, clust.rows = F)
+
+
+###set up matrix for heatmap, Positive correlations
+immune.poscor.astro <- immune.poscor[colsplit(immune.poscor,"_", c("ENS","Gene"))$Gene %in% immune.astro.genes]
+immune.poscor.noastro <- immune.poscor[immune.poscor %notin% immune.poscor.astro]
+
+ion.poscor.neuron <- ion.poscor[colsplit(ion.poscor,"_", c("ENS","Gene"))$Gene %in% ion.neuron.genes]
+ion.poscor.noneuron <- ion.poscor[ion.poscor %notin% ion.poscor.neuron]
+
+annot_poscor_immune <- data.frame(Gene = c(immune.poscor.astro, immune.poscor.noastro),
+                                  Group=c(rep("Immune-Astro", length(immune.poscor.astro)), rep("Immune", length(immune.poscor.noastro))), stringsAsFactors = T)
+rownames(annot_poscor_immune) <- annot_poscor_immune$Gene
+annot_poscor_immune <- annot_poscor_immune[order(annot_poscor_immune$Gene),]
+
+annot_poscor_ion <- data.frame(Gene = c(ion.poscor.neuron, ion.poscor.noneuron),
+                               Group=c(rep("Ion-Neuron", length(ion.poscor.neuron)), rep("Ion", length(ion.poscor.noneuron))), stringsAsFactors = T)
+rownames(annot_poscor_ion) <- annot_poscor_ion$Gene
+annot_poscor_ion <- annot_poscor_ion[order(annot_poscor_ion$Gene),]
+
+impos <- separateBygroup(NTS.Z.sep[which(rownames(NTS.Z.sep) %in% immune.poscor),], groupings=makefactorgroup(annot_samp.full, "Age","Strain"),
+                         groupings.gene = annot_poscor_immune$Group, main="Immune-Related Genes, Positive Correlation", gaps.col.spec = annot.gaps, show.colnames = T)
+impos.mat <- ExtractMatrix(data=(NTS.Z.sep[which(rownames(NTS.Z.sep) %in% immune.poscor),]), heatmap=impos, clustered.cols = F)
+
+ionpos <- separateBygroup(NTS.Z.sep[which(rownames(NTS.Z.sep) %in% ion.poscor),], groupings=makefactorgroup(annot_samp.full, "Age","Strain"),
+                          groupings.gene = annot_poscor_ion$Group, main="Ion-Related Genes, Positive Correlation", gaps.col.spec = annot.gaps, show.colnames = T)
+
+ionpos.mat <- ExtractMatrix(data=(NTS.Z.sep[which(rownames(NTS.Z.sep) %in% ion.poscor),]), heatmap=ionpos, clustered.cols = F)
+
+poscor.mat <- rbind(impos.mat, ionpos.mat)
+pos.cor.annot <- rbind(annot_poscor_immune, annot_poscor_ion)
+
+separateBygroup(poscor.mat, groupings=makefactorgroup(annot_samp.full, "Age","Strain"), gaps.row.spec = sort(c(cumsum(table(pos.cor.annot$Group)), rep(length(immune.poscor),2))),
+                main="Positive Correlation", gaps.col.spec = annot.gaps, clust.rows = F)
+
+
+cell_type_annots <- data.frame(Gene=c(astro.genes, neuron.genes, oligo.genes), Cell_Type=c(rep("Astrocyte", length(astro.genes)), rep("Neuron",length(neuron.genes)), rep("Oligo", length(oligo.genes))), stringsAsFactors = T)
+cell_type_annots <- cell_type_annots[which(cell_type_annots$Gene %in% immune.poscor | cell_type_annots$Gene %in% immune.negcor | cell_type_annots$Gene %in% ion.poscor | cell_type_annots$Gene %in% immune.negcor),]
+rownames(cell_type_annots) <- make.names( cell_type_annots$Gene, unique = T); cell_type_annots <- cell_type_annots[,-1]
+
+
+separateBygroup(negcor.mat, groupings=makefactorgroup(annot_samp.full, "Age","Strain"), gaps.row.spec = sort(c(cumsum(table(neg.cor.annot$Group)), rep(length(immune.negcor),2))),
+                main="Negative Correlation", gaps.col.spec = annot.gaps, clust.rows = F, annot_genes = cell_type_annots)
+
+
+#####
+maxs <- apply(NTS.LFC[,1:5], 1, function(x)(max(abs(x))))
+mean.expr <- apply(NTS,1,mean)
+hist(maxs, breaks=30, ylim=c(0,200))
+sum(maxs >= 4)
+highest.FC <- NTS.LFC[which(maxs >= 4),1:5]
+
+interest <- rownames(NTS)[which(maxs > 2 & mean.expr > 5)]

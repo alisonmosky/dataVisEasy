@@ -1,0 +1,11 @@
+update_annotations <- function(   ###should make an option to full join if stuff thats being added doesn't cover everything....
+  annotation,
+  values
+){
+  if (annotation %in% colnames(annotations)) {
+    params$annotations[,annotation] <<- values
+  }else{
+    params$annotations$V1 <<- values
+    colnames(params$annotations)[colnames(params$annotations)=="V1"] <<- annotation
+  }
+}

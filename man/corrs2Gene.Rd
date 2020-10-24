@@ -8,7 +8,14 @@ Examine Correlations to a Specific Gene in a Datamatrix
 Provides a quick way to check for correlations to a specific gene in a given data matrix. If no limits are supplied, will return a histogram of all gene correlations to the gene in question. When limits are supplied, acts as a wrapper for myHeatmap() where a heatmap is  returned including all genes with  corrleations that are more negatively correlated than the lower limit and more positively correlated than the upper limit.
 }
 \usage{
-corrs2Gene(data, gene, limits = NULL, method = "pearson", linkage = "complete", NA.handling = "pairwise.complete.obs", nbreaks = 20, show.report = F, clust.rows = T, clust.cols = T, row.groups = NA, col.groups = NA, gaps.row = NULL, gaps.col = NULL, gap.width = 1, order.by.gene = NULL, order.by.sample = NULL, cell.width = NA, cell.height = NA, fontsize.row = 10, fontsize.col = 10, show.rownames = T, show.colnames = F, treeheight.row = 20, treeheight.col = 20, hide.plot = FALSE, na.fix = FALSE, na.offset = 2, show.legend = TRUE, show.annotations = TRUE, is.raw.Ct = FALSE, drop.annot.levels = TRUE)
+corrs2Gene(data, gene, limits = NULL, method = "pearson", linkage = "complete",
+  NA.handling = "pairwise.complete.obs", nbreaks = 20, show.report = F, clust.rows = T,
+  clust.cols = T, row.groups = NA, col.groups = NA, gaps.row = NULL, gaps.col = NULL,
+  gap.width = 1, order.by.gene = NULL, order.by.sample = NULL, cell.width = NA,
+  cell.height = NA, fontsize.row = 10, fontsize.col = 10, show.rownames = T,
+  show.colnames = F, treeheight.row = 20, treeheight.col = 20, hide.plot = FALSE,
+  na.fix = FALSE, na.offset = 2, show.legend = TRUE, show.annotations = TRUE,
+  is.raw.Ct = FALSE, drop.annot.levels = TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{

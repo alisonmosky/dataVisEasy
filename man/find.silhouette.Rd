@@ -8,7 +8,11 @@ Find and Compare the Silhouette Coefficient for Clustering Assignments
 Compare the silhouette coefficient for a given number of clusters against other cluster numbers to determine the optimal number of clustes and against randomized trials to determine how the silhouette coefficients of the identified clusters compare to those of randomized data.
 }
 \usage{
-find.silhouette(data, ngroups, maxgroups = 12, max.iter = 10, method = "pearson", NA.handling = "pairwise.complete.obs", linkage = "complete", to.sil = "samples", to.view = "rand.to.clust", main = "Average Silhouette Width", axis.label = "Silhouette Width", main.label.size = 30, axis.label.size = 20, legend.position = "bottom")
+find.silhouette(data, ngroups, maxgroups = 12, max.iter = 10, method = "pearson",
+  NA.handling = "pairwise.complete.obs", linkage = "complete", to.sil = "samples",
+  to.view = "rand.to.clust", main = "Average Silhouette Width",
+  axis.label = "Silhouette Width", main.label.size = 30, axis.label.size = 20,
+  legend.position = "bottom")
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{

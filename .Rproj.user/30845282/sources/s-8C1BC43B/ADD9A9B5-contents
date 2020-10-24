@@ -1,0 +1,205 @@
+library(pheatmap)
+library(pcaMethods)
+library(ggplot2)
+library(cluster)
+library(gtools)
+library(ggbeeswarm)
+library(rgl)
+library(reshape2)
+library(RColorBrewer)
+library(ggpubr)
+library(plyr)
+library(dplyr)
+library(readr)
+
+
+`%notin%` <- Negate(`%in%`)
+myColorRamp4 <- function(colors, values) {
+  out <- rep(rgb(0,0,0),length(values))
+  for(i in 1:length(values)){
+    if(is.na(values[i])){
+    } else{
+      if (values[i]<median(values,na.rm=T)-0.75*mad(values,na.rm=T)){
+        v <- (values[i] - min(values,na.rm=T))/diff(range(values,na.rm=T))
+        x <- colorRamp(colors[1:2])(v)
+        out[i] <- rgb(x[,1], x[,2], x[,3], maxColorValue = 255)}
+      
+      if (values[i]>median(values,na.rm=T)-0.75*mad(values,na.rm=T) & values[i]<=0){
+        v <- (values[i] - min(values,na.rm=T))/diff(range(values,na.rm=T))
+        x <- colorRamp(colors[2:3])(v)
+        out[i] <- rgb(x[,1], x[,2], x[,3], maxColorValue = 255)}
+      
+      if (values[i]<median(values,na.rm=T)+0.75*mad(values,na.rm=T) & values[i]>0){
+        v <- (values[i] - min(values,na.rm=T))/diff(range(values,na.rm=T))
+        x <- colorRamp(colors[3:4])(v)
+        out[i] <- rgb(x[,1], x[,2], x[,3], maxColorValue = 255)}
+      
+      if (values[i]>median(values,na.rm=T)+0.75*mad(values,na.rm=T)){
+        v <- (values[i] - min(values,na.rm=T))/diff(range(values,na.rm=T))
+        x <- colorRamp(colors[4:5])(v)
+        out[i] <- rgb(x[,1], x[,2], x[,3], maxColorValue = 255)}
+    }
+  }
+  return(out)
+}
+
+prefix <- "C://users/axm323/"
+prefix <- "D://"
+
+source(paste0(prefix,"/Dropbox (SBG)/SHR Work/Alison-DataVis-Package/qPCR_data_Functions11.R"))
+
+
+#####################################
+###combine all Samples from 1643 and Make XML file, color for RNAseq vs qPCR
+
+biomark <- read.table(paste0(prefix,"/Dropbox (SBG)/SPARC-Data-Acquisition/Pig 1643/PR1643/Analysis/PR1643_alldata_negddct.txt"), sep="\t", header=T); colnames(biomark) <- gsub("\\.","-",colnames(biomark))
+rnaseq1 <- read.table(paste0(prefix,"/Dropbox (SBG)/SPARC-Data-Acquisition/RNA-seq-analysis/Downstream_Analysis/PIG_Data/Batch-47/PR1643_raw_RNAseqData_47_gene_names_rnd3.txt"), sep="\t", header=T, row.names = 1); colnames(rnaseq1) <- gsub("\\.","-",colnames(rnaseq1))
+rnaseq2 <- read.table(paste0(prefix,"/Dropbox (SBG)/SPARC-Data-Acquisition/RNA-seq-analysis/Downstream_Analysis/PIG_Data/Batch-95/PR1643-95-genes-local-rlogged_100cutoff_blindF.txt"), sep="\t", header=T, row.names = 1);  colnames(rnaseq2) <- gsub("\\.","-",colnames(rnaseq2))
+
+all.coords <- read.table(paste0(prefix,"/Dropbox (SBG)/SPARC-Data-Acquisition/Pig 1643/PR1643/PR1643_Samples_coordinates_20200312.txt"), sep="\t", header=T); all.coords$Sample_ID <- gsub("PR1543","PR1643",all.coords$Sample_ID)
+
+biomark.samples <- colnames(biomark)
+rnaseq.samples <- c(colnames(rnaseq1), colnames(rnaseq2))
+rnaseq.samples <- gsub("^R1643","PR1643",rnaseq.samples); rnaseq.samples <- gsub("PR1543","PR1643",rnaseq.samples)
+
+biomark.coords <- all.coords[which(all.coords$Sample_ID %in% biomark.samples),]
+rnaseq.coords <- all.coords[which(all.coords$Sample_ID %in% rnaseq.samples),]
+
+comb.coords <- rbind(biomark.coords, rnaseq.coords)
+comb.coords$Experiment <- c(rep("Biomark",nrow(biomark.coords)), rep("RNAseq",nrow(rnaseq.coords)))
+
+cols <- c(rep("yellow",nrow(biomark.coords)), rep("purple",nrow(rnaseq.coords)))
+
+View3D(comb.coords$X, comb.coords$Y, comb.coords$Z,cols)
+View3D(biomark.coords$X, biomark.coords$Y, biomark.coords$Z,cols)
+
+shellfile <- read_file("PR1643_BlockFace_500-900_Shaina-scaling50umX50um_2019-12-11_Shell.xml")
+shellfile <- gsub("\\r","",shellfile)
+
+
+####Write XML for both RNAseq and Biomark####
+addition <- createXML(comb.coords$Sample_ID,comb.coords$X,comb.coords$Y,comb.coords$Z,colors = cols, d = comb.coords$D, sections = comb.coords$SID, out.file = paste0("PR1643_Biomark_RNAseq_Points.xml"))
+out <- paste(shellfile,"\n", addition,"\n", sep="\t")
+cat(out,file=paste0("PR1643_Biomark_RNAseq_Points.xml"))
+
+
+####Write XML for RNAseq####
+addition <- createXML(rnaseq.coords$Sample_ID,rnaseq.coords$X,rnaseq.coords$Y,rnaseq.coords$Z,colors = rep("purple",nrow(rnaseq.coords)), d = rnaseq.coords$D, sections = rnaseq.coords$SID, out.file = paste0("PR1643_RNAseq_Points.xml"))
+out <- paste(shellfile,"\n", addition,"\n", sep="\t")
+cat(out,file=paste0("PR1643_RNAseq_Points.xml"))
+
+###coloring RNAseq by gene
+ragp.rlog <- as.matrix(read.table(paste0(prefix,"Dropbox (SBG)/SPARC-Data-Acquisition/RNA-seq-Analysis/Downstream_Analysis/PIG_Data/Normalization/PR1643-normalized_90samples_15kgenes.txt"), sep="\t", header=T, row.names=1)); colnames(ragp.rlog) <- gsub("\\.","-",colnames(ragp.rlog))#rownames(ragp.rlog) <- rownames(ragp.raw)
+ragp.rlog.med <- t(apply(ragp.rlog,1,function(x)(x-median(x))))
+
+rna.90.coords <- all.coords[which(all.coords$Sample_ID %in% colnames(ragp.rlog)),]
+rna.90.coords <-rna.90.coords[match(colnames(ragp.rlog),rna.90.coords$Sample_ID),]
+
+
+color.by<-"CHAT"                                                                   ##########Change Gene Name Here
+genedat<-ragp.rlog.med[which(rownames(ragp.rlog)==color.by),]
+cols <- myColorRamp4(c("blue","lightblue","gray","indianred","firebrick"), genedat) 
+
+View3D(X=rna.90.coords$X,Y=rna.90.coords$Y, Z=rna.90.coords$Z,cols, main=paste(color.by))
+
+
+addition <- createXML(rna.90.coords$Sample_ID,rna.90.coords$X,rna.90.coords$Y,rna.90.coords$Z,colors = cols, d = rna.90.coords$D, sections = rna.90.coords$SID, out.file = paste0("PR1643_RNAseq_Colored_for_",color.by,".xml"))
+out <- paste(shellfile,"\n", addition,"\n", sep="\t")
+cat(out,file=paste0("PR1643_RNAseq_Colored_for_",color.by,".xml"))
+
+
+###coloring RNAseq for group
+gtex.tsne.info <- read.csv("tSNE_info_RAGP_GTex_Genes.csv",header=T, row.names = 1, stringsAsFactors = F)
+gtex.tsne.info$group <- mapvalues(gtex.tsne.info$group, from=c("red", "yellow2","green2","blue","purple"), to=annot_cols$Group)
+
+View3D(X=rna.90.coords$X,Y=rna.90.coords$Y, Z=rna.90.coords$Z,gtex.tsne.info$group, main="GTex State")
+
+addition <- createXML(rna.90.coords$Sample_ID,rna.90.coords$X,rna.90.coords$Y,rna.90.coords$Z,colors = gtex.tsne.info$group, d = rna.90.coords$D, sections = rna.90.coords$SID, out.file = paste0("PR1643_RNAseq_GTex_Group_Colored.xml"))
+out <- paste(shellfile,"\n", addition,"\n", sep="\t")
+cat(out,file=paste0("PR1643_RNAseq_GTex_Group_Colored.xml"))
+
+
+
+
+
+
+####Write XML for Biomark####
+addition <- createXML(biomark.coords$Sample_ID,biomark.coords$X,biomark.coords$Y,biomark.coords$Z,colors = rep("yellow",nrow(biomark.coords)), d = biomark.coords$D, sections = biomark.coords$SID, out.file = paste0("PR1643_Biomark_Points.xml"))
+out <- paste(shellfile,"\n", addition,"\n", sep="\t")
+cat(out,file=paste0("PR1643_Biomark_Points.xml"))
+
+
+#Biomark for a gene or other annotation
+##need annotations and data first 
+norm <- as.matrix(read.table(paste0(prefix, "/Dropbox (SBG)/SPARC-Data-Acquisition/All_RAGP_Analysis/All_RAGP_negddct.txt"), sep="\t", header=T));colnames(norm) <- gsub("\\.","-",colnames(norm))
+all.annots <- read.table(paste0(prefix,"/Dropbox (SBG)/SPARC-Data-Acquisition/All_RAGP_Analysis/Annotations_PR1534_PR1643_PR1705_PR1729_CellStates_New.txt"), sep="\t", header=T)  ##Rcut of 0.45
+
+PR16.norm <- norm[,grep("PR1643", colnames(norm))]
+PR16.annots <- all.annots[which(all.annots$Animal=="PR1643"),]  ##these are already in the right order
+##make sure coordinates are in the right order
+PR16.coords <- biomark.coords[match(colnames(PR16.norm),biomark.coords$Sample_ID),]
+
+annot_samp <- PR16.annots
+section.cols <- colorRampPalette(c("lightblue","blue","darkblue"))(length(levels(annot_samp$Section))); names(section.cols) <- levels(annot_samp$Section)
+state.cols <- brewer.pal(6,"Set1"); names(state.cols) <- LETTERS[1:6]
+substate.cols <- c("red","red",state.cols); names(substate.cols) <- c("A1","A2","A3",LETTERS[2:6])
+annot_cols <- list('Connectivity'=c("FB"="#0E82FF","CV"="#F29CF2","NONE"="grey"),
+                   #'Section'=c(section.cols), 
+                   'Animal'=c("PR1534"="#0571b0","PR1643"="#ca0020","PR1705"="#92c5de","PR1729"="#f4a582"),
+                   #'Sex'=c("Male"="blue", "Female"="red"),
+                   #"Sub_State"= c(substate.cols),
+                   "State"=c(state.cols)
+)
+
+color.by<-"Th"                                                                   ##########Change Gene Name Here
+
+
+genedat<-PR16.norm[which(rownames(PR16.norm)==color.by),]
+cols <- myColorRamp4(c("blue","lightblue","gray","indianred","firebrick"), genedat) 
+
+if (color.by=="State") {cols <- annot_cols$State[as.factor(PR16.annots$State)]}
+if (color.by=="Sub_State") {cols <- annot_cols$Sub_State[as.factor(PR16.annots$Sub_State)]}
+if (color.by=="Stain") {cols <- annot_cols$Connectivity[as.factor(PR16.annots$Cell_Type)]}
+if (color.by=="Section") {cols <- annot_cols$Section[as.factor(PR16.annots$Section)]}
+
+View3D(X=PR16.coords$X,Y=PR16.coords$Y, Z=PR16.coords$Z,cols, main=paste(color.by))
+
+
+addition <- createXML(PR16.coords$Sample_ID,PR16.coords$X,PR16.coords$Y,PR16.coords$Z,colors = cols, d = PR16.coords$D, sections = PR16.coords$SID, out.file = paste0("PR1643_Colored_for_",color.by,".xml"))
+out <- paste(shellfile,"\n", addition,"\n", sep="\t")
+cat(out,file=paste0("PR1643_Colored_for_",color.by,".xml"))
+
+
+
+##biomark for paracrine network
+dat.to.use <- PR16.norm
+geneset <- "Npy"
+lig.cut <- 0
+receptor.cut <- 0 
+ligand <- dat.to.use[which(rownames(dat.to.use)==geneset),]
+receptor <- dat.to.use[grep(paste0(geneset,".r"), rownames(dat.to.use)),]; receptor <- apply(receptor,2,function(x)(max(x,na.rm=T)))
+lig.class <- rep(paste0(geneset,"-"),length(ligand)); rec.class <- rep(paste0(geneset,"r-"), length(receptor))
+lig.class[which(ligand > lig.cut)] <- paste0(geneset,"+"); rec.class[which(receptor > receptor.cut)] <- paste0(geneset,"r+")
+
+IDs <- as.data.frame(cbind(lig.class, rec.class)); IDs$set <- unite(IDs, "Set")
+rownames(IDs) <- names(ligand)
+
+property <- rep("None", nrow(IDs))
+property[which(IDs$lig.class == paste0(geneset,"+") & IDs$rec.class == paste0(geneset,"r+"))] <- "Autocrine"
+property[which(IDs$lig.class == paste0(geneset,"+") & IDs$rec.class == paste0(geneset,"r-"))] <- "Transmitter"
+property[which(IDs$lig.class == paste0(geneset,"-") & IDs$rec.class == paste0(geneset,"r+"))] <- "Receiver"
+
+cols <- rep("grey", length(property))
+cols[which(property=="Autocrine")] <- "darkorchid1"
+cols[which(property=="Transmitter")] <- "firebrick1"
+cols[which(property=="Receiver")] <- "dodgerblue"
+
+View3D(X=PR16.coords$X,Y=PR16.coords$Y, Z=PR16.coords$Z,cols, main=paste(geneset, "Paracrine Network"))
+
+addition <- createXML(PR16.coords$Sample_ID,PR16.coords$X,PR16.coords$Y,PR16.coords$Z,colors = cols, d = PR16.coords$D, sections = PR16.coords$SID, out.file = paste0("PR1643_Colored_for_",geneset,"_Paracrine_Set.xml"))
+out <- paste(shellfile,"\n", addition,"\n", sep="\t")
+cat(out,file=paste0("PR1643_Colored_for_",geneset,"_Paracrine_Set.xml"))
+
+all <- cbind(prop.sst, prop.gal, prop.npy)
+full <- apply(all,1,function(x)(ifelse("Autocrine" %in% x, "Autocrine",ifelse(("Transmitter" %in% x & "Receiver" %in% x), "Autocrine", ifelse("Transmitter" %notin% x, "Receiver",ifelse(sum("Other" %in% x) != 3,"Transmitter","Other"))))))
+cbind(all,full)[which(full=="Other"),]

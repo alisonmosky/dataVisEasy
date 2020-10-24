@@ -8,7 +8,8 @@ Extract the Positions of Spacing from Clustered Groups
 Very similar to \link[dataVisEasy]{extractClusters} but for the gaps that appear between the clusters when row.groups or col.groups are set in the heatmap functions. Useful in conjunction with \link[dataVisEasy]{ExtractMatrix} if spaces between the groups want to be maintained or widened without actually clustering the data. Output can be supplied to gaps.row and gaps.col in \link[dataVisEasy]{myHeatmap} or gaps.row.spec and gaps.col.spec in \link[dataVisEasy]{myHeatmapByAnnotation}
 }
 \usage{
-extractGaps(data, heatmap, extractRows = FALSE, extractCols = TRUE, num_Rows = 5, num_Cols = 5)
+extractGaps(data, heatmap, extractRows = FALSE, extractCols = TRUE,
+  num_Rows = 5, num_Cols = 5)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{

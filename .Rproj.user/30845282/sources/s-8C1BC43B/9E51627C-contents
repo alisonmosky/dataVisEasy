@@ -1,0 +1,360 @@
+library(DESeq2)
+library(Rtsne)
+library(ggplot2)
+library(cluster)
+library(gtools)
+library(pheatmap)
+library(pcaMethods)
+library(reshape2)
+library(rgl)
+library(sva)
+library(edgeR)
+
+prefix <- "/Users/Lakshmi"
+setwd(paste0(prefix,"/Dropbox (SBG)/SPARC-Data-Acquisition/Downstream_Analysis/PIG_Data/Analysis"))
+source (paste0(prefix,"/Dropbox (SBG)/SPARC-Data-Acquisition/Downstream_Analysis/PIG_Data/Batch-correction/help_combat_seq.R"))
+source (paste0(prefix,"/Dropbox (SBG)/SPARC-Data-Acquisition/Downstream_Analysis/PIG_Data/Batch-correction/ComBat_seq.R"))
+source (paste0(prefix,"/Dropbox (SBG)/SHR Work/NTS_analysis/qPCR_data_Functions11.R"))
+
+###############READING FILES ###################################
+#Read the raw count from all samples
+full.all <- read.table("PR1643-142-counts.txt", sep="\t", header=T, row.names = 1)
+
+gene.annots <- read.csv("PR1643_RNAseq_IDs_Genes_Description_rnd3.csv", header=T, blank.lines.skip = FALSE)
+#exon.annots <- read.csv("PR1643_RNAseq_IDs_Exons_Description_rnd3.csv", header=T, blank.lines.skip = FALSE)
+
+#Read the raw count from sample sets 
+PR1643.69 <- read.table("PR1643-69-counts.txt", sep="\t", header=T, row.names = 1)
+PR1643.142 <- read.table("PR1643-142-counts.txt", sep="\t", header=T, row.names = 1)
+
+#Read the batch corrected counts from sample sets
+PR1643.69.adjusted <- read.table("PR1643-69-adjusted.txt", sep="\t", header=T, row.names = 1)
+PR1643.142.adjusted <- read.table("PR1643-142-adjusted.txt", sep="\t", header=T, row.names = 1)
+
+#Read the batch corrected, rlog expression values from sample sets 
+PR1643.69.adjusted.rlog <- read.table("PR1643-69-adjusted-rlog.txt", sep="\t", header=T, row.names = 1)
+PR1643.142.adjusted.rlog <- read.table("PR1643-142-adjusted-rlog.txt", sep="\t", header=T, row.names = 1)
+
+#Define column metadata
+col.data.69 <- data.frame(batch=c(rep("Batch47",44), rep("Batch95",25))); 
+col.data.142 <- data.frame(batch=c(rep("Batch47",47), rep("Batch95",95)));
+
+rownames(col.data.69) <- colnames(PR1643.69.adjusted.rlog)
+rownames(col.data.142) <- colnames(PR1643.142.adjusted.rlog)
+##########################################################################
+
+###############BASIC STATISTICS ##########################################
+#Calculate percentage of zeros for samples and genes
+perc_zeroes <- colSums(PR1643.142.adjusted==0)/nrow(PR1643.142.adjusted)*100
+perc.zero.gene <- rowSums(PR1643.142.adjusted==0)/ncol(PR1643.142.adjusted)*100
+
+#Calculate the coverage (counts/total number genes) for each sample
+ratio_counts_sample <- colSums(PR1643.142.adjusted)/nrow(PR1643.142.adjusted)
+
+#Calculate the ratio of total counts/total number samples for each gene
+ratio_counts_gene <- rowSums(PR1643.142.adjusted)/ncol(PR1643.142.adjusted)
+
+sample_stat <- as.data.frame(cbind(perc_zeroes,ratio_counts_sample))
+write.table(sample_stat,"PR1643-sample-stat.txt", sep="\t", quote=F, col.names = NA, row.names = T)
+
+#Plotting zero count percentage vs count ratio for Batch 47 (red), batch 95(blue)
+plot(sample_stat[48:142,], col="blue");points(sample_stat[1:47,], col="red") 
+
+#Mean count for genes
+count.means <- apply(PR1643.142.adjusted,1,mean)
+hist(count.means,breaks=1000, ylim=c(0,2000), xlim=c(0,200))
+
+
+###########################################################
+########FILTERING OF SAMPLES AND GENES#####################
+###########################################################
+
+#look through samples with least number of genes, look at genes that are present in few samples, mark and keep, average or total counts? 
+#   
+#   Neuronal markers......key markers (samples that do poorly for them?)
+# 
+# once we filter the samples we can look at genes 
+# 
+# one of the things he recommended.....for every single sample, make a characteristic group of stats, percentage of key genes etc 
+
+
+##for every gene, look at total expression, and how many samples are non-zero
+
+samples.with.counts <- apply(PR1643.142.adjusted, 1, function(x)(sum(x!=0)))
+tot.counts <- apply(PR1643.142.adjusted,1, function(x)(sum(x)))
+average <- apply(PR1643.142.adjusted,1, function(x)(mean(x))) 
+
+stats <- data.frame(samples.with.counts,tot.counts,average)
+
+
+ggplot(stats, aes(samples.with.counts)) + geom_histogram() + scale_x_log10() + scale_y_log10()
+
+
+ggplot(stats, aes(1:142,samples.with.counts)) + geom_bar() + scale_x_log10() + scale_y_log10()
+
+
+###Assess samples 
+
+samples.with.counts <- apply(PR1643.142.adjusted, 2, function(x)(sum(x!=0)))
+tot.counts <- apply(PR1643.142.adjusted,2, function(x)(sum(x)))
+average <- apply(PR1643.142.adjusted,2, function(x)(mean(x))) 
+
+stats <- data.frame(samples.with.counts,tot.counts,average)
+
+ggplot(stats, aes(samples.with.counts)) + geom_histogram() #+ scale_x_log10() + scale_y_log10()
+
+
+ggplot(stats, aes(tot.counts)) + geom_histogram() + scale_x_log10() + scale_y_log10()
+
+ggplot(stats, aes(average)) + geom_histogram() + scale_x_log10() + scale_y_log10()
+
+PR1643.142.adjusted.filt <- PR1643.142.adjusted[,-which(samples.with.counts < 3000 & tot.counts < 100000)]
+
+samples.with.counts.filt <- apply(PR1643.142.adjusted.filt, 2, function(x)(sum(x!=0)))
+tot.counts.filt <- apply(PR1643.142.adjusted.filt,2, function(x)(sum(x)))
+average.filt <- apply(PR1643.142.adjusted.filt,2, function(x)(mean(x))) 
+
+stats.filt <- data.frame(samples.with.counts.filt,tot.counts.filt,average.filt)
+
+stats.less <- stats[which(tot.counts < 100000),]  ##remaining samples with less than 100,000 count, keep all for now 
+
+
+neuro.markers <- c("GAPDH","UCHL1", "RBFOX3", "MAP2", "CAMK2A","CAMK2D","CAMK2B", "TUBB","TUBB1","TUBB4A","TUBB4B", "TUBB6")
+neuro.genes <- PR1643.142.adjusted.filt[which(rownames(PR1643.142.adjusted.filt) %in% neuro.markers),]
+
+neuro.genes$Gene <- rownames(neuro.genes)
+
+melted <- melt(neuro.genes) 
+
+ggplot(melted, aes(x=variable, y=value, group=Gene, col=Gene)) + geom_line() + facet_wrap(~Gene, scales="free_y")
+ggplot(melted, aes(x=variable, y=value, group=Gene, col=Gene)) + geom_line() + ylim(0,10)
+
+
+hist(colSums(neuro.genes[,1:131]))
+
+filt <- neuro.genes[,which(colSums(neuro.genes[,1:131]) < 20)]  ##samples with less than 20 counts across neuronal markers
+
+less.and.neuro <- stats.less[rownames(stats.less) %in% colnames(filt),]  ##samples with les than 20 counts and less than 100000 total counts 
+
+a <- cbind(stats[rownames(stats) %in% colnames(filt),], Neuro.Sum=colSums(filt))
+plot(a$Neuro.Sum, a$tot.counts, xlab="NeuroMarker.Sum",ylab="Total Counts")
+
+####make filtered sets 
+
+# PR1643.142.adjusted.filt <- PR1643.142.adjusted[,-which(samples.with.counts < 3000 & tot.counts < 100000)]  ##same line as above
+write.table(PR1643.142.adjusted.filt, "PR1643-132-adjusted.txt", sep="\t", quote=F)
+
+PR1643.142.adjusted.rlog.filt <- PR1643.142.adjusted.rlog[,-which(samples.with.counts < 3000 & tot.counts < 100000)]
+
+write.table(PR1643.142.adjusted.rlog.filt, "PR1643-132-adjusted-rlog.txt", sep="\t", quote=F)
+
+
+########################FILTERING GENES##################################
+
+
+rlog <- read.table("/Users/Lakshmi/Dropbox (SBG)/SPARC-Data-Acquisition/Downstream_Analysis/PIG_Data/Analysis/Filtering/PR1643-132-adjusted-rlog.txt", sep="\t", header=T)
+raw <- read.table("/Users/Lakshmi/Dropbox (SBG)/SPARC-Data-Acquisition/Downstream_Analysis/PIG_Data/Analysis/Filtering/PR1643-132-adjusted.txt", sep="\t", header=T)
+
+genes.with.counts <- apply(rlog, 1, function(x)(sum(x!=0)))
+tot.counts <- apply(rlog,1, function(x)(sum(x)))
+average <- apply(rlog,1, function(x)(mean(x))) 
+max <- apply(rlog,1, function(x)(max(x))) 
+
+stats.genes <- data.frame(genes.with.counts,tot.counts,average, max)
+ggplot(stats.genes, aes(max)) + geom_histogram() + scale_y_log10()
+ggplot(stats.genes, aes(1:142,samples.with.counts)) + geom_bar() + scale_x_log10() + scale_y_log10()
+
+hist(apply(raw[which(average < 0),],1,mean))
+hist(apply(raw[which(average < 0),],1,sum))
+
+###propose to cut genes with max rld value of 0 or less
+
+##log2 data 
+raw2 <- t(apply(raw+1,1,function(x)(log2(x))))
+max.genes <- apply(raw2,1,max)
+max.samples <- apply(raw2,2,max)
+
+head(rev(sort(max.genes)))
+head(rev(sort(max.samples)))
+ExtractGenes(raw2, rownames(raw2), show.rownames = F, order.by.gene = "ENSSSCG00000027279", order.by.sample = "PR1643_728.G.2")
+
+mat.ordered <- raw2[rev(order(raw2[,which(colnames(raw2)=="PR1643_728.G.2")])), rev(order(raw2[which(rownames(raw2)=="PSD3"),]))]
+
+
+write.table(mat.ordered, "PR1643_132_adjusted-log2-Ordered.txt",sep="\t", quote=F)
+
+
+samples.with.counts.filt <- apply(raw, 2, function(x)(sum(x!=0)))
+genes.with.counts.filt <- apply(raw, 1, function(x)(sum(x!=0)))
+
+
+
+mat.ordered <- raw2[rev(order(genes.with.counts.filt)), rev(order(samples.with.counts.filt))]
+
+genes.order <- rev(sort(rowSums(raw2)))
+mat.ordered  <- raw2[rownames(as.data.frame(genes.order)),rev(order(samples.with.counts.filt))]
+raw.ordered <- raw[rownames(as.data.frame(genes.order)),rev(order(samples.with.counts.filt))]
+
+write.table(mat.ordered, "PR1643_adjusted_log2-ordered_by_zeros.txt", sep="\t", quote=F)
+
+write.table(mat.ordered, "PR1643_adjusted_log2-genes-bycounts_samples_ordered_by_zeros.txt", sep="\t", quote=F)
+
+
+mat.ordered3 <- mat.ordered2; mat.ordered3[which(mat.ordered2==0)] <- NA    ##still log2 
+
+
+raw.ordered2 <- raw[rev(order(genes.with.counts.filt)), rev(order(samples.with.counts.filt))]
+write.table(raw.ordered2, "PR1643_raw_genes_bycount_samples_byordered_by_zeros.txt", sep="\t", quote=F)
+
+filtered <- mat.ordered[1:15000,1:90]
+
+filtered.raw <- raw.ordered[1:15000,1:90]
+
+write.table(filtered.raw, "PR1643_adjusted_raw_90samps_15kgenes_new.txt", sep="\t", quote=F)
+
+
+#Finding rlog of the batch corrected filtered set 
+################################################
+adj.filt.data <- read.table("PR1643_adjusted_raw_90samps_15kgenes_new.txt", sep="\t", header=T, row.names = 1)
+adj.filt.rlog<- rlog(as.matrix(adj.filt.data), fitType = "local", blind = T); 
+write.table(adj.filt.rlog, "PR1643_adjusted_rlog_90samps_15kgenes.txt", sep="\t", quote=F)
+
+
+##########################################################################
+###### VISUALIZING SIGNIFICANT GENES IN THE DATA ####################
+##########################################################################
+#Reordering samples and genes according to zerocount (samples) and total counts (genes)
+#sample.order <- as.data.frame(sort(perc_zeroes))
+#genes.order <- rev(sort(rowSums(PR1643.142.adjusted)))
+#PR1643.142.adjusted.rlog.reordered1 <- PR1643.142.adjusted.rlog[,c("PR1643_736.G.2","PR1643_728.G.6","PR1643_638.G.4","PR1643_728.G.7","PR1643_672.G.3","PR1643_630.G.1","PR1543_570.G.1","PR1643_618.G.1","PR1643_594.G.1","PR1643_808.G.4","PR1643_672.G.2","PR1643_720.G.5","PR1643_646.G.4","PR1643_638.G.3","PR1643_720.G.2","PR1643_832.G.1","PR1643_638.G.5","PR1643_618.G.2","PR1643_804.G.2","PR1643_578.G.1","PR1643_664.G.2","PR1643_736.G.1","PR1643_594.G.2","PR1643_852.G.3","PR1643_514.G.2","PR1643_744.G.6","PR1643_534.G.2","PR1643_684.G.3","PR1643_646.G.3","PR1643_696.G.4","PR1643_804.G.1","PR1643_776.G.4","PR1643_764.G.5","PR1643_646.G.5","PR1543_570.G.2","PR1643_808.G.5","PR1643_578.G.2","PR1643_664.G.4","PR1643_570.G.5","PR1643_534.G.1","PR1643_630.G.2","PR1643_784.G.3","PR1643_712.G.1","PR1643_784.G.4","PR1643_744.G.5","PR1643_712.G.3","PR1643_514.G.3","PR1643_664.G.5","PR1643_832.G.5","PR1643_736.G.4","PR1643_744.G.3","PR1643_664.G.3","PR1643_594.G.5","PR1643_744.G.4","PR1643_744.G.1","PR1643_502.G.1","PR1643_712.G.4","PR1643_696.G.5","PR1643_764.G.4","PR1643_728.G.2","PR1643_804.G.5","PR1643_728.G.4","PR1643_618.G.3","PR1643_776.G.1","PR1643_570.G.4","PR1643_852.G.1","PR1643_744.G.2","PR1643_712.G.2","PR1643_776.G.5","PR1643_664.G.1","PR1643_578.G.4","PR1643_514.G.5","PR1643_646.G.1","PR1643_594.G.4","PR1643_578.G.3","PR1643_804.G.4","PR1643_578.G.6","PR1643_578.G.5","PR1643_514.G.1","PR1643_502.G.2","PR1643_832.G.3","PR1643_570.G.3","PR1643_594.G.3","PR1643_728.G.1","PR1643_736.G.5","PR1643_502.G.6","PR1643_638.G.2","PR1643_832.G.4","PR1643_852.G.4","PR1643_672.G.1","PR1643_776.G.2","PR1643_784.G.1","PR1643_696.G.1","PR1643_514.G.4","PR1643_672.G.4","PR1643_656.G.2","PR1643_672.G.5","PR1643_756.G.3","PR1643_728.G.3","PR1643_756.G.1","PR1643_804.G.3","PR1643_656.G.1","PR1643_684.G.1","PR1643_756.G.2","PR1643_784.G.2","PR1643_638.G.1","PR1643_696.G.2","PR1643_502.G.3","PR1643_618.G.5","PR1643_720.G.3","PR1643_704.G.1","PR1643_502.G.5","PR1643_656.G.4","PR1643_808.G.3","PR1643_852.G.5","PR1643_618.G.4","PR1643_720.G.4","PR1643_712.G.5","PR1643_808.G.2","PR1643_704.G.3","PR1643_704.G.5","PR1643_684.G.2","PR1643_704.G.4","PR1643_704.G.2","PR1643_852.G.6","PR1643_646.G.2","PR1643_808.G.1","PR1643_656.G.3","PR1643_720.G.1","PR1643_684.G.4","PR1643_696.G.3","PR1643_776.G.3","PR1643_502.G.4","PR1643_534.G.4","PR1643_534.G.3","PR1643_784.G.6","PR1643_784.G.5","PR1643_764.G.3","PR1643_764.G.2","PR1643_736.G.3","PR1643_832.G.2","PR1643_764.G.1")]
+#Reordering samples based on percentage of zeros 
+#PR1643.142.adjusted.rlog.reordered <- PR1643.142.adjusted.rlog[,rownames(sample.order)]
+#Reordering genes based on total counts
+#PR1643.142.adjusted.rlog.reordered.sg <- PR1643.142.adjusted.rlog.reordered[rownames(as.data.frame(genes.order)),]
+
+#Filter high performing genes based on mean counts
+highgenes <- rownames(adj.filt.data)[which(count.means>50)]
+highgenes.list <- gene.annots[which(gene.annots$gene_name %in% highgenes),]
+
+#Filter high performing genes based on total counts
+top20 <- rev(sort(rowSums(adj.filt.data)))[1:20]
+top200 <- rev(sort(rowSums(adj.filt.data)))[1:200]
+top2000 <- rev(sort(rowSums(adj.filt.data)))[1:2000]
+top20000 <- rev(sort(rowSums(adj.filt.data)))[1:20000]
+
+######## LOOKING AT RESULTS #########################
+
+
+#WHICH DATA TO PLOT!!!################
+mydata <- as.matrix(adj.filt.rlog)
+annot_samp <- col.data.142
+annot_cols <- NA
+
+myHeatmapData(as.matrix(mydata), main="RNAseq Data-Filtered Genes", clust.rows = F, clust.cols = F)
+ExtractGenes(as.matrix(mydata),names(top200), show.rownames = F)
+#ExtractGenes(as.matrix(PR1643.142.adjusted.rlog.reordered.sg),names(top20), clust.rows = F, clust.cols = F, main ="", fontsize.row = 4, order.by.sample = "PR1643_672.G.3")
+
+
+#######################
+###Examine raw data####
+#######################
+goi <- "UCHL1"
+hist(rld[which(rownames(rld)==goi),], main=paste("Histogram of Rawdata,",goi), xlab = "Gene Counts", breaks=100)
+hist(rld[grep(goi,rownames(rld)),], main=paste("Histogram of Rawdata,",goi), breaks=100)
+
+
+###########Neuro Genes separating Brain phenotypes#########
+neuro.genes <- read.table(paste0(prefix,"/Dropbox (SBG)/SPARC-manuscripts/Molecular Identity of rat ICN/Compare Affy to Brain Paper/ANOVA_significant_genes_AM.txt"), sep="\t", header=T); colnames(neuro.genes) <- c("Gene","Pval")#neuro.genes <- neuro.genes$V1
+brain.genes <- read.table(paste0(prefix,"/Dropbox (SBG)/SPARC-manuscripts/Molecular Identity of rat ICN/Compare Neuro and Myo Affy/Gtex_BrainHighGenes.txt"),sep="\t"); brain.genes <- brain.genes$V1
+
+brain.genes.data <- rownames(mydata)[rownames(mydata) %in% toupper(brain.genes)]
+neuro.genes.data <- rownames(mydata)[rownames(mydata) %in% toupper(neuro.genes$Gene)]
+
+ExtractGenes(mydata,brain.genes.data, main="2195 Neuronal Genes from Gtex List Found in Our filtered Data",show.rownames = F)
+ExtractGenes(mydata,neuro.genes.data, main="832 Neuronal Separating Brain Phenotypes Found in Our Data",show.rownames = F)
+ExtractGenes(mydata,neuro.genes.data, main="832 Neuronal Sep Brain Phenotypes",show.rownames = F, order.by.sample = "PR1643_672.G.3")
+ExtractGenes(mydata,brain.genes.data, main="2195 Neuronal Genes from Gtex ",show.rownames = F, order.by.sample = "PR1643_672.G.3")
+ExtractGenes(mydata,neuro.genes.data, main="832 Neuronal Sep Brain Phenotypes",show.rownames = F,  clust.cols = F, clust.rows = F)
+
+
+###########Plotting Biomark genes 
+biomark <- read.table(paste0(prefix,"/Dropbox (SBG)/SPARC-Data-Acquisition/Pig 1643/PR1643/Analysis/PR1643_alldata_Raw.txt"), sep="\t")
+biomark.genes <- toupper(colnames(biomark))
+
+rld.biomarkgenes <- mydata[grep(paste(c(biomark.genes),collapse = '|'), rownames(mydata)),]
+rld.biomarkgenes <- rownames(mydata)[rownames(mydata) %in% biomark.genes]
+ExtractGenes(mydata,biomark.genes, main="PR1643-231 Biomark Genes",fontsize.row = 3,clust.cols = F, clust.rows = F)
+
+
+#### Neuronal markers/genes###########
+gene.list <- toupper(c("Th","Npy","Chat","Dbh","Gal","Pnmt","Ache","ChT","Vacht","slc18a2","slc18a3","slc6a3","slc6a4","UCHL1", "rbfox3","Chrna3","Crna7","chrnb2","npy1r","chrm2"))
+ 
+ExtractGenes(mydata, gene.list, exact=T, clust.rows = T, order.by.gene  = "CHAT", main =".") 
+ExtractGenes(mydata, gene.list, exact=T, main ="", clust.cols = F, clust.rows = F)
+
+
+##### Neurotransmitters ###############
+neurot <- toupper(c("Sst","Npy","Gal$","Cck","Npff","Glp1","Kng1..Bdk.","Chat","Th$","Dbh","Pnmt","Trh","Tac1","Nppa","Nppb","Nppc","BNP","Ddc","Bdk","AVP","PYY","HCRT","ADCYAP1","CORT","GHRH","QRFP","OXT","VGF","CART","GRP$","KNG1","SPX","CARTPT","NTS","NMU"))
+neurot <- paste0("^",neurot)
+ExtractGenes(mydata, neurot, exact=F)
+
+#Calcium and Potassium channels
+doi <- "calcium"
+list <- annots[grep(doi,annots$description),]
+
+ExtractGenes(rld.med,as.vector(list$gene_name), main=paste("Keyword=",doi),fontsize.row = 4)
+ExtractGenes(rld,as.vector(list$gene_name),main=paste("Keyword=",doi), clust.cols = F, fontsize.row = 4) 
+
+p <-ExtractGenes(rld.med,as.vector(list$gene_name), main=paste("Keyword=",doi),fontsize.row = 4)
+samp.order <- pord <- p$tree_col[["labels"]][p$tree_col[["order"]]]
+set <- rld.med[,match(samp.order,colnames(rld.med))]
+
+doi <- "potassium voltage-gated"
+list <- gene.annots[grep(doi,gene.annots$description),]
+
+ExtractGenes(set,as.vector(list$gene_name), main=paste("Keyword=",doi),clust.cols = F, gaps.col = c(10,20,29,36,40),fontsize.row = 13,cell.width = 7,cell.height = 10)
+ExtractGenes(set,as.vector(list$gene_name), main=paste("Keyword=",doi),clust.cols = F, gaps.col = c(10,20,29,36,40),fontsize.row = 13,cell.width = 7,cell.height = 10)
+ExtractGenes(rld,as.vector(list$gene_name),main=paste("Keyword=",doi), clust.cols = F, fontsize.row = 4)
+
+##Extract by gene or gene list 
+
+goi <- c("CHAT","TH","ACHE")
+ExtractGenes(rld.med, goi, clust.cols = F,fontsize.row = 13,cell.width = 4,cell.height = 10)
+ExtractGenes(rld.tot.med, goi, clust.cols = F)
+ExtractGenes(rld, goi, clust.cols = F)
+
+
+
+#############################
+####Scatter for two Genes####
+#############################
+is.raw <- F
+nafix=2
+gen1<- "ADCYAP1"
+gen2<- "ADCYAP1R1"
+color.by <- "Section"
+data <- rld.med
+
+# Fetching these from RNA-seq data
+dat1<-data[which(rownames(data) %in% gen1),]; if (is.raw==F & nafix!=F) {dat1[which(is.na(dat1))] <- (min(dat1, na.rm=T)-nafix)};if (is.raw==T & nafix!=F) {dat1[which(is.na(dat1))]<- (max(dat1, na.rm=T)+nafix)}
+dat2<-data[which(rownames(data) %in% gen2),]; if (is.raw==F & nafix!=F) {dat2[which(is.na(dat2))] <- (min(dat2, na.rm=T)-nafix)};if (is.raw==T & nafix!=F) {dat2[which(is.na(dat2))]<- (max(dat2, na.rm=T)+nafix)}
+
+dat1[which(dat1 < -5)] <- -5; dat2[which(dat2 < -5)] <- -5
+
+dat.to.plot <- data.frame(Gene1= dat1, Gene2= dat2, Section=annot_samp$Section)
+
+if (color.by == "Stain"){cols <- as.factor(dat.to.plot$Stain);colors <- c("violet","blue")}
+if (color.by == "Section"){cols <- as.factor(dat.to.plot$Section);colors <- section.cols}
+if (color.by == "State") {cols <- as.factor(dat.to.plot$State); colors <- annot_cols$State}
+
+if (is.raw==T) {
+  ggplot(dat.to.plot, aes(x=dat1,y=dat2,fill=cols))+ geom_point(pch=21,color="black",size=5)  + 
+    scale_fill_manual(values=colors) +labs(x=paste(gen1), y= paste(gen2)) +ggtitle(paste(gen2, "vs.",gen1)) +
+    theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40), 
+                       axis.text = element_text(size=25),axis.title = element_text(size=30), legend.position = "none")+
+    scale_x_reverse() + scale_y_reverse()
+} else {ggplot(dat.to.plot, aes(x=dat1,y=dat2,fill=cols))+ geom_point(pch=21,color="black",size=5)  + 
+    scale_fill_manual(values=colors) +labs(x=paste(gen1), y= paste(gen2)) + #ggtitle(paste(gen2, "vs.",gen1)) +
+    theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40), 
+                       axis.text = element_text(size=25),axis.title = element_text(size=30), legend.position = "none")  #+ ylim(c(-5, 5))
+}

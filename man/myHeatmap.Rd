@@ -8,7 +8,14 @@ Create a customizable Heatmap of Expression Data
 Creates a heatmap of supplied expression data with options to subset for specific genes/variables and with a variety of customizable options for aesthetics. Draws from params list object for parameters such as the range of the plotted data, the colors used, and annotations to be displayed if desired.
 }
 \usage{
-myHeatmap(data, list = NULL, exact = TRUE, method = "pearson", linkage = "complete", NA.handling = "pairwise.complete.obs", clust.rows = T, clust.cols = T, row.groups = NA, col.groups = NA, gaps.row = NULL, gaps.col = NULL, gap.width = 1, main = NULL, order.by.gene = NULL, order.by.sample = NULL, cell.width = NA, cell.height = NA, fontsize.row = 10, fontsize.col = 10, show.rownames = T, show.colnames = F, treeheight.row = 20, treeheight.col = 20, hide.plot = FALSE, na.fix = FALSE, na.offset = 2, show.legend = TRUE, show.annotations = TRUE, is.raw.Ct = FALSE, drop.annot.levels = TRUE)
+myHeatmap(data, list = NULL, exact = TRUE, method = "pearson", linkage = "complete",
+  NA.handling = "pairwise.complete.obs", clust.rows = T, clust.cols = T, row.groups = NA,
+  col.groups = NA, gaps.row = NULL, gaps.col = NULL, gap.width = 1, main = NULL,
+  order.by.gene = NULL, order.by.sample = NULL, cell.width = NA, cell.height = NA,
+  fontsize.row = 10, fontsize.col = 10, show.rownames = T, show.colnames = F,
+  treeheight.row = 20, treeheight.col = 20, hide.plot = FALSE, na.fix = FALSE,
+  na.offset = 2, show.legend = TRUE, show.annotations = TRUE, is.raw.Ct = FALSE,
+  drop.annot.levels = TRUE, annotation.names.row = TRUE, annotation.names.col = TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -105,6 +112,13 @@ logical. If set to TRUE, will reverse the scale of the data to indicate low valu
   \item{drop.annot.levels}{
 logial, should annotations not included in the output heatmap be shown in the annotation legend.
 }
+  \item{annotation.names.row}{
+logial value showing if the names for row annotation tracks should be drawn
+}
+  \item{annotation.names.col}{
+logial value showing if the names for column annotation tracks should be drawn
+}
+
 }
 \details{
 This function utilizes pheatmap to display a heatmap of supplied data. User can specify the genes/variables to be displayed in the heatmap which will be subset within the function itself. All samples/observations supplied will be plotted. myHeatmap() draws many of its parameters from the params object. params$scale.range indiates the range of data to be displayed in the heatmap. Values outside this range will be squished to fit this range after clustering where values above will be indicated with the highest expression levels and values below will be indicated with the lowest expression level. params$scale.colors holds the colors used in the heatmap and params$n.colors.range is a numeric value indicating how many diffrent colors should be allowed. If column and row annotations are supplied in params$annot_samps and params$annot_genes, respectivey, the annotations will be indicated along the top and left side of the heatmap respectively. If the colors corresponding to the levels of these annotations are specified in params$annot_cols, the inicated colors will be used, if not supplied, defualt colors will be assigned to show the annotation levels. For more information on the setting of parameters found in the params list object, see params and the associated functions to set and update these values with set_'parameter' where 'parameter' is equal to any of the above parameters listed above.A subtitle for the heatmap indicates the method for clustering/creation of a distance matrix and the linkage method used for clustering.

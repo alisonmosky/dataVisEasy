@@ -8,7 +8,9 @@ Principle Component Analysis
 A simple function that performs a PCA of the supplied data for either the genes/rows or samples/columns with options to color according to annotations.
 }
 \usage{
-myPCA(data, to.pca = "samples", nPcs = 3, color.by = "blue", custom.color.vec = FALSE, PCs.to.plot = c("PC1", "PC2"), legend.position = "right", main = NULL, percent.mad = 0.5)
+myPCA(data, to.pca = "samples", nPcs = 3, color.by = "blue", custom.color.vec = FALSE,
+  PCs.to.plot = c("PC1", "PC2"), legend.position = "right", main = NULL,point.size = 5,
+  transparency = 1, percent.mad = 0.5)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -35,6 +37,12 @@ position of the legend
 }
   \item{main}{
 plot title if desired
+}
+  \item{point.size}{
+size of points to be plotted
+}
+  \item{transparency}{
+transparency or alpha value of the points
 }
   \item{percent.mad}{
 if coloring points by expression level. Passed to \link[dataVisEasy]{myColorRamp5} to determine how the data is binned
