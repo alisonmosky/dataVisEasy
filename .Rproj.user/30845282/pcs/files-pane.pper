@@ -1,9 +1,9 @@
 {
-    "path" : "D:/Dropbox (SBG)/SHR-Work/Alison-DataVis-Package/dataVisEasy/man",
-    "sortOrder" : [
+    "sortOrder": [
         {
-            "ascending" : true,
-            "columnIndex" : 2
+            "columnIndex": 2,
+            "ascending": true
         }
-    ]
+    ],
+    "path": "D:/Dropbox (SBG)/SHR-Work/Alison-DataVis-Package/dataVisEasy/man"
 }

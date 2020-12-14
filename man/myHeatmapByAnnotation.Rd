@@ -17,7 +17,8 @@ myHeatmapByAnnotation(data, list = NULL, exact = TRUE, groupings, groupings.gaps
   show.rownames = T, show.colnames = F, treeheight.row = 20, treeheight.col = 20,
   cell.width = NA, cell.height = NA, hide.plot = FALSE, na.fix = FALSE, na.offset = 2,
   is.raw.Ct = FALSE, show.legend = TRUE, show.annotations = TRUE,
-  drop.annot.levels = TRUE,  annotation.names.row = TRUE, annotation.names.col = TRUE)
+  drop.annot.levels = TRUE,  annotation.names.row = TRUE, annotation.names.col = TRUE,
+  border.color = NA, na.color = "grey90")
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -137,6 +138,12 @@ logial value showing if the names for row annotation tracks should be drawn
 }
   \item{annotation.names.col}{
 logial value showing if the names for column annotation tracks should be drawn
+}
+  \item{border.color}{
+color for borders, default set to NA
+}
+  \item{na.color}{
+color for cells with NA values
 }
 }
 \details{

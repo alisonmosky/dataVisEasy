@@ -16,11 +16,11 @@ update_annotations.genes(annotation, values)
 title of annotation to be updated or added. If already found in the colnames of the annotations.genes data frame, the previous values for that column will be replaced with the supplied values here. If not found in the colnames of the annotations.genes data frame, values will be added as a new annotation column under the name indicated.
 }
   \item{values}{
-values corresponding to the annotation to be updated or added.
+data frame of values corresponding to the annotation to be updated or added (gene names should be in rownames).
 }
 }
 \details{
-Length of values must be equal to number of rows in original annotations.genes dataframe. See all.genes option in \link[dataVisEasy]{extractClusters} if added annotations are identifications of cluster groups.  If new or updated values should be shown in the heatmap, must rerun  \link[dataVisEasy]{set_annot_genes}. To add specific colors for the new annotations, see \link[dataVisEasy]{set_annot_cols} and \link[dataVisEasy]{update_annot_cols}
+If the name of the supplied annotation already exists, will overwrite the previous values. Number of values in updated annotation do not need to be the same length as the pre-existing annotations. This function will merge the annotations, see \link[dplyr]{full_join}. Any missing values will be set to "No_Annot" signifying that no annotation was provided. This is especially useful if annotating clusters where the genes being clustered and annotated is a subset of all genes present, see \link[dataVisEasy]{extractClusters} if added annotations are identifications of cluster groups.  If new or updated values should be shown in the heatmap, must rerun  \link[dataVisEasy]{set_annot_genes}. To add specific colors for the new annotations, see \link[dataVisEasy]{set_annot_cols} and \link[dataVisEasy]{update_annot_cols}.
 }
 \value{
 %%  ~Describe the value returned

@@ -8,7 +8,7 @@ Report Expression Information for a given set of genes
 Based on supplied expression data set, will return a report detailing expression information for the list of genes supplied to the function. Will report the percent of samples with detectable expression (non-missing data), Percent Samples NA (missing data), and percent of samples high, mid-range, and low expression with respect to the median of each gene to detail the range of expression of the genes in question.
 }
 \usage{
-reportGenes(data, list, ranges = "fixed", fixed.range = 2, weight = 1.25)
+reportGenes(data, list,exact = T, ranges = "fixed", fixed.range = 2, weight = 1.25)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -17,6 +17,9 @@ numeric data matrix with samples/observations in the columns and genes/variables
 }
   \item{list}{
 character vector of genes/variables to be pulled out of the data matrix for report of expression ranges
+}
+  \item{exact}{
+whether or not to search for exact or inexact matches of 'list' in 'data'. If exact = T (default) heatmap will plot genes/variables that exactly match the list supplied. If set to FALSE, will search for inexact matches.
 }
   \item{ranges}{
 option dictating how the range the ranges of expression are determined. The default, "fixed" sets the threshold for high and low expression a fixed value away from the median. Will also accept "mad" which sets these thresholds as a function of the median average deviation from the median.

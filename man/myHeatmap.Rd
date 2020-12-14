@@ -15,7 +15,8 @@ myHeatmap(data, list = NULL, exact = TRUE, method = "pearson", linkage = "comple
   fontsize.row = 10, fontsize.col = 10, show.rownames = T, show.colnames = F,
   treeheight.row = 20, treeheight.col = 20, hide.plot = FALSE, na.fix = FALSE,
   na.offset = 2, show.legend = TRUE, show.annotations = TRUE, is.raw.Ct = FALSE,
-  drop.annot.levels = TRUE, annotation.names.row = TRUE, annotation.names.col = TRUE)
+  drop.annot.levels = TRUE, annotation.names.row = TRUE, annotation.names.col = TRUE,
+  border.color = NA, na.color = "grey90")
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -118,7 +119,12 @@ logial value showing if the names for row annotation tracks should be drawn
   \item{annotation.names.col}{
 logial value showing if the names for column annotation tracks should be drawn
 }
-
+  \item{border.color}{
+color for borders, default set to NA
+}
+  \item{na.color}{
+color for cells with NA values
+}
 }
 \details{
 This function utilizes pheatmap to display a heatmap of supplied data. User can specify the genes/variables to be displayed in the heatmap which will be subset within the function itself. All samples/observations supplied will be plotted. myHeatmap() draws many of its parameters from the params object. params$scale.range indiates the range of data to be displayed in the heatmap. Values outside this range will be squished to fit this range after clustering where values above will be indicated with the highest expression levels and values below will be indicated with the lowest expression level. params$scale.colors holds the colors used in the heatmap and params$n.colors.range is a numeric value indicating how many diffrent colors should be allowed. If column and row annotations are supplied in params$annot_samps and params$annot_genes, respectivey, the annotations will be indicated along the top and left side of the heatmap respectively. If the colors corresponding to the levels of these annotations are specified in params$annot_cols, the inicated colors will be used, if not supplied, defualt colors will be assigned to show the annotation levels. For more information on the setting of parameters found in the params list object, see params and the associated functions to set and update these values with set_'parameter' where 'parameter' is equal to any of the above parameters listed above.A subtitle for the heatmap indicates the method for clustering/creation of a distance matrix and the linkage method used for clustering.

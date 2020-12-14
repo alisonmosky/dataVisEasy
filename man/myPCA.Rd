@@ -52,7 +52,7 @@ if coloring points by expression level. Passed to \link[dataVisEasy]{myColorRamp
 %%  ~~ If necessary, more details than the description above ~~
 }
 \value{
-A ggplot object. Additional layers can be added to the returned ggplot object to further customize theme and aesthetics.
+A ggplot object. Within the ggplot object are additional options that allow the user to add the text of gene or sample names to the plot (see examples, these are specifically designed to be added outside the function itself for proper positioning). Additional layers can be added to the returned ggplot object to further customize theme and aesthetics.
 }
 \references{
 %% ~put references to the literature/web site here ~

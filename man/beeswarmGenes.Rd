@@ -12,7 +12,7 @@ beeswarmGenes(data, list, exact = TRUE, is.raw.Ct = FALSE, na.fix = 2,
   squishy = FALSE, color.by = "blue", custom.color.vec = FALSE, groupby.x = NULL,
   custom.group.vec = FALSE, facet.wrap = FALSE, ncols = 2, scales = "free_y",
   legend.position = "none", axis.text.x.size = 25, point.size = 3, transparency = 1,
-  percent.mad = 0.5)
+  percent.mad = 0.5, dodge.width =0.8)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -70,6 +70,10 @@ transparency or alpha value of the points
 }
   \item{percent.mad}{
 if coloring points by expression level. Passed to \link[dataVisEasy]{myColorRamp5} to determine how the data is binned
+}
+
+  \item{dodge.width}{
+  the dodge.width of the grouped points, see \link[ggbeeswarm]{geom_beeswarm}
 }
 }
 \details{

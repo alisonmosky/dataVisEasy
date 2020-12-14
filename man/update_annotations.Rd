@@ -20,7 +20,7 @@ values corresponding to the annotation to be updated or added.
 }
 }
 \details{
-Length of values must be equal to number of rows in original annotations dataframe. See all.samples option in \link[dataVisEasy]{extractClusters} if added annotations are identifications of cluster groups.  If new or updated values should be shown in the heatmap, must rerun \link[dataVisEasy]{set_annot_samps}. To add specific colors for the new annotations, see \link[dataVisEasy]{set_annot_cols} and \link[dataVisEasy]{update_annot_cols}
+If the name of the supplied annotation already exists, will overwrite the previous values. Number of values in updated annotation do not need to be the same length as the pre-existing annotations. This function will merge the annotations, see \link[dplyr]{full_join}. Any missing values will be set to "No_Annot" signifying that no annotation was provided. This is especially useful if annotating clusters where the genes being clustered and annotated is a subset of all genes present, see \link[dataVisEasy]{extractClusters} if added annotations are identifications of cluster groups. If new or updated values should be shown in the heatmap, must rerun \link[dataVisEasy]{set_annot_samps}. To add specific colors for the new annotations, see \link[dataVisEasy]{set_annot_cols} and \link[dataVisEasy]{update_annot_cols}
 }
 \value{
 %%  ~Describe the value returned

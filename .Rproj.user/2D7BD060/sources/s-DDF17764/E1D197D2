@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1603396561653.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "11|2|214|0|\n228|2|259|0|\n267|2|309|0|\n321|2|334|0|\n340|2|348|0|\n372|2|391|0|\n402|2|433|0|\n",
+    "hash" : "0",
+    "id" : "E1D197D2",
+    "lastKnownWriteTime" : 1603399368,
+    "last_content_update" : 1603399368638,
+    "path" : "C:/Users/axm323/Dropbox (SBG)/SHR-Work/Alison-DataVis-Package/Extra_Functions.R",
+    "project_path" : null,
+    "properties" : {
+        "cursorPosition" : "217,0",
+        "scrollLine" : "0"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
