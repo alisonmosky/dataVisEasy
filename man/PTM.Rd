@@ -8,7 +8,7 @@ Pavlidis Template Matching
 a simple implementation of Pavlidis Template Matching that searches for correlations above a specified threshold within the supplied input data. Templates can be annotations, genes or samples, or a cusotm template can be provided.
 }
 \usage{
-PTM(data, match.template, set.high, custom.template = NA, Find.Match.For = "genes",
+PTM(data, match.template, annotation.level.set.high, custom.template = NA, Find.Match.For = "genes",
   cutoff = 0.05, cut.by = "pvals", method = "pearson",
   NA.handling = "pairwise.complete.obs", return.vals = FALSE)
 }
@@ -20,8 +20,8 @@ numeric data matrix with samples/observations in the columns and genes/variables
   \item{match.template}{
 template to be matched against. If Find.Match.For = "genes", can supply a gene to be matched against (rownames in input data) or a string pointing to an annotation stored in the annotations dataframe in the params list object. If Find.Match.For = "samples", can supply a sample to be matched against (colnames in input data) or a string pointing to an annotation stored in the annotations.genes dataframe in the params list object.
 }
-  \item{set.high}{
-a character vector indicating which levels of an annotation factor to set high. If pointing to an annotation stored in the params list object, levels supplied will be set to 1 while all other levels will be set to 0, searching for matches that have high expression for the given levels and low expression for all others
+  \item{annotation.level.set.high}{
+a character vector indicating which levels of an annotation factor to set high. match.template will point to an annotation stored in the params list object, levels supplied here will be set to 1 while all other levels will be set to 0, searching for matches that have high expression for the given levels and low expression for all others
 }
   \item{custom.template}{
 a custom template to be matched against. Must be the same length as columns of input data if Find.Match.For = "genes" or the same length as rows of input data if Find.Match.For = "samples"

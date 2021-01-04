@@ -80,7 +80,7 @@ option to specify and override the gaps inserted in between the annotations in t
 numeric indicating the width of gaps along both rows and columns. Works in tandem with both gaps.row.spec/gaps.col.spec and groupings.gaps/groupings.genes.gaps where the indicated gaps from the previous arguments will be widened by the factor indicated.
 }
   \item{main}{
-title of heatmap. Default will display "Genes of Interest:" followed by the genes supplied in the list argument
+title of heatmap. Default will display "Genes of Interest:" followed by the genes supplied in the list argument with the clustering method and linkage displayed underneath.
 }
   \item{order.by.gene}{
 optional character equal to one of the rownames of the data to order the columns of the data by increasing levels of indicated row. If groupings is supplied, each group of the annotations will be ordered by the supplied gene.

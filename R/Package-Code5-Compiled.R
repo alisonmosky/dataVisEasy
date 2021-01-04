@@ -1,14 +1,46 @@
+###Initialize and Update Parameters####
+parameters <- list(scale.range = c(-1,1),
+               scale.colors = c("blue","black","yellow"),
+               n.colors.range = 100,
+               annotations = NA,
+               annot_samps = NA,
+               annotations.genes = NA,
+               annot_genes = NA,
+               annot_cols = NA,
+               expression_gradient.colors = c("blue","lightblue","gray","indianred","firebrick"))
 
 
-##option to supply vector or dataframe? -- should be code in myHeatmapByAnnotation to draw from....
-###if annotation is named or dataframe, do full_join, otherwise check if vector is same length and if so append, error if not
-##just one annotation at once or more?
-##full_join to integrate if not all together
-##change NAs to No_Annot afterwards
-
-##if updating something that exists already.....remove and add back in
+initiate_params <- function(parameters){
+  assign("params",parameters,envir =  .GlobalEnv)
+}
 
 
+set_scale.range <- function(range){
+  if(length(range) == 2 & class(range) == "numeric" & range[2] > range[1]){
+    params$scale.range <<- range}
+  else{stop('range must be a numeric of length 2 and the second element must be greater than the first')}}
+
+set_scale.colors <- function(colors){#unlockBinding("params", env = as.environment("package:dataVisEasy"));
+  params$scale.colors <<- colors}
+
+set_n.colors.range <- function(n){#unlockBinding("params", env = as.environment("package:dataVisEasy"));
+  params$n.colors.range <<- n}
+
+set_annotations <- function(annotations){
+    # params$annotations <<- annotations
+  if (sum(is.na(params$annotations) != 0)) {
+    if ( (length(annotations) == 1) & (is.null(nrow(annotations)) == TRUE) ) {
+      params$annotations <<- NA
+    }else{
+      if (length(.row_names_info(annotations, type = 0)) != nrow(annotations) ) {
+        stop('No rownames present in provided annotations. Rownames of annotations are linked to colnames of data and must be provided for proper integration')}
+    params$annotations <<- annotations
+    params$annotations[is.na(params$annotations)] <<- "No_Annot"
+    warning('NAs present in annotations, converted to "No_Annot" for functionality purposes')
+    }
+  }
+  params$annotations <<- annotations
+}
 
 update_annotations <- function(   ###should make an option to full join if stuff thats being added doesn't cover everything....
   annotation,
@@ -64,7 +96,38 @@ update_annotations <- function(   ###should make an option to full join if stuff
 
 }
 
+set_annot_samps <- function(annotations= NULL){
+  if (is.null(annotations) == TRUE) { params$annot_samps <<- params$annotations
+  }else{
+    suppressWarnings(if (is.na(annotations)) { params$annot_samps <<- NA
+    }else{
+      if (sum(annotations %in% colnames(params$annotations)) != length(annotations)) {
+        stop('one or more of the supplied list of annotations cannot be found in annotations')
+      }
+      params$annot_samps <<- params$annotations[,which(colnames(params$annotations) %in% annotations), drop = FALSE]
+      params$annot_samps <<- params$annot_samps[,match(annotations, colnames(params$annot_samps)), drop = FALSE]
+    })
+  }
+}
 
+set_annotations.genes <- function(annotations.genes){
+
+  # params$annotations.genes <<- annotations.genes
+  if (sum(is.na(params$annotations.genes) != 0)) {
+    if ( (length(annotations.genes) == 1) & (is.null(nrow(annotations.genes)) == TRUE) ) {
+      params$annotations.genes <<- NA
+    }else {
+      if (length(.row_names_info(annotations.genes, type = 0)) != nrow(annotations.genes) ) {
+        stop('No rownames present in provided annotations. Rownames of annotations are linked to rownames of data and must be provided for proper integration')}
+
+      params$annotations.genes <<- annotations.genes
+    params$annotations.genes[is.na(params$annotations.genes)] <<- "No_Annot"
+
+    warning('NAs present in annotations.genes, converted to "No_Annot" for functionality purposes')
+    }
+  }
+  params$annotations.genes <<- annotations.genes
+}
 
 update_annotations.genes <- function(   ###should make an option to full join if stuff thats being added doesn't cover everything....
   annotation,
@@ -122,110 +185,6 @@ update_annotations.genes <- function(   ###should make an option to full join if
   params$annotations.genes <<- temp.annotations.genes
 
 }
-
-
-
-###Initialize and Update Parameters####
-parameters <- list(scale.range = c(-1,1),
-               scale.colors = c("blue","black","yellow"),
-               n.colors.range = 100,
-               annotations = NA,
-               annot_samps = NA,
-               annotations.genes = NA,
-               annot_genes = NA,
-               annot_cols = NA,
-               expression_gradient.colors = c("blue","lightblue","gray","indianred","firebrick"))
-
-
-initiate_params <- function(parameters){
-  assign("params",parameters,envir =  .GlobalEnv)
-}
-
-
-set_scale.range <- function(range){
-  if(length(range) == 2 & class(range) == "numeric" & range[2] > range[1]){
-    params$scale.range <<- range}
-  else{stop('range must be a numeric of length 2 and the second element must be greater than the first')}}
-
-set_scale.colors <- function(colors){#unlockBinding("params", env = as.environment("package:dataVisEasy"));
-  params$scale.colors <<- colors}
-
-set_n.colors.range <- function(n){#unlockBinding("params", env = as.environment("package:dataVisEasy"));
-  params$n.colors.range <<- n}
-
-
-set_annotations <- function(annotations){
-    # params$annotations <<- annotations
-  if (sum(is.na(params$annotations) != 0)) {
-    if ( (length(annotations) == 1) & (is.null(nrow(annotations)) == TRUE) ) {
-      params$annotations <<- NA
-    }else{
-      if (length(.row_names_info(annotations, type = 0)) != nrow(annotations) ) {
-        stop('No rownames present in provided annotations. Rownames of annotations are linked to colnames of data and must be provided for proper integration')}
-    params$annotations <<- annotations
-    params$annotations[is.na(params$annotations)] <<- "No_Annot"
-    warning('NAs present in annotations, converted to "No_Annot" for functionality purposes')
-    }
-  }
-  params$annotations <<- annotations
-}
-
-# update_annotations <- function(   ###should make an option to full join if stuff thats being added doesn't cover everything....
-#   annotation,
-#   values
-# ){
-#   if (annotation %in% colnames(params$annotations)) {
-#     params$annotations[,annotation] <<- values
-#   }else{
-#     params$annotations$V1 <<- values
-#     colnames(params$annotations)[colnames(params$annotations)=="V1"] <<- annotation
-#   }
-# }
-
-set_annot_samps <- function(annotations= NULL){
-  if (is.null(annotations) == TRUE) { params$annot_samps <<- params$annotations
-  }else{
-    suppressWarnings(if (is.na(annotations)) { params$annot_samps <<- NA
-    }else{
-      if (sum(annotations %in% colnames(params$annotations)) != length(annotations)) {
-        stop('one or more of the supplied list of annotations cannot be found in annotations.genes')
-      }
-      params$annot_samps <<- params$annotations[,which(colnames(params$annotations) %in% annotations), drop = FALSE]
-      params$annot_samps <<- params$annot_samps[,match(annotations, colnames(params$annot_samps)), drop = FALSE]
-    })
-  }
-}
-
-set_annotations.genes <- function(annotations.genes){
-
-  # params$annotations.genes <<- annotations.genes
-  if (sum(is.na(params$annotations.genes) != 0)) {
-    if ( (length(annotations.genes) == 1) & (is.null(nrow(annotations.genes)) == TRUE) ) {
-      params$annotations.genes <<- NA
-    }else {
-      if (length(.row_names_info(annotations.genes, type = 0)) != nrow(annotations.genes) ) {
-        stop('No rownames present in provided annotations. Rownames of annotations are linked to rownames of data and must be provided for proper integration')}
-
-      params$annotations.genes <<- annotations.genes
-    params$annotations.genes[is.na(params$annotations.genes)] <<- "No_Annot"
-
-    warning('NAs present in annotations.genes, converted to "No_Annot" for functionality purposes')
-    }
-  }
-  params$annotations.genes <<- annotations.genes
-}
-
-# update_annotations.genes <- function(  ##right now can only do one at a time
-#   annotation,
-#   values
-# ){
-#   if (annotation %in% colnames(params$annotations.genes)) {
-#     params$annotations.genes[,annotation] <<- values
-#   }else{
-#     params$annotations.genes$V1 <<- values
-#     colnames(params$annotations.genes)[colnames(params$annotations.genes)=="V1"] <<- annotation
-#   }
-# }
 
 set_annot_genes <- function(annotations = NULL){
   if (is.null(annotations) == TRUE) { params$annot_genes <<- params$annotations.genes
@@ -418,8 +377,14 @@ myHeatmap <- function(  ##basic heatmap, can subset for gene list
   na.color = "grey90"
 ){
 
+  if (("matrix" %in% class(data)) != TRUE ) {
+    data <- as.matrix(data)
+    warning('input data converted to matrix')
+  }
+
   if (is.null(main)==TRUE){
-    main <- paste("Genes of Interest:",paste(list, collapse = ","))}
+    main <- paste("Genes of Interest:",paste(list, collapse = ","))
+    main <- paste(main,"\n Method:",method," Linkage:",linkage)}
 
   if (is.null(list) == TRUE) {list <- rownames(data)}
 
@@ -550,7 +515,7 @@ myHeatmap <- function(  ##basic heatmap, can subset for gene list
 
 
   pheatmap(subset,col=my_cols, breaks=breaks, border_color = border.color, na_col = na.color, clustering_method=linkage,annotation_col=temp.annot_samps, annotation_colors = temp.annot_cols,
-           clustering_distance_rows = clust.genes, clustering_distance_cols = clust.samps, main=paste(main,"\n Method_",method,"_Linkage_",linkage),
+           clustering_distance_rows = clust.genes, clustering_distance_cols = clust.samps, main=main,
            cluster_rows = clust.rows, cluster_cols = clust.cols, cutree_rows = row.groups, cutree_cols = col.groups, gaps_row = gaps.row, gaps_col = gaps.col,
            cellwidth = cell.width, cellheight = cell.height, fontsize_row = fontsize.row, fontsize_col = fontsize.col, show_rownames = show.rownames,show_colnames = show.colnames,
            treeheight_row = heightrow ,treeheight_col = heightcol, silent = hide.plot, legend=show.legend, annotation_legend = show.annotations,
@@ -605,9 +570,14 @@ myHeatmapByAnnotation <- function(
   na.color = "grey90"
 ){
 
+  if (("matrix" %in% class(data)) != TRUE ) {
+    data <- as.matrix(data)
+    warning('input data converted to matrix')
+  }
 
   if (is.null(main)==TRUE){
-    main <- paste("Genes of Interest:",paste(list, collapse = ","))}
+    main <- paste("Genes of Interest:",paste(list, collapse = ","))
+    main <- paste(main,"\n Method:",method," Linkage:",linkage)}
 
   if (is.null(list) == TRUE) {list <- rownames(data)}
 
@@ -1022,7 +992,7 @@ myHeatmapByAnnotation <- function(
 
 
   pheatmap(data.subset,col=my_cols, breaks=breaks, border_color = border.color, na_col = na.color, clustering_method=linkage,annotation_col=temp.annot_samps, annotation_colors = temp.annot_cols,
-           clustering_distance_rows = clust.genes, clustering_distance_cols = clust.samps, main=paste(main,"\n Method_",method,"_Linkage_",linkage),
+           clustering_distance_rows = clust.genes, clustering_distance_cols = clust.samps, main=main,
            cluster_rows = clust.rows, cluster_cols = clust.cols, cutree_rows = row.groups, cutree_cols = col.groups, gaps_row = gaps.row, gaps_col = gaps.col,fontsize_row = fontsize.row, fontsize_col = fontsize.col,
            cellwidth = cell.width, cellheight = cell.height, show_rownames = show.rownames,show_colnames = show.colnames,
            treeheight_row = heightrow ,treeheight_col = heightcol, silent=hide.plot, legend=show.legend, annotation_legend = show.annotations,
@@ -1038,6 +1008,11 @@ ExtractMatrix <- function(   ##from clustered heatmap, will extract the exact ma
   clustered.cols = TRUE, ##assumes that heatmap$tree_col exists
   clustered.rows = TRUE ##assumes that heatmap$tree_row exists
 ){
+
+  if (("matrix" %in% class(data)) != TRUE ) {
+    data <- as.matrix(data)
+    warning('input data converted to matrix')
+  }
 
   attributes <- unlist(lapply(heatmap$gtable$grobs, function(x)(x$name)))
   text.attributes <- grep("GRID.text", attributes)
@@ -1060,19 +1035,25 @@ ExtractMatrix <- function(   ##from clustered heatmap, will extract the exact ma
 extractClusters <- function(  ##will extract cluster groups from clustered heatmaps
   data, ##should be the same data as what was used to generate the heatmap, used to extract the correct gene order
   heatmap, #this should be the output from pheatmap that was saved
-  extractGenes = FALSE, ##will extract from the gene clustering
+  to.extract = "genes", ##can accept "genes", "samples", or "both"
+  nclusters, ## numeric, how many clusters should be extracted. If to.extract is set to "both", numeric vector should be supplied listing number of gene (row clusters) first
   GeneGroup_Name = NULL,
-  extractSamples = TRUE, ##will extract from the sample clustering
   SampleGroup_Name = NULL,
-  num_Gene.groups = 5, ##default of 5, should be decided
-  num_Sample.groups = 5, ##default of 5, should be decided
   all.genes = NULL, #gene names, if annotations should be in placed in larger gene list than matrix in question
   all.samples = NULL #sample names, if annotations should be in placed in larger sample list than matrix in question
 ){
+
+  if (("matrix" %in% class(data)) != TRUE ) {
+    data <- as.matrix(data)
+    warning('input data converted to matrix')
+  }
+
   if(is.null(all.genes)==TRUE){ all.genes <- rownames(data) }
   if(is.null(all.samples)==TRUE){ all.samples <- colnames(data) }
 
-  if (extractGenes == TRUE) {
+  if (to.extract == "genes" | to.extract == "both") {
+    if (to.extract == "genes") {num_Gene.groups <- nclusters}
+    if (to.extract == "both") {num_Gene.groups <- nclusters[1]}
     report.gene.groups <- rep("_",length(all.genes))
     gene.groups <- cutree(heatmap$tree_row, k=num_Gene.groups)
     alph <- LETTERS[1:num_Gene.groups]
@@ -1089,7 +1070,9 @@ extractClusters <- function(  ##will extract cluster groups from clustered heatm
     #names(report.gene.groups) <- all.genes
   }
 
-  if(extractSamples == TRUE){
+  if(to.extract == "samples" | to.extract == "both"){
+    if (to.extract == "samples") {num_Sample.groups <- nclusters}
+    if (to.extract == "both") {num_Sample.groups <- nclusters[2]}
     report.sample.groups <- rep("_",length(all.samples))
     sample.groups <- cutree(heatmap$tree_col,k=num_Sample.groups)
     alph <- LETTERS[1:num_Sample.groups]
@@ -1123,6 +1106,11 @@ extractGaps <- function(  ##similar to extractClusters, will return the position
   num_Rows = 5, ##default of 5, should be decided
   num_Cols = 5 ##default of 5, should be decided
 ){
+  if (("matrix" %in% class(data)) != TRUE ) {
+    data <- as.matrix(data)
+    warning('input data converted to matrix')
+  }
+
   if (extractRows == TRUE) {
     gene.groups <- cutree(heatmap$tree_row, k=num_Rows)
     gene.tree.order <- heatmap$tree_row[["labels"]][heatmap$tree_row[["order"]]]
@@ -1164,6 +1152,11 @@ AOV1way <- function(
   pthreshold = 0.05,
   additional.report = "NONE"  ##options are "NONE", "TUKEY","AOV", or "ALL"
 ){
+
+  if (("matrix" %in% class(data.to.aov)) != TRUE ) {
+    data.to.aov <- as.matrix(data.to.aov)
+    warning('input data converted to matrix')
+  }
 
   ####if data is not all samples, subset annotations appropriately
     if (sum(colnames(data.to.aov) %notin% rownames(params$annotations)) != 0 ) {
@@ -1238,6 +1231,11 @@ AOV2way <- function(
   pthreshold = 0.05,
   additional.report = "NONE"  ##options are "NONE", "TUKEY","AOV", or "ALL"
 ){
+
+  if (("matrix" %in% class(data.to.aov)) != TRUE ) {
+    data.to.aov <- as.matrix(data.to.aov)
+    warning('input data converted to matrix')
+  }
 
   ####if data is not all samples, subset annotations appropriately
   if (sum(colnames(data.to.aov) %notin% rownames(params$annotations)) != 0 ) {
@@ -1356,8 +1354,15 @@ myPCA <- function(
   main = NULL,
   point.size =5,
   transparency = 1,
-  percent.mad =0.5
+  percent.mad =0.5,
+  return.ggplot.input = FALSE,
+  return.loadings = FALSE
 ){
+
+  if (("matrix" %in% class(data)) != TRUE ) {
+    data <- as.matrix(data)
+    warning('input data converted to matrix')
+  }
 
   if (to.pca == "samples") {
 
@@ -1461,7 +1466,8 @@ myPCA <- function(
                            axis.text = element_text(size=25),axis.title = element_text(size=30), legend.position = legend.position)
     }
   }
-
+  if (return.loadings == TRUE) {return(pca.ldgs)}
+  if (return.ggplot.input == TRUE) {return(pca.data)}
   return(p)
 }
 
@@ -1470,7 +1476,7 @@ myPCA <- function(
 PTM <- function(  #pavlidis template matching, correlation to a chosen template
   data, ##dataset, genes in the rows
   match.template, ##from params$annotations or gene, can also be gene or sample
-  set.high, ##level(s) of annotations vector to set high
+  annotation.level.set.high, ##level(s) of annotations vector to set high
   custom.template = NA,  ##must be same length as data
   Find.Match.For = "genes", ##default to compare to a gene or sample metadata template, can change to "samples"
   cutoff = 0.05, ##default of 0.05, can be changed, assumes pval
@@ -1480,6 +1486,11 @@ PTM <- function(  #pavlidis template matching, correlation to a chosen template
   return.vals = FALSE
 ){
 
+  if (("matrix" %in% class(data)) != TRUE ) {
+    data <- as.matrix(data)
+    warning('input data converted to matrix')
+  }
+
   if (tolower(Find.Match.For) == "genes") {   ##length of samples
 
     temp.annotations <- params$annotations
@@ -1487,6 +1498,13 @@ PTM <- function(  #pavlidis template matching, correlation to a chosen template
 
 
     if(is.na(custom.template)==TRUE){
+
+      if (((match.template %in% colnames(temp.annotations)) == FALSE) & ((match.template %in% rownames(data)) == FALSE)){
+        stop('when finding a match for genes, match.template must be set to either a gene name (in the rownames of input data) or
+             be the name of an annotation found in the annotations dataframe in the params list object, if neither is applicable,
+             please use custom.template')
+      }
+
       if (match.template %in% colnames(temp.annotations)) {
         suppressWarnings( if (is.na(temp.annotations) == FALSE) {
           if (sum(colnames(data) %notin% rownames(temp.annotations)) != 0 ) {
@@ -1495,7 +1513,7 @@ PTM <- function(  #pavlidis template matching, correlation to a chosen template
           temp.annotations <- temp.annotations[match(colnames(data), rownames(temp.annotations)),, drop = FALSE]}  )
 
         template <- rep(0,nrow(temp.annotations))
-        template[which(temp.annotations[,match.template] %in% set.high)] <- 1
+        template[which(temp.annotations[,match.template] %in% annotation.level.set.high)] <- 1
       }
       if (match.template %in% rownames(data)) {
         template <- data[which(rownames(data) == match.template),]
@@ -1514,17 +1532,29 @@ PTM <- function(  #pavlidis template matching, correlation to a chosen template
 
     temp.annotations.genes <- params$annotations.genes
 
-    suppressWarnings( if (is.na(temp.annotations.genes) == FALSE) {
-      if (sum(rownames(data) %notin% rownames(temp.annotations.genes)) != 0 ) {
-        stop('rownames of input data do not match rownames of annotations, cannot link annotations to data')
-      }
-      temp.annotations.genes <- temp.annotations.genes[match(rownames(data), rownames(temp.annotations.genes)),, drop = FALSE]}  )
 
 
     if(is.na(custom.template)==TRUE){
+
+      if (((match.template %in% colnames(temp.annotations)) == FALSE) & ((match.template %in% rownames(data)) == FALSE)){
+        stop('when finding a match for samples, match.template must be set to either a sample name (in the colnames of input data) or
+             be the name of an annotation found in the annotations.genes dataframe in the params list object, if neither is applicable,
+             please use custom.template')
+      }
+
+
+
       if (match.template %in% colnames(temp.annotations.genes)) {
+
+        suppressWarnings( if (is.na(temp.annotations.genes) == FALSE) {
+          if (sum(rownames(data) %notin% rownames(temp.annotations.genes)) != 0 ) {
+            stop('rownames of input data do not match rownames of annotations, cannot link annotations to data')
+          }
+          temp.annotations.genes <- temp.annotations.genes[match(rownames(data), rownames(temp.annotations.genes)),, drop = FALSE]}  )
+
+
         template <- rep(0,nrow(temp.annotations.genes))
-        template[which(temp.annotations.genes[,match.template] %in% set.high)] <- 1
+        template[which(temp.annotations.genes[,match.template] %in% annotation.level.set.high)] <- 1
       }
       if (match.template %in% colnames(data)) {
         template <- data[,which(colnames(data) == match.template)]
@@ -1580,6 +1610,11 @@ corrs2Gene <- function(  ##find correlations to specific gene, if no limits are 
   drop.annot.levels = TRUE
 ){
 
+  if (("matrix" %in% class(data)) != TRUE ) {
+    data <- as.matrix(data)
+    warning('input data converted to matrix')
+  }
+
   main <- paste("Correlations_to_",gene)
   gen.cor<-cor(x=(data[which(rownames(data)==gene),]),y=t(data), use=NA.handling, method=method)
 
@@ -1615,6 +1650,11 @@ correlateGenes <- function(  ##broad gene correlations
   method = "pearson",   ##clustering and correlating method, default of pearson, can be switched to spearman
   NA.handling = "pairwise.complete.obs"   ##use for correlations, can be overwritten
 ){
+  if (("matrix" %in% class(data)) != TRUE ) {
+    data <- as.matrix(data)
+    warning('input data converted to matrix')
+  }
+
   main=paste("Gene Correlations")
   cor.dat <- cor(t(data),use=NA.handling,method=method)
   cor.dat[!upper.tri(cor.dat)] <- NA
@@ -1649,6 +1689,10 @@ reportGenes <- function(  ##returns report summary of range of expression
   weight = 1.25 #only used if ranges=mad, weight to be added to mad for ranges
 ){
 
+  if (("matrix" %in% class(data)) != TRUE ) {
+    data <- as.matrix(data)
+    warning('input data converted to matrix')
+  }
 
   ##subset for list
   if (exact == TRUE) {
@@ -1788,6 +1832,10 @@ find.silhouette <- function(
   legend.position = "bottom"
 ){
 
+  if (("matrix" %in% class(data)) != TRUE ) {
+    data <- as.matrix(data)
+    warning('input data converted to matrix')
+  }
 
   ###clustering
   if (method %in% c("spearman","pearson", "kendall")) {
@@ -1895,8 +1943,14 @@ scatterGenes <- function(
   point.size = 5,
   transparency = 1,
   legend.position = "none",
-  percent.mad = 0.5
+  percent.mad = 0.5,
+  return.ggplot.input = FALSE
 ){
+
+  if (("matrix" %in% class(data)) != TRUE ) {
+    data <- as.matrix(data)
+    warning('input data converted to matrix')
+  }
 
   if (length(custom.x) == 1 & custom.x[1] == FALSE) {
     if (gene1 %notin% rownames(data)) {stop('gene1 not found in rownames data')}
@@ -1967,6 +2021,7 @@ scatterGenes <- function(
     if ((xlimits || ylimits) == TRUE) {p <- p + xlim(c(xlimits)) + ylim(c(ylimits))}
   }
 
+  if (return.ggplot.input == TRUE) {return(dat.to.plot)}
   return(p)
 }
 
@@ -1991,8 +2046,14 @@ beeswarmGenes <- function( ##can save as ggplot object and add layers afterwards
   point.size = 3,
   transparency = 1,
   percent.mad = 0.5,
-  dodge.width =0.8
+  dodge.width =0.8,
+  return.ggplot.input = FALSE
 ){
+
+  if (("matrix" %in% class(data)) != TRUE ) {
+    data <- as.matrix(data)
+    warning('input data converted to matrix')
+  }
 
   ###set up, get genes, squish scale if needed, set groupby.x == FALSE if it doesnt match with colors
   if (exact == TRUE) {dat<-data[which(rownames(data) %in% list),, drop = FALSE]
@@ -2224,6 +2285,7 @@ beeswarmGenes <- function( ##can save as ggplot object and add layers afterwards
 
     }
   }
+  if (return.ggplot.input == TRUE) {return(dat.to.plot)}
   return(p)
 }
 
@@ -2242,8 +2304,14 @@ volcano <- function(
   show.genes = NULL,
   point.size = 2,
   transparency = 1,
-  legend.position = "right"
+  legend.position = "right",
+  return.ggplot.input = FALSE
 ){
+
+  if (("matrix" %in% class(data)) != TRUE ) {
+    data <- as.matrix(data)
+    warning('input data converted to matrix')
+  }
 
   ####if data is not all samples, subset annotations appropriately
   temp.annotations <- params$annotations
@@ -2303,6 +2371,7 @@ volcano <- function(
     xlab("Log2 Fold Change") + ylab("-log10(Pvalue)") + scale_color_manual(name = paste(paste0("FC.cut = ", FC.cut), paste0("Pval.cut = ", pval.cut), sep="\n"), values=c("Downregulated"=downreg.color,"Upregulated"=upreg.color,"No Sig"=nosig.color)) +
     ggtitle(paste("-log10(pvalue) vs. log2(Fold Change) for",levels[2],"over",levels[1]))
 
+  if (return.ggplot.input == TRUE) {return(mat)}
   if (return.summary == FALSE) {return(p)}
   if (return.summary == TRUE) {return(volcano.summary)}
 
@@ -2319,8 +2388,14 @@ DensityGenes <- function(
   transparency = 0.5,
   ncols=2, ##can change
   scales="free",
-  legend.position = "right"
+  legend.position = "right",
+  return.ggplot.input = FALSE
 ){
+
+  if (("matrix" %in% class(data)) != TRUE ) {
+    data <- as.matrix(data)
+    warning('input data converted to matrix')
+  }
 
   if (exact == TRUE) {dat<-data[which(rownames(data) %in% list),, drop = FALSE]
   if (length(dat) == 0 ) {stop('exact matches for list not found in rownames data')}
@@ -2386,6 +2461,7 @@ DensityGenes <- function(
 
   }
   }
+  if (return.ggplot.input == TRUE) {return(dat.to.plot)}
   return(p)
 }
 

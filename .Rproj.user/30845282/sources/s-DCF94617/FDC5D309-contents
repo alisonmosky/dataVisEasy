@@ -1,0 +1,32 @@
+\name{RAGP_rawCt}
+\alias{RAGP_rawCt}
+\docType{data}
+\title{
+Raw Ct HT-qPCR data for single neurons from the Right Atrial Ganglionated Plexus of a Yucatan Minipig
+}
+\description{
+HT-qPCR data for 266 genes for 405 single neurons across 4 Pigs. These genes passed QC
+in at least one of the four animals. See \link[dataVisEasy]{RAGP_norm} for the normalized and trimmed data and \link[dataVisEasy]{RAGP_annots} for annotations for all samples. This data is used in examples for functions in the dataVisEasy package
+}
+\usage{data("RAGP_rawCt")}
+\format{
+  The format is:
+ num [1:266, 1:405] 7.86 NA 11.8 NA NA ...
+ - attr(*, "dimnames")=List of 2
+  ..$ : chr [1:266] "Ache" "Acta2" "Actb" "Adra1a" ...
+  ..$ : chr [1:405] "Pig-M1_188-L1-2" "Pig-M1_188-L1-3" "Pig-M1_188-L1-7" "Pig-M1_20-L1-1" ...
+}
+\details{
+%%  ~~ If necessary, more details than the __description__ above ~~
+}
+\source{
+%%  ~~ reference to a publication or URL from which the data were obtained ~~
+}
+\references{
+%%  ~~ possibly secondary sources and usages ~~
+}
+\examples{
+data(RAGP_rawCt)
+## maybe str(RAGP_rawCt) ; plot(RAGP_rawCt) ...
+}
+\keyword{datasets}

@@ -1,0 +1,63 @@
+extractClusters <- function(  ##will extract cluster groups from clustered heatmaps
+  data, ##should be the same data as what was used to generate the heatmap, used to extract the correct gene order
+  heatmap, #this should be the output from pheatmap that was saved
+  to.extract = "genes", ##can accept "genes", "samples", or "both"
+  nclusters, ## numeric, how many clusters should be extracted. If to.extract is set to "both", numeric vector should be supplied listing number of gene (row clusters) first
+  GeneGroup_Name = NULL,
+  SampleGroup_Name = NULL,
+  all.genes = NULL, #gene names, if annotations should be in placed in larger gene list than matrix in question
+  all.samples = NULL #sample names, if annotations should be in placed in larger sample list than matrix in question
+){
+  
+  if (("matrix" %in% class(data)) != TRUE ) {
+    data <- as.matrix(data)
+    warning('input data converted to matrix')
+  }
+  
+  if(is.null(all.genes)==TRUE){ all.genes <- rownames(data) }
+  if(is.null(all.samples)==TRUE){ all.samples <- colnames(data) }
+  
+  if (to.extract == "genes" | to.extract == "both") {
+    if (to.extract == "genes") {num_Gene.groups <- nclusters}
+    if (to.extract == "both") {num_Gene.groups <- nclusters[1]}
+    report.gene.groups <- rep("_",length(all.genes))
+    gene.groups <- cutree(heatmap$tree_row, k=num_Gene.groups)
+    alph <- LETTERS[1:num_Gene.groups]
+    gene.tree.order <- heatmap$tree_row[["labels"]][heatmap$tree_row[["order"]]]
+    ind=1
+    for (i in 1:length(unique(gene.groups))) {
+      which.group <- gene.groups[which(names(gene.groups)==gene.tree.order[ind])]
+      names <- names(which(gene.groups==which.group))
+      report.gene.groups[which(all.genes %in% names)] <- alph[i]
+      ind <- ind + length(names)
+    }
+    report.gene.groups <- data.frame(Gene.Groups=report.gene.groups, stringsAsFactors = T); rownames(report.gene.groups) <- all.genes
+    if (is.null(GeneGroup_Name) == FALSE) { colnames(report.gene.groups) <- GeneGroup_Name}
+    #names(report.gene.groups) <- all.genes
+  }
+  
+  if(to.extract == "samples" | to.extract == "both"){
+    if (to.extract == "samples") {num_Sample.groups <- nclusters}
+    if (to.extract == "both") {num_Sample.groups <- nclusters[2]}
+    report.sample.groups <- rep("_",length(all.samples))
+    sample.groups <- cutree(heatmap$tree_col,k=num_Sample.groups)
+    alph <- LETTERS[1:num_Sample.groups]
+    sample.tree.order <- heatmap$tree_col[["labels"]][heatmap$tree_col[["order"]]]
+    ind=1
+    for (i in 1:length(unique(sample.groups))) {
+      which.group <- sample.groups[which(names(sample.groups)==sample.tree.order[ind])]
+      names <- names(which(sample.groups==which.group))
+      report.sample.groups[which(all.samples %in% names)] <- alph[i]
+      ind <- ind + length(names)
+    }
+    report.sample.groups <- data.frame(Sample.Groups=report.sample.groups, stringsAsFactors = T); rownames(report.sample.groups) <- all.samples
+    if (is.null(SampleGroup_Name) == FALSE) { colnames(report.sample.groups) <- SampleGroup_Name}
+    # names(report.sample.groups) <- all.samples
+  }
+  
+  if(extractGenes == TRUE & extractSamples == TRUE){return(c(list(Gene_Groups=report.gene.groups, Sample_Groups=report.sample.groups)))}
+  if(extractGenes == TRUE & extractSamples == FALSE){return(report.gene.groups)}
+  if(extractGenes == FALSE & extractSamples == TRUE){return(report.sample.groups)}
+  #c(list(Gene_Groups=report.gene.groups, Sample_Groups=report.sample.groups))
+  
+}

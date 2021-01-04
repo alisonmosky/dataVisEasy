@@ -1,0 +1,337 @@
+\name{myHeatmap}
+\alias{myHeatmap}
+%- Also NEED an '\alias' for EACH other topic documented here.
+\title{
+Create a customizable Heatmap of Expression Data
+}
+\description{
+Creates a heatmap of supplied expression data with options to subset for specific genes/variables and with a variety of customizable options for aesthetics. Draws from params list object for parameters such as the range of the plotted data, the colors used, and annotations to be displayed if desired.
+}
+\usage{
+myHeatmap(data, list = NULL, exact = TRUE, method = "pearson", linkage = "complete",
+  NA.handling = "pairwise.complete.obs", clust.rows = T, clust.cols = T, row.groups = NA,
+  col.groups = NA, gaps.row = NULL, gaps.col = NULL, gap.width = 1, main = NULL,
+  order.by.gene = NULL, order.by.sample = NULL, cell.width = NA, cell.height = NA,
+  fontsize.row = 10, fontsize.col = 10, show.rownames = T, show.colnames = F,
+  treeheight.row = 20, treeheight.col = 20, hide.plot = FALSE, na.fix = FALSE,
+  na.offset = 2, show.legend = TRUE, show.annotations = TRUE, is.raw.Ct = FALSE,
+  drop.annot.levels = TRUE, annotation.names.row = TRUE, annotation.names.col = TRUE,
+  border.color = NA, na.color = "grey90")
+}
+%- maybe also 'usage' for other objects documented here.
+\arguments{
+  \item{data}{
+numeric data matrix with samples/observations in the columns and genes/variables in the rows
+}
+  \item{list}{
+character vector of genes/variables to be pulled out of the data matrix for viewing. If left as NULL, all the rownames of the supplied data matrix will be plotted
+}
+  \item{exact}{
+whether or not to search for exact or inexact matches of 'list' in 'data'. If exact = T (default) heatmap will plot genes/variables that exactly match the list supplied. If set to FALSE, will search for inexact matches.
+}
+  \item{method}{
+method to be used to calculate distance matrix for clustering. Accepts values to be passed to cor() such as "pearson" (default), "spearman", and "kendall" which well then be coerced to a distance matrix or any options accepted by dist()
+}
+  \item{linkage}{
+linkage clustering method used for clustering and to be passed to hclust().  Accepts all methods accepted by hclust()
+}
+  \item{NA.handling}{
+how missing values should be handled in the case of correlations, passed to the "use" argument of cor()
+}
+  \item{clust.rows}{
+should rows be clustered, default = TRUE
+}
+  \item{clust.cols}{
+should columns be clustered, default = TRUE
+}
+  \item{row.groups}{
+numeric to be passed to cutree(). Will split the dendrogram into the number of groups indicated
+}
+  \item{col.groups}{
+same as row.groups but for columns
+}
+  \item{gaps.row}{
+numeric vector specifying gaps to be inserted into rows of the data, only works if clust.rows = FALSE
+}
+  \item{gaps.col}{
+numeric vector specifying gaps to be inserted into columns of the data, only works if clust.cols = FALSE
+}
+  \item{gap.width}{
+numeric indicating how wide the spaces indicated in gaps.row and gaps.col should be
+}
+  \item{main}{
+title of heatmap. Default will display "Genes of Interest:" followed by the genes supplied in the list argument with the clustering method and linkage displayed underneath.
+}
+  \item{order.by.gene}{
+optional character equal to one of the rownames of the data to order the columns of the data by increasing levels of indicated row
+}
+  \item{order.by.sample}{
+optional character equal to one of the colnames of the data to order the rows of the data by increasing levels of indicated column
+}
+  \item{cell.width}{
+individual cell width in points. If left as NA, then the values depend on the size of plotting window.
+}
+  \item{cell.height}{
+individual cell height in points. If left as NA, then the values depend on the size of plotting window.
+}
+  \item{fontsize.row}{
+size of font for row names
+}
+  \item{fontsize.col}{
+size of font for column names
+}
+  \item{show.rownames}{
+logical value determining if rownames should be displayed, default = TRUE
+}
+  \item{show.colnames}{
+logical value determining if colnames should be displayed, default = FALSE
+}
+  \item{treeheight.row}{
+the height of a dendrogram tree for rows, if these are clustered. Default value 20 points.
+}
+  \item{treeheight.col}{
+the height of a dendrogram tree for columns if these are clustered. Default value 20 points.
+}
+  \item{hide.plot}{
+should the plot be displayed
+}
+  \item{na.fix}{
+logical: should missing values be treated as NA or be set to a low value (see na.offset). Values will still be colored gray in heatmap but may aid in clustering when many missing values are present.
+}
+  \item{na.offset}{
+option to treat missing/NA values as an offset from the minimum value. Ex a value of 2 will set missing values to min(data) - 2. Values will still be colored gray in heatmap but may aid in clustering when many missing values are present.
+}
+  \item{show.legend}{
+logical, should legend be shown
+}
+  \item{show.annotations}{
+logical, should annotation legend be shown
+}
+  \item{is.raw.Ct}{
+logical. If set to TRUE, will reverse the scale of the data to indicate low values as high expression as in the case of raw Ct values from qPCR, in this case, missing values will also be set to a high value to reflect low expression level
+}
+  \item{drop.annot.levels}{
+logial, should annotations not included in the output heatmap be shown in the annotation legend.
+}
+  \item{annotation.names.row}{
+logial value showing if the names for row annotation tracks should be drawn
+}
+  \item{annotation.names.col}{
+logial value showing if the names for column annotation tracks should be drawn
+}
+  \item{border.color}{
+color for borders, default set to NA
+}
+  \item{na.color}{
+color for cells with NA values
+}
+}
+\details{
+This function utilizes pheatmap to display a heatmap of supplied data. User can specify the genes/variables to be displayed in the heatmap which will be subset within the function itself. All samples/observations supplied will be plotted. myHeatmap() draws many of its parameters from the params object. params$scale.range indiates the range of data to be displayed in the heatmap. Values outside this range will be squished to fit this range after clustering where values above will be indicated with the highest expression levels and values below will be indicated with the lowest expression level. params$scale.colors holds the colors used in the heatmap and params$n.colors.range is a numeric value indicating how many diffrent colors should be allowed. If column and row annotations are supplied in params$annot_samps and params$annot_genes, respectivey, the annotations will be indicated along the top and left side of the heatmap respectively. If the colors corresponding to the levels of these annotations are specified in params$annot_cols, the inicated colors will be used, if not supplied, defualt colors will be assigned to show the annotation levels. For more information on the setting of parameters found in the params list object, see params and the associated functions to set and update these values with set_'parameter' where 'parameter' is equal to any of the above parameters listed above.A subtitle for the heatmap indicates the method for clustering/creation of a distance matrix and the linkage method used for clustering.
+}
+\value{
+a pheatmap object
+}
+\references{
+%% ~put references to the literature/web site here ~
+}
+\author{
+~~Alison Moss~~
+}
+\note{
+%%  ~~further notes~~
+}
+
+%% ~Make other sections like Warning with \section{Warning }{....} ~
+
+\seealso{
+See \link[dataVisEasy]{params}, \link[dataVisEasy]{set_scale.range}, \link[dataVisEasy]{set_scale.colors}, \link[dataVisEasy]{set_n.colors.range},\link[dataVisEasy]{set_annotations}, \link[dataVisEasy]{set_annotations.genes}, \link[dataVisEasy]{set_annot_samps}, \link[dataVisEasy]{set_annot_genes}, and \link[dataVisEasy]{set_annot_cols} for more information on setting up annotations and associated colors.
+}
+\examples{
+##---- Should be DIRECTLY executable !! ----
+##-- ==>  Define data, use random,
+##--	or do  help(data=index)  for the standard data sets.
+
+## The function is currently defined as
+function (data, list = NULL, exact = TRUE, method = "pearson",
+    linkage = "complete", NA.handling = "pairwise.complete.obs",
+    clust.rows = T, clust.cols = T, row.groups = NA, col.groups = NA,
+    gaps.row = NULL, gaps.col = NULL, gap.width = 1, main = NULL,
+    order.by.gene = NULL, order.by.sample = NULL, cell.width = NA,
+    cell.height = NA, fontsize.row = 10, fontsize.col = 10, show.rownames = T,
+    show.colnames = F, treeheight.row = 20, treeheight.col = 20,
+    hide.plot = FALSE, na.fix = FALSE, na.offset = 2, show.legend = TRUE,
+    show.annotations = TRUE, is.raw.Ct = FALSE, drop.annot.levels = TRUE)
+{
+    if (is.null(main) == TRUE) {
+        main <- paste("Genes of Interest:", paste(list, collapse = ","))
+    }
+    if (is.null(list) == TRUE) {
+        list <- rownames(data)
+    }
+    if (exact == TRUE) {
+        subset <- data[which(rownames(data) \%in\% list), ]
+        if (length(subset) == 0) {
+            stop("exact matches for list not found in rownames data")
+        }
+    }
+    else {
+        subset <- data[grep(paste(list, collapse = "|"), rownames(data)),
+            ]
+        if (length(subset) == 0) {
+            stop("inexact matches for list not found in rownames data")
+        }
+    }
+    if (na.fix == TRUE) {
+        if (is.raw.Ct == TRUE) {
+            subset[which(is.na(subset))] <- max(subset, na.rm = T) +
+                na.offset
+        }
+        if (is.raw.Ct == FALSE) {
+            subset[which(is.na(subset))] <- min(subset, na.rm = T) -
+                na.offset
+        }
+    }
+    if (method \%in\% c("spearman", "pearson", "kendall")) {
+        clust.genes <- (as.dist(1 - cor(t(subset), method = method,
+            use = NA.handling)))
+        clust.samps <- (as.dist(1 - cor(subset, method = method,
+            use = NA.handling)))
+    }
+    if (method \%in\% c("euclidean", "maximum", "manhattan", "canberra",
+        "binary", "minkowski")) {
+        clust.genes <- dist(subset, method = method)
+        clust.samps <- dist(t(subset), method = method)
+    }
+    if (is.null(order.by.gene) == FALSE) {
+        if (is.raw.Ct == FALSE) {
+            subset <- subset[, order(data[which(rownames(data) \%in\%
+                order.by.gene), ], na.last = F)]
+        }
+        if (is.raw.Ct == TRUE) {
+            subset <- subset[, order(data[which(rownames(data) \%in\%
+                order.by.gene), ], na.last = T)]
+        }
+        clust.cols <- F
+    }
+    if (is.null(order.by.sample) == FALSE) {
+        if (is.raw.Ct == FALSE) {
+            subset <- subset[order(subset[, which(colnames(subset) \%in\%
+                order.by.sample)], na.last = F), ]
+        }
+        if (is.raw.Ct == TRUE) {
+            subset <- subset[order(subset[, which(colnames(subset) \%in\%
+                order.by.sample)], na.last = T), ]
+        }
+        clust.rows <- F
+    }
+    if (clust.rows == T) {
+        heightrow <- treeheight.row
+    }
+    if (clust.cols == T) {
+        heightcol <- treeheight.col
+    }
+    subset1 <- subset
+    subset <- scales::squish(subset, params$scale.range)
+    breaks <- seq(params$scale.range[1], params$scale.range[2],
+        length.out = params$n.colors.range)
+    my_cols = colorRampPalette(params$scale.colors)(n = params$n.colors.range -
+        1)
+    if (is.raw.Ct == TRUE) {
+        my_cols <- rev(my_cols)
+    }
+    if (na.fix == TRUE) {
+        if (is.raw.Ct == TRUE) {
+            subset[which(subset1 == max(subset1))] <- params$scale.range[2] +
+                0.04
+            breaks <- c(breaks, params$scale.range[2] + 0.01,
+                params$scale.range[2] + 0.05)
+            my_cols <- c(my_cols, params$scale.colors[1], "grey90")
+        }
+        if (is.raw.Ct == FALSE) {
+            subset[which(subset1 == min(subset1))] <- params$scale.range[1] -
+                0.04
+            breaks <- c(params$scale.range[1] - 0.05, params$scale.range[1] -
+                0.01, breaks)
+            my_cols <- c("grey90", params$scale.colors[1], my_cols)
+        }
+    }
+    temp.annot_samps <- params$annot_samps
+    temp.annot_genes <- params$annot_genes
+    temp.annot_cols <- params$annot_cols
+    if (drop.annot.levels == TRUE) {
+        suppressWarnings(if (is.na(temp.annot_samps) == F) {
+            temp.annot_samps[] <- lapply(temp.annot_samps, as.factor)
+            temp.annot_samps <- temp.annot_samps \%>\% tibble::rownames_to_column("Sample")
+            temp.annot_samps <- droplevels(temp.annot_samps[which(temp.annot_samps$Sample \%in\%
+                colnames(subset)), ]) \%>\% as.data.frame() \%>\%
+                tibble::remove_rownames() \%>\% tibble::column_to_rownames(var = "Sample")
+            spec.cols <- colnames(temp.annot_samps)[colnames(temp.annot_samps) \%in\%
+                names(temp.annot_cols)]
+            if (length(spec.cols) != 0) {
+                for (annot.i in 1:length(spec.cols)) {
+                  annot <- colnames(temp.annot_samps)[annot.i]
+                  temp.annot_cols[[which(names(temp.annot_cols) ==
+                    annot)]] <- temp.annot_cols[[which(names(temp.annot_cols) ==
+                    annot)]][which(names(temp.annot_cols[[which(names(temp.annot_cols) ==
+                    annot)]]) \%in\% levels(temp.annot_samps[,
+                    which(colnames(temp.annot_samps) == annot)]))]
+                }
+            }
+        })
+        suppressWarnings(if (is.na(params$annot_genes) == F) {
+            temp.annot_genes[] <- lapply(temp.annot_genes, as.factor)
+            temp.annot_genes <- temp.annot_genes \%>\% tibble::rownames_to_column("Gene")
+            temp.annot_genes <- droplevels(temp.annot_genes[which(temp.annot_genes$Gene \%in\%
+                rownames(subset)), ]) \%>\% as.data.frame() \%>\%
+                tibble::remove_rownames() \%>\% tibble::column_to_rownames(var = "Gene")
+            spec.cols <- colnames(temp.annot_samps)[colnames(temp.annot_genes) \%in\%
+                names(temp.annot_cols)]
+            if (length(spec.cols) != 0) {
+                for (annot.i in 1:length(colnames(temp.annot_genes))) {
+                  annot <- colnames(temp.annot_genes)[annot.i]
+                  temp.annot_cols[[which(names(temp.annot_cols) ==
+                    annot)]] <- temp.annot_cols[[which(names(temp.annot_cols) ==
+                    annot)]][which(names(temp.annot_cols[[which(names(temp.annot_cols) ==
+                    annot)]]) \%in\% levels(temp.annot_genes[,
+                    which(colnames(temp.annot_genes) == annot)]))]
+                }
+            }
+        })
+    }
+    if (clust.cols == T) {
+        tryclustcols <- try(hclust(clust.samps, linkage), silent = T)
+        if (class(tryclustcols) == "try-error") {
+            stop("cannot cluster columns, if too many NAs present, set na.fix = T to treat NA values as low expression instead of missing, otherwise set clust.cols = F or specify order.by.gene")
+        }
+    }
+    if (clust.rows == T) {
+        tryclustrows <- try(hclust(clust.genes, linkage), silent = T)
+        if (class(tryclustrows) == "try-error") {
+            stop("cannot cluster rows, if too many NAs present, set na.fix = T to treat NA values as low expression instead of missing, otherwise set clust.rows = F or specify order.by.sample")
+        }
+    }
+    pheatmap(subset, col = my_cols, breaks = breaks, border_color = NA,
+        clustering_method = linkage, annotation_col = temp.annot_samps,
+        annotation_colors = temp.annot_cols, clustering_distance_rows = clust.genes,
+        clustering_distance_cols = clust.samps, main = paste(main,
+            "\n Method_", method, "_Linkage_", linkage), cluster_rows = clust.rows,
+        cluster_cols = clust.cols, cutree_rows = row.groups,
+        cutree_cols = col.groups, gaps_row = gaps.row, gaps_col = gaps.col,
+        cellwidth = cell.width, cellheight = cell.height, fontsize_row = fontsize.row,
+        fontsize_col = fontsize.col, show_rownames = show.rownames,
+        show_colnames = show.colnames, treeheight_row = heightrow,
+        treeheight_col = heightcol, silent = hide.plot, legend = show.legend,
+        annotation_legend = show.annotations, annotation_row = temp.annot_genes,
+        drop_levels = drop.annot.levels)
+  }
+}
+% Add one or more standard keywords, see file 'KEYWORDS' in the
+% R documentation directory (show via RShowDoc("KEYWORDS")):
+% \keyword{ ~kwd1 }
+% \keyword{ ~kwd2 }
+% Use only one keyword per line.
+% For non-standard keywords, use \concept instead of \keyword:
+% \concept{ ~cpt1 }
+% \concept{ ~cpt2 }
+% Use only one concept per line.

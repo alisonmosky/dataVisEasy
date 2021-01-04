@@ -10,7 +10,7 @@ A simple function that performs a PCA of the supplied data for either the genes/
 \usage{
 myPCA(data, to.pca = "samples", nPcs = 3, color.by = "blue", custom.color.vec = FALSE,
   PCs.to.plot = c("PC1", "PC2"), legend.position = "right", main = NULL,point.size = 5,
-  transparency = 1, percent.mad = 0.5)
+  transparency = 1, percent.mad = 0.5, return.ggplot.input = FALSE, return.loadings = FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -47,12 +47,20 @@ transparency or alpha value of the points
   \item{percent.mad}{
 if coloring points by expression level. Passed to \link[dataVisEasy]{myColorRamp5} to determine how the data is binned
 }
+  \item{return.ggplot.input}{
+logical. If true, will return the input dataframe to the ggplot object. Useful if more customization is required.
+}
+  \item{return.loadings}{
+logical. If true, will return the loadings from the pca.
+}
 }
 \details{
 %%  ~~ If necessary, more details than the description above ~~
 }
 \value{
-A ggplot object. Within the ggplot object are additional options that allow the user to add the text of gene or sample names to the plot (see examples, these are specifically designed to be added outside the function itself for proper positioning). Additional layers can be added to the returned ggplot object to further customize theme and aesthetics.
+A ggplot object. The input data frame to the ggplot object contains the scores, the sample/gene names, and annotations/gene annotations if an annotation is specified. This input object can be accessed by setting return.ggplot.input to TRUE. The inclusion of the gene and sample names allows the user to add the text of gene or sample names to the plot (see examples, these are specifically designed to be added outside the function itself for proper positioning). Additional layers can be added to the returned ggplot object to further customize theme and aesthetics.
+
+If return.loadings is set to TRUE, will return a matrix of the loadings from the PCA.
 }
 \references{
 %% ~put references to the literature/web site here ~

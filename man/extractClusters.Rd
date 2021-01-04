@@ -8,9 +8,8 @@ Extract the clusters from a Clustered Heatmap
 Provided a clustered heatmap, and a number of groups the dendrogram should be split into, will return a vector detailing which genes/samples are in each cluster. Particularly helpful after setting row.groups or column.groups in the heatmap functions and the groupings of the genes or samples in these groups need to be identified.
 }
 \usage{
-extractClusters(data, heatmap, extractGenes = FALSE, GeneGroup_Name = NULL,
-  extractSamples = TRUE, SampleGroup_Name = NULL, num_Gene.groups = 5,
-  num_Sample.groups = 5, all.genes = NULL, all.samples = NULL)
+extractClusters(data, heatmap,to.extract = "genes",nclusters, GeneGroup_Name = NULL,
+  SampleGroup_Name = NULL, all.genes = NULL, all.samples = NULL)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -20,24 +19,20 @@ numeric data matrix with samples/observations in the columns and genes/variables
   \item{heatmap}{
 Output of a heatmap generated from \link[dataVisEasy]{myHeatmap} or \link[dataVisEasy]{myHeatmapByAnnotation}.  The heatmap generated from these functions can be saved to a variable which should serve as the input here. IMPORTANT. The heatmap supplied here MUST have show.colnames and show.rownames = TRUE.
 }
-  \item{extractGenes}{
-logical. should clusters of genes (clustered rows) be extracted. At least one of extractGenes and extractSamples must be set to TRUE
+  \item{to.extract}{
+whether clusters should be extracted for genes (rows), samples(columns), or both. Can accept "genes", "samples", or "both"
+}
+  \item{nclusters}{
+numeric, how many clusters should be extracted. If to.extract is set to "both", numeric vector should be supplied listing number of gene (row clusters) first
 }
   \item{GeneGroup_Name}{
 optional name for the groupings to be extracted
 }
-  \item{extractSamples}{
-logical. should clusters of samples (clustered columns) be extracted. At least one of extractGenes and extractSamples must be set to TRUE
-}
+
   \item{SampleGroup_Name}{
 optional name for the groupings to be extracted
 }
-  \item{num_Gene.groups}{
-number of clusters along the rows that should be extracted. Default set to 5.
-}
-  \item{num_Sample.groups}{
-number of clusters along the columns that should be extracted. Default set to 5.
-}
+
   \item{all.genes}{
 gene names, if annotations should be in placed in larger gene list than matrix in question. Default assumes that the rownames of the input data represent all genes in question (this is true even if the genes in the heatmap are a subset of the input data). Genes not represented in the heatmap or input data that do not have a cluster designation will be assigned "_".
 }

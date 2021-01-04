@@ -12,7 +12,7 @@ scatterGenes(data, gene1, gene2, custom.x = FALSE, custom.y = FALSE,
   is.raw.Ct = FALSE, na.fix = 2, color.by = "blue",
   custom.color.vec = FALSE, xlimits = FALSE, ylimits = FALSE, squish1 = FALSE,
   squish2 = FALSE, point.size = 5, transparency = 1,legend.position = "none",
-  percent.mad = 0.5)
+  percent.mad = 0.5, return.ggplot.input = FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -67,12 +67,17 @@ should the legend be shown and if so where should it be placed. No legend will b
   \item{percent.mad}{
 if coloring points by expression level. Passed to \link[dataVisEasy]{myColorRamp5} to determine how the data is binned
 }
+  \item{return.ggplot.input}{
+logical. If true, will return the input dataframe to the ggplot object. Useful if more customization is required.
+}
 }
 \details{
 A scatter plot will be generated from the input data for the two genes provided. Options to color the plotted points are most easily acheived through use of the annotations dataframe stored in the params list object (although this is not necessary and custom color can be provided as well as coloring by a single color or by expression level). See \link[dataVisEasy]{params}, \link[dataVisEasy]{set_annotations}, and \link[dataVisEasy]{set_annot_cols} for more information on setting up annotations.
 }
 \value{
 A ggplot object. Additional layers can be added to the returned ggplot object to further customize theme and aesthetics.
+
+If return.ggplot.input is set to TRUE, will return the dataframe used for plotting which will contain the expression levels of the chosen genes (if values are squished to fit the plot the values will be similarly squished) as well as the annotations if available.
 }
 \references{
 %% ~put references to the literature/web site here ~

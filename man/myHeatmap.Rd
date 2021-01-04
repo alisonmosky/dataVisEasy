@@ -60,7 +60,7 @@ numeric vector specifying gaps to be inserted into columns of the data, only wor
 numeric indicating how wide the spaces indicated in gaps.row and gaps.col should be
 }
   \item{main}{
-title of heatmap. Default will display "Genes of Interest:" followed by the genes supplied in the list argument
+title of heatmap. Default will display "Genes of Interest:" followed by the genes supplied in the list argument with the clustering method and linkage displayed underneath.
 }
   \item{order.by.gene}{
 optional character equal to one of the rownames of the data to order the columns of the data by increasing levels of indicated row

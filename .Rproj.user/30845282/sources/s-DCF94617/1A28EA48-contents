@@ -1,0 +1,32 @@
+\name{RAGP_norm}
+\alias{RAGP_norm}
+\docType{data}
+\title{
+Normalized HT-qPCR data for single neurons from the Right Atrial Ganglionated Plexus of a Yucatan Minipig
+}
+\description{
+HT-qPCR data for 174 genes for 405 single neurons across 4 Pigs. These are the genes that passed QC
+for all 4 animals. See \link[dataVisEasy]{RAGP_rawCt} for the raw Ct values and \link[dataVisEasy]{RAGP_annots}
+for annotations for all samples. This data is used in examples for functions in the dataVisEasy package
+}
+\usage{data("RAGP_norm")}
+\format{
+  The format is:
+ num [1:174, 1:405] 2.355 -0.836 -0.34 -1.358 -1.752 ...
+ - attr(*, "dimnames")=List of 2
+  ..$ : chr [1:174] "Ache" "Actb" "Adra2a" "Adra2b" ...
+  ..$ : chr [1:405] "Pig-M1_188-L1-2" "Pig-M1_188-L1-3" "Pig-M1_188-L1-7" "Pig-M1_20-L1-1" ...
+}
+\details{
+%%  ~~ If necessary, more details than the __description__ above ~~
+}
+\source{
+%%  ~~ reference to a publication or URL from which the data were obtained ~~
+}
+\references{
+%%  ~~ possibly secondary sources and usages ~~
+}
+\examples{
+data(RAGP_norm)
+}
+\keyword{datasets}

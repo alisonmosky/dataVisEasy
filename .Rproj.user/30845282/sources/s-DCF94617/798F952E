@@ -1,0 +1,24 @@
+{
+    "id": "798F952E",
+    "path": "D:/Dropbox (SBG)/SHR-Work/Alison-DataVis-Package/dataVisEasy/R/Package-Code5-Compiled.R",
+    "project_path": "R/Package-Code5-Compiled.R",
+    "type": "r_source",
+    "hash": "2221085361",
+    "contents": "",
+    "dirty": false,
+    "created": 1606164743485.0,
+    "source_on_save": false,
+    "relative_order": 5,
+    "properties": {
+        "cursorPosition": "1148,3",
+        "scrollLine": "1099"
+    },
+    "folds": "12|40|14|0|\n17|35|20|105|\n22|37|23|32|\n25|34|26|29|\n28|41|42|0|\n47|2|96|0|\n98|47|110|0|\n112|53|129|0|\n134|2|186|0|\n188|48|202|0|\n204|39|207|0|\n212|2|230|0|\n234|51|244|55|\n252|2|258|0|\n265|2|281|0|\n289|2|309|0|\n311|61|338|0|\n377|2|524|0|\n570|2|1000|0|\n1009|2|1031|0|\n1043|2|1096|0|\n1107|2|1144|0|\n1359|2|1471|0|\n1486|2|1573|0|\n1610|2|1642|0|\n1651|2|1678|0|\n1689|2|1741|0|\n1751|2|1812|0|\n1832|2|1925|0|\n1947|2|2025|0|\n2050|2|2289|0|\n2308|2|2377|0|\n2392|2|2465|0|\n",
+    "lastKnownWriteTime": 1609715856,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1609716938843,
+    "read_only": false,
+    "read_only_alternatives": []
+}

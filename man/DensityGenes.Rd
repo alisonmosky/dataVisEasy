@@ -9,7 +9,8 @@ Create highly customizable density plots for a given set of genes. Includes opti
 }
 \usage{
 DensityGenes(data, list, color.by = "blue", exact = TRUE, is.raw.Ct = FALSE,
-  na.fix = 2, transparency = 0.5, ncols = 2, scales = "free", legend.position = "right")
+  na.fix = 2, transparency = 0.5, ncols = 2, scales = "free", legend.position = "right",
+  return.ggplot.input = FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -43,12 +44,17 @@ freedom of scales in facets. See \link[ggplot2]{facet_wrap}
   \item{legend.position}{
 should the legend be shown and if so where should it be placed. No legend will be shown if colored by gene or a custom color vector is supplied.
 }
+  \item{return.ggplot.input}{
+logical. If true, will return the input dataframe to the ggplot object. Useful if more customization is required.
+}
 }
 \details{
 A density plot will be generated from the input data for each gene provided. Options to group and color the plots according to sample groups or annotations are acheived through use of the annotations dataframe stored in the params list object. See \link[dataVisEasy]{params}, \link[dataVisEasy]{set_annotations}, and \link[dataVisEasy]{set_annot_cols} for more information on setting up annotations.
 }
 \value{
 A ggplot object. Additional layers can be added to the returned ggplot object to further customize theme and aesthetics.
+
+If return.ggplot.input is set to TRUE, will return the dataframe used for plotting which will contain the expression levels of the chosen genes (if values are squished to fit the plot the values will be similarly squished) as well as the annotations if available.
 }
 \references{
 %% ~put references to the literature/web site here ~

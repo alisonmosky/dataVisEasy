@@ -1,0 +1,99 @@
+PTM <- function(  #pavlidis template matching, correlation to a chosen template
+  data, ##dataset, genes in the rows
+  match.template, ##from params$annotations or gene, can also be gene or sample
+  annotation.level.set.high, ##level(s) of annotations vector to set high
+  custom.template = NA,  ##must be same length as data
+  Find.Match.For = "genes", ##default to compare to a gene or sample metadata template, can change to "samples"
+  cutoff = 0.05, ##default of 0.05, can be changed, assumes pval
+  cut.by = "pvals", ##pvals will return lower than cutoff with a positive correlation, can also use rvals, returns values greater than cutoff
+  method = "pearson", ##default of pearson
+  NA.handling = "pairwise.complete.obs", ##default of pairwise complete obs, can be changed
+  return.vals = FALSE
+){
+  
+  if (("matrix" %in% class(data)) != TRUE ) {
+    data <- as.matrix(data)
+    warning('input data converted to matrix')
+  }
+  
+  if (tolower(Find.Match.For) == "genes") {   ##length of samples
+    
+    temp.annotations <- params$annotations
+    
+    
+    
+    if(is.na(custom.template)==TRUE){
+      
+      if (((match.template %in% colnames(temp.annotations)) == FALSE) & ((match.template %in% rownames(data)) == FALSE)){
+        stop('when finding a match for genes, match.template must be set to either a gene name (in the rownames of input data) or
+             be the name of an annotation found in the annotations dataframe in the params list object, if neither is applicable,
+             please use custom.template')
+      }
+      
+      if (match.template %in% colnames(temp.annotations)) {
+        suppressWarnings( if (is.na(temp.annotations) == FALSE) {
+          if (sum(colnames(data) %notin% rownames(temp.annotations)) != 0 ) {
+            stop('colnames of input data do not match rownames of annotations, cannot link annotations to data')
+          }
+          temp.annotations <- temp.annotations[match(colnames(data), rownames(temp.annotations)),, drop = FALSE]}  )
+        
+        template <- rep(0,nrow(temp.annotations))
+        template[which(temp.annotations[,match.template] %in% annotation.level.set.high)] <- 1
+      }
+      if (match.template %in% rownames(data)) {
+        template <- data[which(rownames(data) == match.template),]
+      }
+      
+    }else{ template <- custom.template}
+    
+    p.vals <- apply(data,1,function(x)(cor.test(template,x,method=method, use=NA.handling)$p.value))
+    corrs <- apply(data,1,function(x)(cor.test(template,x,method=method, use=NA.handling)$estimate))
+    
+    if(cut.by=="pvals"){corrs.past.cutoff <- names(p.vals)[which(p.vals < cutoff & corrs > 0)]}
+    if(cut.by=="rvals"){corrs.past.cutoff <- names(corrs)[which(corrs > cutoff)]}
+  }
+  
+  if (tolower(Find.Match.For) == "samples"){
+    
+    temp.annotations.genes <- params$annotations.genes
+    
+    
+    
+    if(is.na(custom.template)==TRUE){
+      
+      if (((match.template %in% colnames(temp.annotations)) == FALSE) & ((match.template %in% rownames(data)) == FALSE)){
+        stop('when finding a match for samples, match.template must be set to either a sample name (in the colnames of input data) or
+             be the name of an annotation found in the annotations.genes dataframe in the params list object, if neither is applicable,
+             please use custom.template')
+      }
+      
+      
+      
+      if (match.template %in% colnames(temp.annotations.genes)) {
+        
+        suppressWarnings( if (is.na(temp.annotations.genes) == FALSE) {
+          if (sum(rownames(data) %notin% rownames(temp.annotations.genes)) != 0 ) {
+            stop('rownames of input data do not match rownames of annotations, cannot link annotations to data')
+          }
+          temp.annotations.genes <- temp.annotations.genes[match(rownames(data), rownames(temp.annotations.genes)),, drop = FALSE]}  )
+        
+        
+        template <- rep(0,nrow(temp.annotations.genes))
+        template[which(temp.annotations.genes[,match.template] %in% annotation.level.set.high)] <- 1
+      }
+      if (match.template %in% colnames(data)) {
+        template <- data[,which(colnames(data) == match.template)]
+      }
+      
+    }else{ template <- custom.template}
+    
+    p.vals <- apply(data,2,function(x)(cor.test(template,x,method=method, use=NA.handling)$p.value))
+    corrs <- apply(data,2,function(x)(cor.test(template,x,method=method, use=NA.handling)$estimate))
+    
+    
+    if(cut.by=="pvals"){corrs.past.cutoff <- names(p.vals)[which(p.vals < cutoff & corrs > 0)]}
+    if(cut.by=="rvals"){corrs.past.cutoff <- names(corrs)[which(corrs > cutoff)]}
+  }
+  if(return.vals==FALSE){return(corrs.past.cutoff)}
+  if(return.vals==TRUE){cbind(p.vals,corrs)}
+}

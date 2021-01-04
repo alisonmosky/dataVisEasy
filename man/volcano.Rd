@@ -11,7 +11,7 @@ Creates a volcano plot for the data provided showing up and downregulation of ge
 volcano(data, groups, levels = NULL, is.log2 = TRUE, pval.cut = 0.05,
   FC.cut = 2, return.summary = FALSE, downreg.color = "green",
   upreg.color = "red", nosig.color = "gray", show.genes = NULL,
-  point.size = 2, transparency = 1, legend.position = "right")
+  point.size = 2, transparency = 1, legend.position = "right", return.ggplot.input = FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -57,6 +57,9 @@ transparency or alpha value of the points
   \item{legend.position}{
 should the legend be shown and if so where should it be placed
 }
+  \item{return.ggplot.input}{
+logical. If true, will return the input dataframe to the ggplot object. Useful if more customization is required.
+}
 }
 \details{
 A standard volcano plot where the pvalues between levels of groups are calculated using a ttest and the fold changes are calculated using the differences of the estimates
@@ -72,6 +75,9 @@ if return.summary == TRUE
 \item{'FoldChange'}{the fold change}
 \item{'pvals'}{pvalues}
 \item{'-log10pvals'}{-log10 of the p values (y axis of the volcano plot)}
+
+if return.ggplot.input == TRUE
+  the input dataframe used for plotting which contains the same dataframe as return.summary but with the addition of colored groups based on significance, gene names, and if a desired number of genes were supplied to highlight, those will be in a separate column.
 }
 \references{
 %% ~put references to the literature/web site here ~
