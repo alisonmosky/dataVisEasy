@@ -28,7 +28,7 @@ set_n.colors.range <- function(n){#unlockBinding("params", env = as.environment(
 
 set_annotations <- function(annotations){
     # params$annotations <<- annotations
-  if (sum(is.na(params$annotations) != 0)) {
+  if (sum(is.na(annotations) != 0)) {
     if ( (length(annotations) == 1) & (is.null(nrow(annotations)) == TRUE) ) {
       params$annotations <<- NA
     }else{
@@ -113,7 +113,7 @@ set_annot_samps <- function(annotations= NULL){
 set_annotations.genes <- function(annotations.genes){
 
   # params$annotations.genes <<- annotations.genes
-  if (sum(is.na(params$annotations.genes) != 0)) {
+  if (sum(is.na(annotations.genes) != 0)) {
     if ( (length(annotations.genes) == 1) & (is.null(nrow(annotations.genes)) == TRUE) ) {
       params$annotations.genes <<- NA
     }else {
@@ -1408,7 +1408,7 @@ myPCA <- function(
           colors <- scales::hue_pal()(length(levels(cols)))
         }
 
-      } else{ cols <- color.by; colors <- color.by; pca.data <- data.frame(pca.scrs, Samples = colnames(data))}
+      } else{ cols <- color.by; colors <- color.by; pca.data <- data.frame(pca.scrs, Samples = colnames(data)); legend.position = "none"}
 
 
       p <- ggplot(pca.data, aes(x=eval(parse(text = PCs.to.plot[1])),y=eval(parse(text = PCs.to.plot[2])),fill=cols))+ geom_point(pch=21,color="black",size=point.size, alpha = transparency)  +
@@ -1457,7 +1457,7 @@ myPCA <- function(
           colors <- scales::hue_pal()(length(levels(cols)))
         }
 
-      } else{ cols <- color.by; colors <- color.by; pca.data <- data.frame(pca.scrs, Genes = rownames(data))}
+      } else{ cols <- color.by; colors <- color.by; pca.data <- data.frame(pca.scrs, Genes = rownames(data)); legend.position = "none"}
 
 
       p <- ggplot(pca.data, aes(x=eval(parse(text = PCs.to.plot[1])),y=eval(parse(text = PCs.to.plot[2])),fill=cols))+ geom_point(pch=21,color="black",size=point.size, alpha = transparency)  +

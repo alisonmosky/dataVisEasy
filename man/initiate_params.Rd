@@ -5,7 +5,7 @@
 Initiate Parameters
 }
 \description{
-A function that MUST be run before setting the annotations. Brings the params object inthe the global environment so that it can be accessed and updated.
+A function that is run upon loading of the package. Brings the params object inthe the global environment so that it can be accessed and updated. Can also be used to reset the params to the default. See \link[dataVisEasy]{params} for the format of these parameters, their defaults, and how to set them.
 }
 \usage{
 initiate_params(parameters)
@@ -15,7 +15,7 @@ initiate_params(parameters)
 \item{parameters}{the parameters}
 }
 \details{
-
+should be run exactly as stated in the Usage section: "initiate_params(parameters)" where parameters is an internal data structure within the dataVisEasy package
 }
 \value{
 %%  ~Describe the value returned
@@ -37,7 +37,7 @@ initiate_params(parameters)
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-Add or update values with \link[dataVisEasy]{update_annot_cols}
+See \link[dataVisEasy]{params} for the format of these parameters and their defaults.
 }
 \examples{
 

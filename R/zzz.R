@@ -1,0 +1,12 @@
+.onLoad <- function(libname, pkgname) {
+  initiate_params(parameters)
+}
+
+.onAttach <- function(libname, pkgname) {
+  cat(
+    "Welcome to dataVisEasy!
+    \n The params object has been loaded into the global environment.
+    Please see ?initiate_params for how these have been initialized and how they can be reset
+    Please see ?parameters for more information on what these parameters are and their default values"
+    )
+}

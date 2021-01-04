@@ -1,25 +1,24 @@
 \name{parameters}
 \alias{params}
-\docType{data}
 \title{
 List Object Holding Parameters Called by Other Functions
 }
 \description{
 The functions in the dataVisEasy package often call upon variables stored within this list object for annotations, coloring, and to keep consistent throughout the use of the package without having to unnecessarily spec
 }
-\usage{data("parameters")}
 \format{
-  The format is:
-List of 9
- $ scale.range               : num [1:2] -1 1
- $ scale.colors              : chr [1:3] "blue" "black" "yellow"
- $ n.colors.range            : num 300
- $ annotations               : logi NA
- $ annot_samps               : logi NA
- $ annotations.genes         : logi NA
- $ annot_genes               : logi NA
- $ annot_cols                : logi NA
- $ expression_gradient.colors: chr [1:5] "blue" "lightblue" "gray" "indianred" ...
+  The format is a list of 9 items:
+ \describe{
+  \item{scale.range}{the scale of heatmaps, default set to c(-1,1), see \link[dataVisEasy]{set_scale.range}}
+  \item{scale.colors}{default colors for heatmaps, default set to c("blue","black","yellow"), see \link[dataVisEasy]{set_scale.colors}}
+  \item{n.colors.range}{number of distinct colors in a heatmap, default set to 100, see \link[dataVisEasy]{set_n.colors.range}}
+  \item{annotations}{Will hold a dataframe of annotations for samples (data columns), see \link[dataVisEasy]{set_annotations}. Initialized as NA.}
+  \item{annot_samps}{Will hold a dataframe of annotations to be displayed as tracks along heatmaps, see \link[dataVisEasy]{set_annot_samps}. Initialized as NA.}
+  \item{annotations.genes}{Will hold a dataframe of annotations for genes (data rows), see \link[dataVisEasy]{set_annotations.genes}. Initialized as NA.}
+  \item{annot_genes}{Will hold a dataframe of gene annotations to be displayed as tracks along heatmaps, see \link[dataVisEasy]{set_annot_genes}. Initialized as NA.}
+  \item{annot_cols}{Specific colors to accompany annotations, will hold a list of color assignments, see \link[dataVisEasy]{set_annot_cols}. Initialized as NA. }
+  \item{expression_gradiet.colors}{color range for plots colored by expression level, default set to c("blue","lightblue","gray","indianred","firebrick"), see \link[dataVisEasy]{set_expression_gradient.colors}}
+  }
 }
 \details{
 All of the parameters stored in params can be set and updated using the functions listed below. Likewise, all of these objects can be accessed from the terminal using params$'parameter' where 'parameter' represents any of the list object the user may wish to check on or change.

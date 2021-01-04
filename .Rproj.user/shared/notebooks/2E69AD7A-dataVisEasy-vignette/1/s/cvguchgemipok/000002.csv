@@ -1,0 +1,7 @@
+"0","state.cols <- brewer.pal(6,""Set1""); names(state.cols) <- LETTERS[1:6]"
+"0","annot_cols <- list('Connectivity'=c(""Projecting""=""blue"",""Non-Projecting""=""violet"",""NONE""=""grey""),"
+"0","                   'Animal'=c(""Pig-M1""=""#0571b0"",""Pig-F1""=""#ca0020"",""Pig-M2""=""#92c5de"",""Pig-F2""=""#f4a582""),"
+"0","                   ""State""=c(state.cols))"
+"0","set_annot_cols(annot_cols)"
+"0",""
+"0","myPCA(RAGP_norm, color.by = ""Connectivity"")"
