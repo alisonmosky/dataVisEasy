@@ -5,7 +5,7 @@
 \alias{RAGP_annots}
 \title{Annotations for single neurons from the Right Atrial Ganglionated Plexus of a Yucatan Minipig}
 \format{
-A data frame with 405 rows (samples) and 7 variables:
+A data frame with 405 rows (samples) and 8 variables:
 \describe{
   \item{Sample_ID}{Sample name for 405 single neurons}
   \item{Section}{Section number from which the sample was taken}

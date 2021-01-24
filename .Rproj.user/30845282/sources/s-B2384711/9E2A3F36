@@ -3,7 +3,7 @@
     "path": "D:/Dropbox (SBG)/SHR-Work/Alison-DataVis-Package/dataVisEasy/R/plots_functions.R",
     "project_path": "R/plots_functions.R",
     "type": "r_source",
-    "hash": "4140619018",
+    "hash": "0",
     "contents": "",
     "dirty": false,
     "created": 1609974199833.0,
@@ -11,15 +11,15 @@
     "relative_order": 1,
     "properties": {
         "tempName": "Untitled1",
-        "cursorPosition": "10,8",
-        "scrollLine": "0"
+        "cursorPosition": "553,11",
+        "scrollLine": "531"
     },
-    "folds": "26|2|104|0|\n129|2|368|0|\n",
-    "lastKnownWriteTime": 1609973356,
+    "folds": "26|2|106|0|\n132|2|373|0|\n394|2|463|0|\n",
+    "lastKnownWriteTime": 1611530308,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1611525929144,
+    "last_content_update": 1611530308864,
     "read_only": false,
     "read_only_alternatives": []
 }

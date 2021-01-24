@@ -1,0 +1,263 @@
+beeswarmGenes <- function( ##can save as ggplot object and add layers afterwards if more specifications need to be changed
+  data,
+  list,
+  exact = TRUE,
+  is.raw.Ct = FALSE,
+  na.fix = 2,
+  squishy = FALSE,      ##might need to add option for limits as well
+  color.by = "blue",   ##single color, gene, column in annot_samps and use annot_cols
+  custom.color.vec = FALSE,
+  groupby.x = NULL, #option to change what is grouped by or on the X axis if faceted, change to false if groups arent needed,  #if null and color.by is not in annot_samps, will not facet and will not split into groups, equivalent to setting equal to FALSE
+  custom.group.vec = FALSE,
+  facet.wrap = FALSE, ##can change to true
+  ncols=2, ##can change
+  scales="free_y",
+  legend.position = "default",
+  axis.text.x.size = 25,
+  point.size = 3,
+  transparency = 1,
+  percent.mad = 0.5,
+  dodge.width =0.8,
+  return.ggplot.input = FALSE
+){
+  
+  if (("matrix" %in% class(data)) != TRUE ) {
+    data <- as.matrix(data)
+    warning('input data converted to matrix')
+  }
+  
+  ###set up, get genes, squish scale if needed, set groupby.x == FALSE if it doesnt match with colors
+  if (exact == TRUE) {dat<-data[which(rownames(data) %in% list),, drop = FALSE]
+  if (length(dat) == 0 ) {stop('exact matches for list not found in rownames data')}
+  if (is.raw.Ct==F & na.fix!=F) {dat[which(is.na(dat))] <- (min(dat, na.rm=T)-na.fix)};if (is.raw.Ct==T & na.fix!=F) {dat[which(is.na(dat))]<- (max(dat, na.rm=T)+na.fix)}}
+  if (exact == FALSE) {dat<-data[grep(paste(list, collapse = "|"),rownames(data)),, drop = FALSE]
+  if (length(dat) == 0 ) {stop('inexact matches for list not found in rownames data')}
+  if (is.raw.Ct==F & na.fix!=F) {dat[which(is.na(dat))] <- (min(dat, na.rm=T)-na.fix)};if (is.raw.Ct==T & na.fix!=F) {dat[which(is.na(dat))]<- (max(dat, na.rm=T)+na.fix)}}
+  
+  
+  ####if data is not all samples, subset annotations appropriately
+  temp.annotations <- params$annotations
+  #temp.annotations <- temp.annotations[match(colnames(data), rownames(temp.annotations)),, drop = FALSE]
+  
+  suppressWarnings( if (is.na(temp.annotations) == FALSE) {
+    if (sum(colnames(dat) %notin% rownames(temp.annotations)) != 0 ) {
+      stop('colnames of input data do not match rownames of annotations, cannot link annotations to data')
+    }
+    temp.annotations <- temp.annotations[match(colnames(dat), rownames(temp.annotations)),, drop = FALSE]
+  }  )
+  
+  if (is.null(groupby.x) == TRUE & (color.by %in% colnames(temp.annotations)) == FALSE) { groupby.x <- FALSE}  ##if groupby.x is null and color.by is in annot_samps, will group by that annotation as well, if no override to group and no annotation to color, wont group at all, if custom group vector supplied, will get corrected downstream
+  
+  
+  ####if coloring by gene or custom color vector, identity based
+  
+  if (color.by %in% rownames(data) | sum(custom.color.vec != FALSE) > 0) {   ##if coloring by gene or by custom
+    if (color.by %in% rownames(data)) {
+      genedat<- data[which(rownames(data)==color.by),]
+      if (is.raw.Ct ==FALSE) {cols <- myColorRamp5(params$expression_gradient.colors,genedat, percent.mad = percent.mad)}
+      if (is.raw.Ct ==TRUE) {cols <- myColorRamp5(rev(params$expression_gradient.colors),genedat, percent.mad = percent.mad)}
+    } else{ cols <- custom.color.vec}
+    
+    
+    ##make dat.to.plot with identiy based colors
+    suppressWarnings( if (custom.group.vec != FALSE) {
+      if (legend.position == "default") { legend.position <- "none"}
+      dat.to.plot <- data.frame(t(dat)); dat.to.plot <- cbind(dat.to.plot, temp.annotations); dat.to.plot$cols <- cols; dat.to.plot$Custom <- custom.group.vec
+      
+      dat.to.plot <- reshape2::melt(dat.to.plot, id.vars = c(colnames(temp.annotations),"cols", "Custom"))
+      if (is.na(temp.annotations) == TRUE) {
+        dat.to.plot <- dat.to.plot[-which(dat.to.plot$variable == "temp.annotations"),]
+      }
+      
+      groupby.x <- "Custom"
+      
+      suppressWarnings( if (squishy != FALSE) { dat.to.plot$value <- scales::squish(dat.to.plot$value, squishy)} )  ##if we want to squish
+    }else{
+      dat.to.plot <- data.frame(t(dat)); dat.to.plot <- cbind(dat.to.plot, temp.annotations); dat.to.plot$cols <- cols
+      
+      dat.to.plot <- reshape2::melt(dat.to.plot, id.vars = c(colnames(temp.annotations),"cols"))
+      if (is.na(temp.annotations) == TRUE) {
+        dat.to.plot <- dat.to.plot[-which(dat.to.plot$variable == "temp.annotations"),]
+      }
+      
+      suppressWarnings( if (squishy != FALSE) { dat.to.plot$value <- scales::squish(dat.to.plot$value, squishy)} )  ##if we want to squish
+    })   ##set dat.to.plot with identity based color vector and identity based group vector if supplied
+    
+    
+    #####
+    if ((is.null(groupby.x) == FALSE)) {  ##groupby has either been set to false by user or by previous tested condition (same as color, taken care of above)
+      if (groupby.x != FALSE) {  ##set group to specification
+        if (facet.wrap == FALSE) {
+          p <- ggplot(dat.to.plot, aes(x=variable,y=value,fill=cols, group=eval(parse(text=groupby.x))))+ ggbeeswarm::geom_quasirandom(pch=21,color="black", dodge.width = dodge.width, size=point.size, alpha = transparency) +
+            scale_fill_identity() + #ggtitle(paste(list)) +
+            theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
+                               strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = legend.position,
+                               axis.title.y = element_text(size=20), axis.title.x=element_blank(), axis.text.x = element_text(size=axis.text.x.size))
+          
+          if(is.raw.Ct==T){
+            p <- p + ylab("Raw Ct Value") + scale_y_reverse()
+          }else{
+            p <- p + ylab("Normalized Expression Level")
+          }
+        }
+        
+        if (facet.wrap == TRUE) {
+          p <- ggplot(dat.to.plot, aes(x=eval(parse(text=groupby.x)),y=value,fill=cols,group=eval(parse(text=groupby.x))))+ ggbeeswarm::geom_quasirandom(pch=21,color="black", dodge.width = 0.8, alpha = transparency) +
+            scale_fill_identity() + #ggtitle(paste(list)) +
+            theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
+                               strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = legend.position,
+                               axis.title.y = element_text(size=20), axis.title.x=element_blank(), axis.text.x = element_text(size=axis.text.x.size))
+          
+          if(is.raw.Ct==T){
+            p <- p + ylab("Raw Ct Value") + scale_y_reverse() + facet_wrap(~variable, ncol=ncols, scales = scales)
+          }else{
+            p <- p + ylab("Normalized Expression Level") + facet_wrap(~variable, ncol=ncols, scales = scales)
+          }
+        }
+        
+      }else{ ##no groupings, and no facet
+        
+        p <- ggplot(dat.to.plot, aes(x=variable,y=value,fill=cols))+ ggbeeswarm::geom_quasirandom(pch=21,color="black", size=point.size) +
+          scale_fill_identity() + #ggtitle(paste(list)) +
+          theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
+                             strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = legend.position,
+                             axis.title.y = element_text(size=20), axis.title.x=element_blank(), axis.text.x = element_text(size=axis.text.x.size))
+        
+        if(is.raw.Ct==T){
+          p <- p + ylab("Raw Ct Value") + scale_y_reverse()
+        }else{
+          p <- p + ylab("Normalized Expression Level")
+        }
+      }
+      
+    }
+    
+  }else{ ##custom color vector, by gene or supplied
+    
+    
+    ####if color.by is by an annotation, not identity based colors
+    
+    ###set dat.to.plot
+    suppressWarnings( if (custom.group.vec != FALSE) {
+      dat.to.plot <- data.frame(t(dat)); dat.to.plot <- cbind(dat.to.plot, temp.annotations); dat.to.plot$Custom <- custom.group.vec
+      
+      dat.to.plot <- reshape2::melt(dat.to.plot, id.vars = c(colnames(temp.annotations),"Custom"))
+      if (is.na(temp.annotations) == TRUE) {
+        dat.to.plot <- dat.to.plot[-which(dat.to.plot$variable == "temp.annotations"),]
+      }
+      
+      groupby.x <- "Custom"
+      
+      suppressWarnings( if (squishy != FALSE) { dat.to.plot$value <- scales::squish(dat.to.plot$value, squishy)} )  ##if we want to squish
+    }else{
+      dat.to.plot <- data.frame(t(dat)); dat.to.plot <- cbind(dat.to.plot, temp.annotations)
+      
+      dat.to.plot <- reshape2::melt(dat.to.plot, id.vars = colnames(temp.annotations))
+      if (is.na(temp.annotations) == TRUE) {
+        dat.to.plot <- dat.to.plot[-which(dat.to.plot$variable == "temp.annotations"),]
+      }
+      
+      suppressWarnings( if (squishy != FALSE) { dat.to.plot$value <- scales::squish(dat.to.plot$value, squishy)} )  ##if we want to squish
+    })
+    
+    if (color.by %in% colnames(temp.annotations)) {
+      if (legend.position == "default") { legend.position <- "right"}
+      if (color.by %in% names(params$annot_cols)) {
+        cols <- as.factor(dat.to.plot[,which(colnames(dat.to.plot) == color.by)])
+        colors <- params$annot_cols[[which(names(params$annot_cols) == color.by)]]
+      }else{
+        cols <- as.factor(dat.to.plot[,which(colnames(dat.to.plot) == color.by)])
+        colors <- scales::hue_pal()(length(levels(cols)))
+      }
+      
+    } else{ cols <- color.by; colors <- color.by; if (legend.position == "default") { legend.position <- "none"}} ##single color
+    
+    
+    ##group by same annotations as coloring
+    if ( (is.null(groupby.x) == TRUE) & (color.by %in% colnames(temp.annotations))) {
+      
+      if (facet.wrap == FALSE) {
+        
+        p <- ggplot(dat.to.plot, aes(x=variable,y=value,fill=cols, group=eval(parse(text=color.by))))+ ggbeeswarm::geom_quasirandom(pch=21,color="black", dodge.width = dodge.width, size=point.size, alpha = transparency) +
+          scale_fill_manual(values=colors) + labs(fill=color.by) +#ggtitle(paste(list)) +
+          theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
+                             strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = legend.position,
+                             axis.title.y = element_text(size=20), axis.title.x=element_blank(), axis.text.x = element_text(size=axis.text.x.size))
+        
+        if(is.raw.Ct==T){
+          p <- p + ylab("Raw Ct Value") + scale_y_reverse()
+        }else{
+          p <- p + ylab("Normalized Expression Level")
+        }
+      }
+      
+      if (facet.wrap == TRUE) {
+        
+        p <- ggplot(dat.to.plot, aes(x=eval(parse(text=color.by)),y=value,fill=cols))+ ggbeeswarm::geom_quasirandom(pch=21,color="black", dodge.width = dodge.width, size=point.size, alpha = transparency) +
+          scale_fill_manual(values=colors) + labs(fill=color.by) +#ggtitle(paste(list)) +
+          theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
+                             strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = legend.position,
+                             axis.title.y = element_text(size=20), axis.title.x=element_blank(), axis.text.x = element_text(size=axis.text.x.size))
+        
+        if(is.raw.Ct==T){
+          p <- p + ylab("Raw Ct Value") + scale_y_reverse() + facet_wrap(~variable, ncol=ncols, scales = scales)
+        }else{
+          p <- p + ylab("Normalized Expression Level") + facet_wrap(~variable, ncol=ncols, scales = scales)
+        }
+      }
+    }
+    
+    
+    if ((is.null(groupby.x) == FALSE)) {
+      if (groupby.x != FALSE) {  ##group by specified grouping
+        
+        if (facet.wrap == FALSE) {
+          
+          p <- ggplot(dat.to.plot, aes(x=variable,y=value,fill=cols, group=eval(parse(text=groupby.x))))+ ggbeeswarm::geom_quasirandom(pch=21,color="black", dodge.width = dodge.width, size=point.size, alpha = transparency) +
+            scale_fill_manual(values=colors) + labs(fill=color.by) +#ggtitle(paste(list)) +
+            theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
+                               strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = legend.position,
+                               axis.title.y = element_text(size=20), axis.title.x=element_blank(), axis.text.x = element_text(size=axis.text.x.size))
+          
+          if(is.raw.Ct==T){
+            p <- p + ylab("Raw Ct Value") + scale_y_reverse()
+          }else{
+            p <- p + ylab("Normalized Expression Level")
+          }
+        }
+        
+        if (facet.wrap == TRUE) {
+          
+          p <- ggplot(dat.to.plot, aes(x=eval(parse(text=groupby.x)),y=value,fill=cols,group=eval(parse(text=groupby.x))))+ ggbeeswarm::geom_quasirandom(pch=21,color="black", dodge.width = dodge.width, size=point.size, alpha = transparency) +
+            scale_fill_manual(values=colors) + labs(fill=color.by) +#ggtitle(paste(list)) +
+            theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
+                               strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = legend.position,
+                               axis.title.y = element_text(size=20), axis.title.x=element_blank(), axis.text.x = element_text(size=axis.text.x.size))
+          
+          if(is.raw.Ct==T){
+            p <- p + ylab("Raw Ct Value") + scale_y_reverse() + facet_wrap(~variable, ncol=ncols, scales = scales)
+          }else{
+            p <- p + ylab("Normalized Expression Level") + facet_wrap(~variable, ncol=ncols, scales = scales)
+          }
+        }
+        
+      }else{  ##set to false, no grouping and no faceting
+        
+        p <- ggplot(dat.to.plot, aes(x=variable,y=value,fill=cols))+ ggbeeswarm::geom_quasirandom(pch=21,color="black", size=point.size, alpha = transparency) +
+          scale_fill_manual(values=colors) + labs(fill=color.by) +#ggtitle(paste(list)) +
+          theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
+                             strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = legend.position,
+                             axis.title.y = element_text(size=20), axis.title.x=element_blank(), axis.text.x = element_text(size=axis.text.x.size))
+        
+        if(is.raw.Ct==T){
+          p <- p + ylab("Raw Ct Value") + scale_y_reverse()
+        }else{
+          p <- p + ylab("Normalized Expression Level")
+        }
+      }
+      
+    }
+  }
+  if (return.ggplot.input == TRUE) {return(dat.to.plot)}
+  return(p)
+}

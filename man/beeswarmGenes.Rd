@@ -11,7 +11,7 @@ Create highly customizable beeswarm plots for a given set of genes. Includes opt
 beeswarmGenes(data, list, exact = TRUE, is.raw.Ct = FALSE, na.fix = 2,
   squishy = FALSE, color.by = "blue", custom.color.vec = FALSE, groupby.x = NULL,
   custom.group.vec = FALSE, facet.wrap = FALSE, ncols = 2, scales = "free_y",
-  legend.position = "none", axis.text.x.size = 25, point.size = 3, transparency = 1,
+  legend.position = "default", axis.text.x.size = 25, point.size = 3, transparency = 1,
   percent.mad = 0.5, dodge.width =0.8, return.ggplot.input = FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
@@ -57,7 +57,7 @@ freedom of scales if facet.wrap = TRUE. See \link[ggplot2]{facet_wrap}
 }
 
   \item{legend.position}{
-should the legend be shown and if so where should it be placed. No legend will be shown if colored by gene or a custom color vector is supplied.
+should the legend be shown and if so where should it be placed. If left as default, legend will be drawn at the right if colored by an annotation, otherwise will not be drawn, can be overwritten by setting the legend position to one of "top", "right","left","bottom","none".
 }
   \item{axis.text.x.size}{
 size of axis text on the x axis

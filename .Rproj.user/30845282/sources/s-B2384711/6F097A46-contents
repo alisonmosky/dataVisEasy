@@ -29,7 +29,7 @@
 #' This data is used in examples for functions in the dataVisEasy package.
 #'
 #' @docType data
-#' @format A data frame with 405 rows (samples) and 7 variables:
+#' @format A data frame with 405 rows (samples) and 8 variables:
 #' \describe{
 #'   \item{Sample_ID}{Sample name for 405 single neurons}
 #'   \item{Section}{Section number from which the sample was taken}

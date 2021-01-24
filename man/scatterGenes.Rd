@@ -11,7 +11,7 @@ Creates a scatter plot between two genes within a supplied data matrix. Many cus
 scatterGenes(data, gene1, gene2, custom.x = FALSE, custom.y = FALSE,
   is.raw.Ct = FALSE, na.fix = 2, color.by = "blue",
   custom.color.vec = FALSE, xlimits = FALSE, ylimits = FALSE, squish1 = FALSE,
-  squish2 = FALSE, point.size = 5, transparency = 1,legend.position = "none",
+  squish2 = FALSE, point.size = 5, transparency = 1,legend.position = "default",
   percent.mad = 0.5, return.ggplot.input = FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
@@ -62,7 +62,7 @@ size of points to be plotted
 transparency or alpha value of the points
 }
   \item{legend.position}{
-should the legend be shown and if so where should it be placed. No legend will be shown if colored by gene or a custom color vector is supplied.
+should the legend be shown and if so where should it be placed. If left as default, legend will be drawn at the right if colored by an annotation, otherwise will not be drawn, can be overwritten by setting the legend position to one of "top", "right","left","bottom","none".
 }
   \item{percent.mad}{
 if coloring points by expression level. Passed to \link[dataVisEasy]{myColorRamp5} to determine how the data is binned

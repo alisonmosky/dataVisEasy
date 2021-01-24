@@ -21,7 +21,7 @@ scatterGenes <- function(
   squish2 = FALSE,
   point.size = 5,
   transparency = 1,
-  legend.position = "none",
+  legend.position = "default",
   percent.mad = 0.5,
   return.ggplot.input = FALSE
 ){
@@ -47,6 +47,7 @@ scatterGenes <- function(
   dat.to.plot <- data.frame(Gene1= dat1, Gene2= dat2); dat.to.plot <- cbind(dat.to.plot, temp.annotations)
 
   if (color.by %in% rownames(data) | sum(custom.color.vec != FALSE) > 0) {
+    if (legend.position == "default") { legend.position <- "none"}
     if (color.by %in% rownames(data)) {
       genedat<- data[which(rownames(data)==color.by),]
       cols <- myColorRamp5(params$expression_gradient.colors,genedat, percent.mad = percent.mad)
@@ -70,6 +71,7 @@ scatterGenes <- function(
   } else{
 
     if (color.by %in% colnames(temp.annotations)) {
+      if (legend.position == "default") { legend.position <- "right"}
       if (sum(colnames(data) %notin% rownames(temp.annotations)) != 0 ) {
         stop('colnames of input data do not match rownames of annotations, cannot link annotations to data')
       }
@@ -82,7 +84,7 @@ scatterGenes <- function(
         cols <- as.factor(dat.to.plot[,which(colnames(dat.to.plot) == color.by)])
         colors <- scales::hue_pal()(length(levels(cols)))
       }
-    } else{ cols <- color.by; colors <- color.by}
+    } else{ cols <- color.by; colors <- color.by; if (legend.position == "default") { legend.position <- "none"}}
 
 
     if (((xlimits==FALSE) && (ylimits==FALSE)) == TRUE) {
@@ -105,6 +107,7 @@ scatterGenes <- function(
 }
 
 
+
 #' @export
 beeswarmGenes <- function( ##can save as ggplot object and add layers afterwards if more specifications need to be changed
   data,
@@ -120,7 +123,7 @@ beeswarmGenes <- function( ##can save as ggplot object and add layers afterwards
   facet.wrap = FALSE, ##can change to true
   ncols=2, ##can change
   scales="free_y",
-  legend.position = "none",
+  legend.position = "default",
   axis.text.x.size = 25,
   point.size = 3,
   transparency = 1,
@@ -169,6 +172,7 @@ beeswarmGenes <- function( ##can save as ggplot object and add layers afterwards
 
     ##make dat.to.plot with identiy based colors
     suppressWarnings( if (custom.group.vec != FALSE) {
+      if (legend.position == "default") { legend.position <- "none"}
       dat.to.plot <- data.frame(t(dat)); dat.to.plot <- cbind(dat.to.plot, temp.annotations); dat.to.plot$cols <- cols; dat.to.plot$Custom <- custom.group.vec
 
       dat.to.plot <- reshape2::melt(dat.to.plot, id.vars = c(colnames(temp.annotations),"cols", "Custom"))
@@ -268,6 +272,7 @@ beeswarmGenes <- function( ##can save as ggplot object and add layers afterwards
     })
 
     if (color.by %in% colnames(temp.annotations)) {
+      if (legend.position == "default") { legend.position <- "right"}
       if (color.by %in% names(params$annot_cols)) {
         cols <- as.factor(dat.to.plot[,which(colnames(dat.to.plot) == color.by)])
         colors <- params$annot_cols[[which(names(params$annot_cols) == color.by)]]
@@ -276,7 +281,7 @@ beeswarmGenes <- function( ##can save as ggplot object and add layers afterwards
         colors <- scales::hue_pal()(length(levels(cols)))
       }
 
-    } else{ cols <- color.by; colors <- color.by} ##single color
+    } else{ cols <- color.by; colors <- color.by; if (legend.position == "default") { legend.position <- "none"}} ##single color
 
 
     ##group by same annotations as coloring
@@ -446,7 +451,7 @@ volcano <- function(
     mat <- cbind(mat, My.Genes)
   }
 
-  p <- ggplot(mat,aes(x=LFC, y=-log10(pvals), col=Color)) + geom_point(size=point.size, alpha = transparency) +
+  p <- ggplot(mat,aes(x=LFC, y=-log10(pvals), col=Color, Gene = Gene)) + geom_point(size=point.size, alpha = transparency) +
     theme(panel.grid = element_blank(), panel.background = element_rect(fill="white"), panel.border = element_rect(color = "black", fill=NA), strip.background = element_blank(),
           strip.text = element_text(size=25), axis.text.x = element_text(size=15), axis.text.y = element_text(size=15), axis.title = element_text(size=20), plot.title = element_text(size=15, hjust = 0.5), legend.position = legend.position) +
     xlab("Log2 Fold Change") + ylab("-log10(Pvalue)") + scale_color_manual(name = paste(paste0("FC.cut = ", FC.cut), paste0("Pval.cut = ", pval.cut), sep="\n"), values=c("Downregulated"=downreg.color,"Upregulated"=upreg.color,"No Sig"=nosig.color)) +
@@ -471,7 +476,7 @@ DensityGenes <- function(
   transparency = 0.5,
   ncols=2, ##can change
   scales="free",
-  legend.position = "right",
+  legend.position = "default",
   return.ggplot.input = FALSE
 ){
 
@@ -491,6 +496,7 @@ DensityGenes <- function(
   temp.annotations <- params$annotations
 
   if (color.by %in% colnames(temp.annotations)) {
+    if (legend.position == "default") { legend.position <- "right"}
 
     if (sum(colnames(dat) %notin% rownames(temp.annotations)) != 0 ) {
       stop('colnames of input data do not match rownames of annotations, cannot link annotations to data')
@@ -522,7 +528,7 @@ DensityGenes <- function(
     }else{
       p <- p + xlab("Normalized Expression Level") + ylab("Density")
     }
-  } else{ cols <- color.by; colors <- color.by
+  } else{ cols <- color.by; colors <- color.by;  if (legend.position == "default") { legend.position <- "none"}
 
   dat.to.plot <- data.frame(t(dat)); dat.to.plot <- cbind(dat.to.plot, temp.annotations)
 

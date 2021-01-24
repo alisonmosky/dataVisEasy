@@ -9,7 +9,7 @@ Create highly customizable density plots for a given set of genes. Includes opti
 }
 \usage{
 DensityGenes(data, list, color.by = "blue", exact = TRUE, is.raw.Ct = FALSE,
-  na.fix = 2, transparency = 0.5, ncols = 2, scales = "free", legend.position = "right",
+  na.fix = 2, transparency = 0.5, ncols = 2, scales = "free", legend.position = "default",
   return.ggplot.input = FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
@@ -42,7 +42,7 @@ how many columns in the facet. See \link[ggplot2]{facet_wrap}
 freedom of scales in facets. See \link[ggplot2]{facet_wrap}
 }
   \item{legend.position}{
-should the legend be shown and if so where should it be placed. No legend will be shown if colored by gene or a custom color vector is supplied.
+should the legend be shown and if so where should it be placed. If left as default, legend will be drawn at the right if colored by an annotation, otherwise will not be drawn, can be overwritten by setting the legend position to one of "top", "right","left","bottom","none".
 }
   \item{return.ggplot.input}{
 logical. If true, will return the input dataframe to the ggplot object. Useful if more customization is required.
