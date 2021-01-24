@@ -41,13 +41,6 @@ See \link[dataVisEasy]{params} for the format of these parameters and their defa
 }
 \examples{
 
-state.cols <- brewer.pal(6,"Set1"); names(state.cols) <- LETTERS[1:6]
-annot_cols <- list('Cell_Type'=c("FB"="blue","CV"="violet","NONE"="grey"),
-                   'Animal'=c("PR1534"="#0571b0","PR1643"="#ca0020","PR1705"="#92c5de","PR1729"="#f4a582"),
-                   "State"=c(state.cols))
-
-###set color annotations
-set_annot_cols(annot_cols)
 
 ##---- Should be DIRECTLY executable !! ----
 ##-- ==>  Define data, use random,

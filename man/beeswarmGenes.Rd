@@ -150,7 +150,8 @@ function (data, list, exact = TRUE, is.raw.Ct = FALSE, na.fix = 2,
     suppressWarnings(if (is.na(temp.annotations) == FALSE) {
         if (sum(colnames(dat) \%notin\% rownames(temp.annotations)) !=
             0) {
-            stop("colnames of input data do not match rownames of annotations, cannot link annotations to data")
+            stop("colnames of input data do not match rownames of annotations,
+            cannot link annotations to data")
         }
         temp.annotations <- temp.annotations[match(colnames(dat),
             rownames(temp.annotations)), , drop = FALSE]
@@ -221,7 +222,8 @@ function (data, list, exact = TRUE, is.raw.Ct = FALSE, na.fix = 2,
                         size = 40), strip.text = element_text(size = 25),
                       strip.background.x = element_blank(), legend.position = legend.position,
                       axis.title.y = element_text(size = 20),
-                      axis.title.x = element_blank(), axis.text.x = element_text(size = axis.text.x.size)) +
+                      axis.title.x = element_blank(), axis.text.x = element_text(size =
+                      axis.text.x.size)) +
                       ylab("Raw Ct Value") + scale_y_reverse())
                   }
                   else {
@@ -234,7 +236,8 @@ function (data, list, exact = TRUE, is.raw.Ct = FALSE, na.fix = 2,
                         size = 40), strip.text = element_text(size = 25),
                       strip.background.x = element_blank(), legend.position = legend.position,
                       axis.title.y = element_text(size = 20),
-                      axis.title.x = element_blank(), axis.text.x = element_text(size = axis.text.x.size)) +
+                      axis.title.x = element_blank(), axis.text.x = element_text(size =
+                      axis.text.x.size)) +
                       ylab("Normalized Expression Level"))
                   }
                 }
@@ -249,7 +252,8 @@ function (data, list, exact = TRUE, is.raw.Ct = FALSE, na.fix = 2,
                         size = 40), strip.text = element_text(size = 25),
                       strip.background.x = element_blank(), legend.position = legend.position,
                       axis.title.y = element_text(size = 20),
-                      axis.title.x = element_blank(), axis.text.x = element_text(size = axis.text.x.size)) +
+                      axis.title.x = element_blank(), axis.text.x = element_text(size =
+                      axis.text.x.size)) +
                       ylab("Raw Ct Value") + scale_y_reverse() +
                       facet_wrap(~variable, ncol = ncols, scales = scales))
                   }
@@ -263,7 +267,8 @@ function (data, list, exact = TRUE, is.raw.Ct = FALSE, na.fix = 2,
                         size = 40), strip.text = element_text(size = 25),
                       strip.background.x = element_blank(), legend.position = legend.position,
                       axis.title.y = element_text(size = 20),
-                      axis.title.x = element_blank(), axis.text.x = element_text(size = axis.text.x.size)) +
+                      axis.title.x = element_blank(), axis.text.x = element_text(size =
+                      axis.text.x.size)) +
                       ylab("Normalized Expression Level") + facet_wrap(~variable,
                       ncol = ncols, scales = scales))
                   }
@@ -278,7 +283,8 @@ function (data, list, exact = TRUE, is.raw.Ct = FALSE, na.fix = 2,
                     plot.title = element_text(hjust = 0.5, size = 40),
                     strip.text = element_text(size = 25), strip.background.x = element_blank(),
                     legend.position = legend.position, axis.title.y = element_text(size = 20),
-                    axis.title.x = element_blank(), axis.text.x = element_text(size = axis.text.x.size)) +
+                    axis.title.x = element_blank(), axis.text.x = element_text(size =
+                    axis.text.x.size)) +
                     ylab("Raw Ct Value") + scale_y_reverse())
                 }
                 else {
@@ -289,7 +295,8 @@ function (data, list, exact = TRUE, is.raw.Ct = FALSE, na.fix = 2,
                     plot.title = element_text(hjust = 0.5, size = 40),
                     strip.text = element_text(size = 25), strip.background.x = element_blank(),
                     legend.position = legend.position, axis.title.y = element_text(size = 20),
-                    axis.title.x = element_blank(), axis.text.x = element_text(size = axis.text.x.size)) +
+                    axis.title.x = element_blank(), axis.text.x = element_text(size =
+                    axis.text.x.size)) +
                     ylab("Normalized Expression Level"))
                 }
             }
@@ -354,7 +361,8 @@ function (data, list, exact = TRUE, is.raw.Ct = FALSE, na.fix = 2,
                       size = 40), strip.text = element_text(size = 25),
                       strip.background.x = element_blank(), legend.position = legend.position,
                       axis.title.y = element_text(size = 20),
-                      axis.title.x = element_blank(), axis.text.x = element_text(size = axis.text.x.size)) +
+                      axis.title.x = element_blank(), axis.text.x = element_text(size =
+                      axis.text.x.size)) +
                     ylab("Raw Ct Value") + scale_y_reverse())
                 }
                 else {
@@ -367,7 +375,8 @@ function (data, list, exact = TRUE, is.raw.Ct = FALSE, na.fix = 2,
                       size = 40), strip.text = element_text(size = 25),
                       strip.background.x = element_blank(), legend.position = legend.position,
                       axis.title.y = element_text(size = 20),
-                      axis.title.x = element_blank(), axis.text.x = element_text(size = axis.text.x.size)) +
+                      axis.title.x = element_blank(), axis.text.x = element_text(size =
+                      axis.text.x.size)) +
                     ylab("Normalized Expression Level"))
                 }
             }
@@ -381,7 +390,8 @@ function (data, list, exact = TRUE, is.raw.Ct = FALSE, na.fix = 2,
                       size = 40), strip.text = element_text(size = 25),
                       strip.background.x = element_blank(), legend.position = legend.position,
                       axis.title.y = element_text(size = 20),
-                      axis.title.x = element_blank(), axis.text.x = element_text(size = axis.text.x.size)) +
+                      axis.title.x = element_blank(), axis.text.x = element_text(size =
+                      axis.text.x.size)) +
                     ylab("Raw Ct Value") + scale_y_reverse() +
                     facet_wrap(~variable, ncol = ncols, scales = scales))
                 }
@@ -394,7 +404,8 @@ function (data, list, exact = TRUE, is.raw.Ct = FALSE, na.fix = 2,
                       size = 40), strip.text = element_text(size = 25),
                       strip.background.x = element_blank(), legend.position = legend.position,
                       axis.title.y = element_text(size = 20),
-                      axis.title.x = element_blank(), axis.text.x = element_text(size = axis.text.x.size)) +
+                      axis.title.x = element_blank(), axis.text.x = element_text(size =
+                      axis.text.x.size)) +
                     ylab("Normalized Expression Level") + facet_wrap(~variable,
                     ncol = ncols, scales = scales))
                 }
@@ -413,7 +424,8 @@ function (data, list, exact = TRUE, is.raw.Ct = FALSE, na.fix = 2,
                         size = 40), strip.text = element_text(size = 25),
                         strip.background.x = element_blank(),
                         legend.position = legend.position, axis.title.y = element_text(size = 20),
-                        axis.title.x = element_blank(), axis.text.x = element_text(size = axis.text.x.size)) +
+                        axis.title.x = element_blank(), axis.text.x = element_text(size =
+                        axis.text.x.size)) +
                       ylab("Raw Ct Value") + scale_y_reverse())
                   }
                   else {
@@ -426,7 +438,8 @@ function (data, list, exact = TRUE, is.raw.Ct = FALSE, na.fix = 2,
                         size = 40), strip.text = element_text(size = 25),
                         strip.background.x = element_blank(),
                         legend.position = legend.position, axis.title.y = element_text(size = 20),
-                        axis.title.x = element_blank(), axis.text.x = element_text(size = axis.text.x.size)) +
+                        axis.title.x = element_blank(), axis.text.x = element_text(size =
+                        axis.text.x.size)) +
                       ylab("Normalized Expression Level"))
                   }
                 }
@@ -441,7 +454,8 @@ function (data, list, exact = TRUE, is.raw.Ct = FALSE, na.fix = 2,
                         size = 40), strip.text = element_text(size = 25),
                         strip.background.x = element_blank(),
                         legend.position = legend.position, axis.title.y = element_text(size = 20),
-                        axis.title.x = element_blank(), axis.text.x = element_text(size = axis.text.x.size)) +
+                        axis.title.x = element_blank(), axis.text.x = element_text(size =
+                        axis.text.x.size)) +
                       ylab("Raw Ct Value") + scale_y_reverse() +
                       facet_wrap(~variable, ncol = ncols, scales = scales))
                   }
@@ -455,7 +469,8 @@ function (data, list, exact = TRUE, is.raw.Ct = FALSE, na.fix = 2,
                         size = 40), strip.text = element_text(size = 25),
                         strip.background.x = element_blank(),
                         legend.position = legend.position, axis.title.y = element_text(size = 20),
-                        axis.title.x = element_blank(), axis.text.x = element_text(size = axis.text.x.size)) +
+                        axis.title.x = element_blank(), axis.text.x = element_text(size =
+                        axis.text.x.size)) +
                       ylab("Normalized Expression Level") + facet_wrap(~variable,
                       ncol = ncols, scales = scales))
                   }
@@ -470,7 +485,8 @@ function (data, list, exact = TRUE, is.raw.Ct = FALSE, na.fix = 2,
                     plot.title = element_text(hjust = 0.5, size = 40),
                     strip.text = element_text(size = 25), strip.background.x = element_blank(),
                     legend.position = legend.position, axis.title.y = element_text(size = 20),
-                    axis.title.x = element_blank(), axis.text.x = element_text(size = axis.text.x.size)) +
+                    axis.title.x = element_blank(), axis.text.x = element_text(size =
+                    axis.text.x.size)) +
                     ylab("Raw Ct Value") + scale_y_reverse())
                 }
                 else {
@@ -481,7 +497,8 @@ function (data, list, exact = TRUE, is.raw.Ct = FALSE, na.fix = 2,
                     plot.title = element_text(hjust = 0.5, size = 40),
                     strip.text = element_text(size = 25), strip.background.x = element_blank(),
                     legend.position = legend.position, axis.title.y = element_text(size = 20),
-                    axis.title.x = element_blank(), axis.text.x = element_text(size = axis.text.x.size)) +
+                    axis.title.x = element_blank(), axis.text.x = element_text(size =
+                    axis.text.x.size)) +
                     ylab("Normalized Expression Level"))
                 }
             }

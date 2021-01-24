@@ -176,8 +176,8 @@ function (data, gene, limits = NULL, method = "pearson", linkage = "complete",
             fontsize.row = fontsize.row, fontsize.col = fontsize.col,
             show.rownames = show.rownames, show.colnames = show.colnames,
             treeheight.row = treeheight.row, treeheight.col = treeheight.col,
-            hide.plot = hide.plot, na.fix = na.fix, na.offset = na.offset, show.legend = show.legend,
-            show.annotations = show.annotations, is.raw.Ct = is.raw.Ct,
+            hide.plot = hide.plot, na.fix = na.fix, na.offset = na.offset, show.legend =
+            show.legend,show.annotations = show.annotations, is.raw.Ct = is.raw.Ct,
             drop.annot.levels = drop.annot.levels)
         if (show.report == T) {
             report <- gen.cor[, which(gen.cor > above | gen.cor <

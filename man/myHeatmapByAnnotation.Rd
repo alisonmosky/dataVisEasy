@@ -212,7 +212,8 @@ function (data, list = NULL, exact = TRUE, groupings, groupings.gaps = NULL,
     suppressWarnings(if (is.na(params$annotations) == FALSE) {
         if (sum(colnames(data.subset) \%notin\% rownames(params$annotations)) !=
             0) {
-            stop("colnames of input data do not match rownames of annotations, cannot link annotations to data")
+            stop("colnames of input data do not match rownames of annotations,
+            cannot link annotations to data")
         }
         temp.annotations <- params$annotations[match(colnames(data.subset),
             rownames(params$annotations)), , drop = FALSE]
@@ -220,7 +221,8 @@ function (data, list = NULL, exact = TRUE, groupings, groupings.gaps = NULL,
     suppressWarnings(if (is.na(params$annotations.genes) == FALSE) {
         if (sum(rownames(data.subset) \%notin\% rownames(params$annotations.genes)) !=
             0) {
-            stop("rownames of input data do not match rownames of annotations.genes, cannot link annotations to data")
+            stop("rownames of input data do not match rownames of annotations.genes,
+            cannot link annotations to data")
         }
         temp.annotations.genes <- params$annotations.genes[match(rownames(data.subset),
             rownames(params$annotations.genes)), , drop = FALSE]
@@ -257,7 +259,8 @@ function (data, list = NULL, exact = TRUE, groupings, groupings.gaps = NULL,
             }
             else {
                 if (length(groupings) != ncol(data.subset)) {
-                  stop("unnamed factor supplied to groupings not the same length as number of columns in data")
+                  stop("unnamed factor supplied to groupings not the same length as
+                  number of columns in data")
                 }
             }
         }
@@ -295,7 +298,8 @@ function (data, list = NULL, exact = TRUE, groupings, groupings.gaps = NULL,
             }
             else {
                 if (length(groupings.genes) != nrow(data.subset)) {
-                  stop("unnamed factor supplied to groupings.genes not the same length as number of rows from data or number of rows after subsetting for supplied list")
+                  stop("unnamed factor supplied to groupings.genes not the same length as
+                  number of rows from data or number of rows after subsetting for supplied list")
                 }
             }
         }
@@ -342,7 +346,9 @@ function (data, list = NULL, exact = TRUE, groupings, groupings.gaps = NULL,
                   tryclustcols <- try(hclust(clust.samps, linkage),
                     silent = T)
                   if (class(tryclustcols) == "try-error") {
-                    stop("cannot cluster columns, if too many NAs present, set na.fix = T to treat NA values as low expression instead of missing, otherwise set clust.cols = F or specify order.by.gene")
+                    stop("cannot cluster columns, if too many NAs present, set na.fix = T to
+                    treat NA values as low expression instead of missing, otherwise set
+                    clust.cols = F or specify order.by.gene")
                   }
                   a <- hclust(clust.samps, method = linkage)
                   samp.order <- c(samp.order, a$labels[a$order])
@@ -440,7 +446,9 @@ function (data, list = NULL, exact = TRUE, groupings, groupings.gaps = NULL,
                   tryclustrows <- try(hclust(clust.genes, linkage),
                     silent = T)
                   if (class(tryclustrows) == "try-error") {
-                    stop("cannot cluster rows, if too many NAs present, set na.fix = T to treat NA values as low expression instead of missing, otherwise set clust.rows = F or specify order.by.sample")
+                    stop("cannot cluster rows, if too many NAs present, set na.fix = T to treat NA
+                    values as low expression instead of missing, otherwise set clust.rows = F or
+                    specify order.by.sample")
                   }
                   a <- hclust(clust.genes, linkage)
                   gene.order <- c(gene.order, a$labels[a$order])
@@ -605,13 +613,17 @@ function (data, list = NULL, exact = TRUE, groupings, groupings.gaps = NULL,
     if (clust.cols == T) {
         tryclustcols <- try(hclust(clust.samps, linkage), silent = T)
         if (class(tryclustcols) == "try-error") {
-            stop("cannot cluster columns, if too many NAs present, set na.fix = T to treat NA values as low expression instead of missing, otherwise set clust.cols = F or specify order.by.gene")
+            stop("cannot cluster columns, if too many NAs present, set na.fix = T to treat NA
+            values as low expression instead of missing, otherwise set clust.cols = F or
+            specify order.by.gene")
         }
     }
     if (clust.rows == T) {
         tryclustrows <- try(hclust(clust.genes, linkage), silent = T)
         if (class(tryclustrows) == "try-error") {
-            stop("cannot cluster rows, if too many NAs present, set na.fix = T to treat NA values as low expression instead of missing, otherwise set clust.rows = F or specify order.by.sample")
+            stop("cannot cluster rows, if too many NAs present, set na.fix = T to treat NA
+            values as low expression instead of missing, otherwise set clust.rows = F or
+            specify order.by.sample")
         }
     }
     pheatmap(data.subset, col = my_cols, breaks = breaks, border_color = NA,

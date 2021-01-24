@@ -117,7 +117,8 @@ function (data, ngroups, maxgroups = 12, max.iter = 10, method = "pearson",
             clust.mat))$avg.width, simplify = "vector")
         data.to.plot <- data.frame(vals = c(rands, sil.coef))
         p <- ggplot(data.to.plot, aes(x = vals)) + geom_density(size = 1) +
-            geom_point(x = sil.coef, y = density(data.to.plot$vals)$y[which.min(abs(density(data.to.plot$vals)$x -
+            geom_point(x = sil.coef, y =
+            density(data.to.plot$vals)$y[which.min(abs(density(data.to.plot$vals)$x -
                 sil.coef))], size = 3) + geom_text(x = sil.coef,
             y = (density(data.to.plot$vals)$y[which.min(abs(density(data.to.plot$vals)$x -
                 sil.coef))]) + 5, label = round(sil.coef, 3)) +

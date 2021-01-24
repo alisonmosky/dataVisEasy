@@ -10,7 +10,8 @@ A simple function that performs a PCA of the supplied data for either the genes/
 \usage{
 myPCA(data, to.pca = "samples", nPcs = 3, color.by = "blue", custom.color.vec = FALSE,
   PCs.to.plot = c("PC1", "PC2"), legend.position = "right", main = NULL,point.size = 5,
-  transparency = 1, percent.mad = 0.5, return.ggplot.input = FALSE, return.loadings = FALSE)
+  transparency = 1, percent.mad = 0.5, return.ggplot.input = FALSE,
+  return.loadings = FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -120,7 +121,8 @@ function (data, to.pca = "samples", nPcs = 3, color.by = "blue",
                   FALSE) {
                   if (sum(colnames(data) \%notin\% rownames(temp.annotations)) !=
                     0) {
-                    stop("colnames of input data do not match rownames of annotations, cannot link annotations to data")
+                    stop("colnames of input data do not match rownames of annotations,
+                    cannot link annotations to data")
                   }
                   temp.annotations <- temp.annotations[match(colnames(data),
                     rownames(temp.annotations)), ]
@@ -176,7 +178,8 @@ function (data, to.pca = "samples", nPcs = 3, color.by = "blue",
                   FALSE) {
                   if (sum(rownames(data) \%notin\% rownames(temp.annotations.genes)) !=
                     0) {
-                    stop("rownames of input data do not match rownames of annotations, cannot link annotations to data")
+                    stop("rownames of input data do not match rownames of annotations,
+                    cannot link annotations to data")
                   }
                   temp.annotations.genes <- temp.annotations.genes[match(rownames(data),
                     rownames(temp.annotations.genes)), ]

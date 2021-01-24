@@ -89,8 +89,8 @@ function (annots, levels, specify.gaps = NULL, return.gaps = FALSE)
                 stop("length of gap specifications not equal to number of levels provided")
             }
             gaps <- sort(c(rep(cumsum(rev(rev(rle(as.vector(bylevel2$Level1))$lengths)[-1])),
-                specify.gaps[1]), rep(cumsum(rev(rev(rle(as.vector(bylevel2$Level2))$lengths)[-1])),
-                specify.gaps[2])))
+              specify.gaps[1]), rep(cumsum(rev(rev(rle(as.vector(bylevel2$Level2))$lengths)[-1])),
+              specify.gaps[2])))
         }
         else {
             gaps <- cumsum(rev(rev(rle(as.vector(bylevel2$Combo))$lengths)[-1]))
@@ -116,9 +116,9 @@ function (annots, levels, specify.gaps = NULL, return.gaps = FALSE)
                 stop("length of gap specifications not equal to number of levels provided")
             }
             gaps <- sort(c(rep(cumsum(rev(rev(rle(as.vector(bylevel3$Level1))$lengths)[-1])),
-                specify.gaps[1]), rep(cumsum(rev(rev(rle(as.vector(bylevel3$Level2))$lengths)[-1])),
-                specify.gaps[2]), rep(cumsum(rev(rev(rle(as.vector(bylevel3$Level3))$lengths)[-1])),
-                specify.gaps[3])))
+              specify.gaps[1]), rep(cumsum(rev(rev(rle(as.vector(bylevel3$Level2))$lengths)[-1])),
+              specify.gaps[2]), rep(cumsum(rev(rev(rle(as.vector(bylevel3$Level3))$lengths)[-1])),
+              specify.gaps[3])))
         }
         else {
             gaps <- cumsum(rev(rev(rle(as.vector(bylevel3$Combo))$lengths)[-1]))

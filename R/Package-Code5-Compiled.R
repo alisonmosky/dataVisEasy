@@ -1018,13 +1018,18 @@ ExtractMatrix <- function(   ##from clustered heatmap, will extract the exact ma
   text.attributes <- grep("GRID.text", attributes)
 
   ordered <- data
+
+  ##extract columns
+  colord <- heatmap$gtable[["grobs"]][[text.attributes[2]]][["label"]]
+  ordered <- ordered[,colnames(ordered) %in% colord]
   if(clustered.cols==TRUE){
-    colord <- heatmap$gtable[["grobs"]][[text.attributes[2]]][["label"]]
     ordered <- ordered[,match(colord,colnames(ordered))]
   }
 
+  ##extract rows
+  roword <- heatmap$gtable[["grobs"]][[text.attributes[3]]][["label"]]
+  ordered <- ordered[rownames(ordered) %in% roword,]
   if(clustered.rows==TRUE){
-    roword <- heatmap$gtable[["grobs"]][[text.attributes[3]]][["label"]]
     ordered <- ordered[match(roword,rownames(ordered)),]
   }
 

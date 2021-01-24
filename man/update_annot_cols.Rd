@@ -48,8 +48,8 @@ values corresponding to the annotation to be updated or added.
 }
 \examples{
 
-genemod.cols <- brewer.pal(7,"Set3"); names(genemod.cols) <- LETTERS[1:7]
-update_annot_cols("GeneMods",c(genemod.cols))
+#genemod.cols <- brewer.pal(7,"Set3"); names(genemod.cols) <- LETTERS[1:7]
+#update_annot_cols("GeneMods",c(genemod.cols))
 
 
 ##---- Should be DIRECTLY executable !! ----

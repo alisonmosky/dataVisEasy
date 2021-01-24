@@ -72,7 +72,8 @@ function (data.to.aov, category, pthreshold = 0.05, additional.report = "NONE")
 {
     if (sum(colnames(data.to.aov) \%notin\% rownames(params$annotations)) !=
         0) {
-        stop("colnames of input data do not match rownames of annotations, cannot link annotations to data and assign groupings for ANOVA")
+        stop("colnames of input data do not match rownames of annotations, cannot link annotations
+        to data and assign groupings for ANOVA")
     }
     temp.annotations <- params$annotations[match(colnames(data.to.aov),
         rownames(params$annotations)), ]
@@ -92,10 +93,10 @@ function (data.to.aov, category, pthreshold = 0.05, additional.report = "NONE")
         groupings))))
     tukey.pvals <- data.frame(Reduce(rbind, lapply(tukey.all,
         function(x) (x$groupings[, 4]))), row.names = names(tukey.all))
-    colnames(tukey.pvals) <- gsub("\\.", "-", colnames(tukey.pvals))
+    #colnames(tukey.pvals) <- gsub("\\.", "-", colnames(tukey.pvals))
     tukey.diffs <- data.frame(Reduce(rbind, lapply(tukey.all,
         function(x) (x$groupings[, 1]))), row.names = names(tukey.all))
-    colnames(tukey.diffs) <- gsub("\\.", "-", colnames(tukey.diffs))
+    #colnames(tukey.diffs) <- gsub("\\.", "-", colnames(tukey.diffs))
     if (toupper(additional.report) == "ALL") {
         return(list(AOV.output = aov.all, AOV.Results = aov.results,
             Sig.Genes = sig.genes, NonSig.Genes = nonsig.genes,

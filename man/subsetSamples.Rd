@@ -55,7 +55,8 @@ function (data, group, take.out)
     if (group \%in\% colnames(temp.annotations)) {
         if (sum(colnames(data) \%notin\% rownames(temp.annotations)) !=
             0) {
-            stop("colnames of input data do not match rownames of annotations, cannot link annotations to data")
+            stop("colnames of input data do not match rownames of annotations,
+            cannot link annotations to data")
         }
         temp.annotations <- temp.annotations[match(colnames(data),
             rownames(temp.annotations)), , drop = FALSE]

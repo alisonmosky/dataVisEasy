@@ -60,7 +60,8 @@ function (annotations)
         }
         else {
             params$annotations[is.na(params$annotations)] <<- "No_Annot"
-            warning("NAs present in annotations, converted to \"No_Annot\" for functionality purposes")
+            warning("NAs present in annotations, converted to \"No_Annot\" for
+            functionality purposes")
         }
     }
   }

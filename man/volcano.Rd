@@ -11,7 +11,8 @@ Creates a volcano plot for the data provided showing up and downregulation of ge
 volcano(data, groups, levels = NULL, is.log2 = TRUE, pval.cut = 0.05,
   FC.cut = 2, return.summary = FALSE, downreg.color = "green",
   upreg.color = "red", nosig.color = "gray", show.genes = NULL,
-  point.size = 2, transparency = 1, legend.position = "right", return.ggplot.input = FALSE)
+  point.size = 2, transparency = 1, legend.position = "right",
+  return.ggplot.input = FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -98,24 +99,30 @@ See \link[dataVisEasy]{params}, \link[dataVisEasy]{set_annotations}, and \link[d
 }
 \examples{
 
-####Volcano Plot
-volcano(data, "Sex")
-volcano(data, "Cell_Type", levels = c("CV","FB"))
-volcano(data, "Cell_Type", levels = c("CV","FB"), pval.cut = 0.1, FC.cut = 1.5, upreg.color = "yellow", downreg.color = "blue", nosig.color = "gray90")
-
-###add things to ggplot object
-volcano(data, "Cell_Type", levels = c("CV","FB")) + geom_text(aes(label=Gene),  nudge_x = 0.1, nudge_y = -.1)
-
-volcano(data, "Cell_Type", levels = c("CV","FB")) + geom_text(aes(label=Sig.Genes),  nudge_x = 0.5, nudge_y = -.5)
-
-##if show.genes is specified
-volcano(data, "Cell_Type", levels = c("CV","FB")) + geom_text(aes(label=My.Genes),  nudge_x = 0.1, nudge_y = -.1)
-
-##add lines
-horiz.lines <- c(0.05)
-vert.lines <- c(2,3)
-
-volcano(data, "Cell_Type", levels = c("CV","FB")) + geom_hline(yintercept = c(-log10(horiz.lines))) + geom_vline(xintercept = c(log2(vert.lines), -log2(vert.lines)))
+#####Volcano Plot
+#volcano(data, "Sex")
+#volcano(data, "Cell_Type", levels = c("CV","FB"))
+#volcano(data, "Cell_Type", levels = c("CV","FB"), pval.cut = 0.1, FC.cut = 1.5,
+#upreg.color = "yellow", downreg.color = "blue", nosig.color = "gray90")
+#
+####add things to ggplot object
+#volcano(data, "Cell_Type", levels = c("CV","FB")) + geom_text(aes(label=Gene),
+#nudge_x = 0.1, nudge_y = -.1)
+#
+#volcano(data, "Cell_Type", levels = c("CV","FB")) + geom_text(aes(label=Sig.Genes),
+#nudge_x = 0.5, nudge_y = -.5)
+#
+###if show.genes is specified
+#volcano(data, "Cell_Type", levels = c("CV","FB")) + geom_text(aes(label=My.Genes),
+#nudge_x = 0.1, nudge_y = -.1)
+#
+###add lines
+#horiz.lines <- c(0.05)
+#vert.lines <- c(2,3)
+#
+#volcano(data, "Cell_Type", levels = c("CV","FB")) + geom_hline(yintercept =
+#c(-log10(horiz.lines))) + geom_vline(xintercept =
+#c(log2(vert.lines), -log2(vert.lines)))
 
 
 ##---- Should be DIRECTLY executable !! ----
@@ -131,7 +138,8 @@ function (data, groups, levels = NULL, is.log2 = TRUE, pval.cut = 0.05,
     if (groups \%in\% colnames(temp.annotations)) {
         if (sum(colnames(data) \%notin\% rownames(temp.annotations)) !=
             0) {
-            stop("colnames of input data do not match rownames of annotations, cannot link annotations to data")
+            stop("colnames of input data do not match rownames of annotations,
+            cannot link annotations to data")
         }
         temp.annotations <- temp.annotations[match(colnames(data),
             rownames(temp.annotations)), , drop = FALSE]
@@ -171,13 +179,15 @@ function (data, groups, levels = NULL, is.log2 = TRUE, pval.cut = 0.05,
     mat <- cbind(volcano.summary, Color = group, Gene = rownames(volcano.summary))
     p <- ggplot(mat, aes(x = LFC, y = -log10(pvals), col = Color)) +
         geom_point(size = 2) + theme(panel.grid = element_blank(),
-        panel.background = element_rect(fill = "white"), panel.border = element_rect(color = "black",
-            fill = NA), strip.background = element_blank(), strip.text = element_text(size = 25),
-        axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15),
-        axis.title = element_text(size = 20), plot.title = element_text(size = 15,
+        panel.background = element_rect(fill = "white"), panel.border =
+        element_rect(color = "black", fill = NA), strip.background = element_blank(),
+        strip.text = element_text(size = 25), axis.text.x = element_text(size = 15),
+        axis.text.y = element_text(size = 15), axis.title = element_text(size = 20),
+        plot.title = element_text(size = 15,
             hjust = 0.5)) + xlab("Log2 Fold Change") + ylab("-log10(Pvalue)") +
         scale_color_manual(name = paste(paste0("FC.cut = ", FC.cut),
-            paste0("Pval.cut = ", pval.cut), sep = "\n"), values = c(Downregulated = downreg.color,
+            paste0("Pval.cut = ", pval.cut), sep = "\n"),
+            values = c(Downregulated = downreg.color,
             Upregulated = upreg.color, `No Sig` = nosig.color)) +
         ggtitle(paste("-log10(pvalue) vs. log2(Fold Change) for",
             levels[2], "over", levels[1]))

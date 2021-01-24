@@ -116,7 +116,8 @@ function (data, list, exact = TRUE, color.by = "blue", is.raw.Ct = FALSE,
     if (color.by \%in\% colnames(temp.annotations)) {
         if (sum(colnames(dat) \%notin\% rownames(temp.annotations)) !=
             0) {
-            stop("colnames of input data do not match rownames of annotations, cannot link annotations to data")
+            stop("colnames of input data do not match rownames of annotations,
+            cannot link annotations to data")
         }
         temp.annotations <- temp.annotations[match(colnames(dat),
             rownames(temp.annotations)), , drop = FALSE]

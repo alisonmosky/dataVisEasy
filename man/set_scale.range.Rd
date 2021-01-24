@@ -56,7 +56,8 @@ function (range)
         params$scale.range <<- range
     }
     else {
-        stop("range must be a numeric of length 2 and the second element must be greater than the first")
+        stop("range must be a numeric of length 2 and the second
+        element must be greater than the first")
     }
   }
 }

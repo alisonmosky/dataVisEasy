@@ -302,13 +302,17 @@ function (data, list = NULL, exact = TRUE, method = "pearson",
     if (clust.cols == T) {
         tryclustcols <- try(hclust(clust.samps, linkage), silent = T)
         if (class(tryclustcols) == "try-error") {
-            stop("cannot cluster columns, if too many NAs present, set na.fix = T to treat NA values as low expression instead of missing, otherwise set clust.cols = F or specify order.by.gene")
+            stop("cannot cluster columns, if too many NAs present, set na.fix = T to treat NA
+            values as low expression instead of missing, otherwise set clust.cols = F or
+            specify order.by.gene")
         }
     }
     if (clust.rows == T) {
         tryclustrows <- try(hclust(clust.genes, linkage), silent = T)
         if (class(tryclustrows) == "try-error") {
-            stop("cannot cluster rows, if too many NAs present, set na.fix = T to treat NA values as low expression instead of missing, otherwise set clust.rows = F or specify order.by.sample")
+            stop("cannot cluster rows, if too many NAs present, set na.fix = T to treat NA
+            values as low expression instead of missing, otherwise set clust.rows = F or
+            specify order.by.sample")
         }
     }
     pheatmap(subset, col = my_cols, breaks = breaks, border_color = NA,

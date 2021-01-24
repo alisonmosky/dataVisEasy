@@ -90,7 +90,8 @@ function (data.to.aov, category1, category2, pthreshold = 0.05,
 {
     if (sum(colnames(data.to.aov) \%notin\% rownames(params$annotations)) !=
         0) {
-        stop("colnames of input data do not match rownames of annotations, cannot link annotations to data and assign groupings for ANOVA")
+        stop("colnames of input data do not match rownames of annotations, cannot link
+        annotations to data and assign groupings for ANOVA")
     }
     temp.annotations <- params$annotations[match(colnames(data.to.aov),
         rownames(params$annotations)), ]
@@ -118,11 +119,13 @@ function (data.to.aov, category1, category2, pthreshold = 0.05,
     tukey.all <- apply(data.to.aov, 1, function(x) (TukeyHSD(aov(x ~
         groupings1 + groupings2 + groupings1:groupings2))))
     tukey.pvals1 <- data.frame(Reduce(rbind, lapply(tukey.all[which(names(tukey.all) \%in\%
-        category1.sig)], function(x) (x$groupings1[, 4]))), row.names = names(tukey.all)[which(names(tukey.all) \%in\%
+        category1.sig)], function(x) (x$groupings1[, 4]))), row.names =
+        names(tukey.all)[which(names(tukey.all) \%in\%
         category1.sig)])
     colnames(tukey.pvals1) <- rownames(tukey.all[[1]]$groupings1)
     tukey.pvals2 <- data.frame(Reduce(rbind, lapply(tukey.all[which(names(tukey.all) \%in\%
-        category2.sig)], function(x) (x$groupings2[, 4]))), row.names = names(tukey.all)[which(names(tukey.all) \%in\%
+        category2.sig)], function(x) (x$groupings2[, 4]))), row.names =
+        names(tukey.all)[which(names(tukey.all) \%in\%
         category2.sig)])
     colnames(tukey.pvals2) <- rownames(tukey.all[[1]]$groupings2)
     tukey.pvals3 <- data.frame(Reduce(rbind, lapply(tukey.all[which(names(tukey.all) \%in\%
@@ -131,11 +134,13 @@ function (data.to.aov, category1, category2, pthreshold = 0.05,
         interaction.sig)])
     colnames(tukey.pvals3) <- rownames(tukey.all[[1]]$`groupings1:groupings2`)
     tukey.diffs1 <- data.frame(Reduce(rbind, lapply(tukey.all[which(names(tukey.all) \%in\%
-        category1.sig)], function(x) (x$groupings1[, 1]))), row.names = names(tukey.all)[which(names(tukey.all) \%in\%
+        category1.sig)], function(x) (x$groupings1[, 1]))), row.names =
+        names(tukey.all)[which(names(tukey.all) \%in\%
         category1.sig)])
     colnames(tukey.diffs1) <- rownames(tukey.all[[1]]$groupings1)
     tukey.diffs2 <- data.frame(Reduce(rbind, lapply(tukey.all[which(names(tukey.all) \%in\%
-        category2.sig)], function(x) (x$groupings2[, 1]))), row.names = names(tukey.all)[which(names(tukey.all) \%in\%
+        category2.sig)], function(x) (x$groupings2[, 1]))), row.names =
+        names(tukey.all)[which(names(tukey.all) \%in\%
         category2.sig)])
     colnames(tukey.diffs2) <- rownames(tukey.all[[1]]$groupings2)
     tukey.diffs3 <- data.frame(Reduce(rbind, lapply(tukey.all[which(names(tukey.all) \%in\%

@@ -1,0 +1,24 @@
+###assess metadata from Yao et al 2020 Datasets
+
+v310x <- read.csv("D://Dropbox (SBG)/Neuro-Data-Acquisition/RNA Seq/External Datasets/Yao_2020/10x_cells_v3_AIBS/sample_metadata.csv")
+
+v210x <- read.csv("D://Dropbox (SBG)/Neuro-Data-Acquisition/RNA Seq/External Datasets/Yao_2020/10x_cells_v2_AIBS/sample_metadata.csv")
+
+
+
+dat <- v310x
+
+ggplot(dat, aes(x=umi.counts, y = gene.counts, col = library_id)) + geom_point() + theme_bw()
+
+dat %>% select(library_id, Mean_Reads_perCell, Median_Genes_perCell, Median_UMI_perCell, Live_percent) %>% distinct
+
+
+dat %>% select(total.reads, mapped_reads) %>%  tibble::rownames_to_column("Number") %>% melt() %>%
+  ggplot(aes(x=Number, y = value, col = variable, group = variable)) + geom_line() + theme(axis.text.x = element_blank(), axis.title.x = element_blank())
+
+
+smart <- read.csv("D://Dropbox (SBG)/Neuro-Data-Acquisition/RNA Seq/External Datasets/Yao_2020/SMARTer/sample_metadata.csv")
+
+
+smart %>% select(total_reads,percent_reads_aligned_to_exons, percent_reads_aligned_total, percent_reads_aligned_unique, Genes.Detected, MultiPlex) %>%  tibble::rownames_to_column("Number") %>% melt() %>%
+  ggplot(aes(x=Number, y = value, col = variable, group = variable)) + geom_line() + theme(axis.text.x = element_blank(), axis.title.x = element_blank()) +facet_wrap(~variable, scales = "free")

@@ -8,15 +8,18 @@ Description: A user friendly package to aid in visualization of transcriptomic (
 Depends: 
     pheatmap,
     ggplot2,
+    R (>= 2.10)
+Imports: 
+    pcaMethods,
+    scales,
+    tibble,
     cluster,
-    gtools,
     ggbeeswarm,
+    gtools,
+    dplyr,
     reshape2,
     RColorBrewer,
-    plyr,
-    dplyr,
-    R (>= 2.10)
-Import: pcaMethods, scales, tibble
+    magrittr
 License: What license is it under?
 Encoding: UTF-8
 LazyData: true

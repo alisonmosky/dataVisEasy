@@ -60,7 +60,8 @@ function (annotations.genes)
         }
         else {
             params$annotations.genes[is.na(params$annotations.genes)] <<- "No_Annot"
-            warning("NAs present in annotations.genes, converted to \"No_Annot\" for functionality purposes")
+            warning("NAs present in annotations.genes,
+            converted to \"No_Annot\" for functionality purposes")
         }
     }
   }

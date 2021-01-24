@@ -8,8 +8,8 @@ Pavlidis Template Matching
 a simple implementation of Pavlidis Template Matching that searches for correlations above a specified threshold within the supplied input data. Templates can be annotations, genes or samples, or a cusotm template can be provided.
 }
 \usage{
-PTM(data, match.template, annotation.level.set.high, custom.template = NA, Find.Match.For = "genes",
-  cutoff = 0.05, cut.by = "pvals", method = "pearson",
+PTM(data, match.template, annotation.level.set.high, custom.template = NA,
+  Find.Match.For = "genes",cutoff = 0.05, cut.by = "pvals", method = "pearson",
   NA.handling = "pairwise.complete.obs", return.vals = FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
@@ -87,7 +87,8 @@ function (data, match.template, set.high, custom.template = NA,
                   FALSE) {
                   if (sum(colnames(data) \%notin\% rownames(temp.annotations)) !=
                     0) {
-                    stop("colnames of input data do not match rownames of annotations, cannot link annotations to data")
+                    stop("colnames of input data do not match rownames of annotations,
+                    cannot link annotations to data")
                   }
                   temp.annotations <- temp.annotations[match(colnames(data),
                     rownames(temp.annotations)), , drop = FALSE]
@@ -122,7 +123,8 @@ function (data, match.template, set.high, custom.template = NA,
             FALSE) {
             if (sum(rownames(data) \%notin\% rownames(temp.annotations.genes)) !=
                 0) {
-                stop("rownames of input data do not match rownames of annotations, cannot link annotations to data")
+                stop("rownames of input data do not match rownames of annotations,
+                cannot link annotations to data")
             }
             temp.annotations.genes <- temp.annotations.genes[match(rownames(data),
                 rownames(temp.annotations.genes)), , drop = FALSE]
