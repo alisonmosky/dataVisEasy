@@ -14,8 +14,8 @@ parameters <- list(scale.range = c(-1,1),
 
 
 #' @export
-initiate_params <- function(parameters){
-  assign("params",parameters,envir =  .GlobalEnv)
+initiate_params <- function(params = parameters){
+  assign("params",params,envir =  .GlobalEnv)
 }
 
 

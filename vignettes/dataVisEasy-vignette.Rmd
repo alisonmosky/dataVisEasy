@@ -69,8 +69,8 @@ myPCA(RAGP_norm, nPcs = 5, PCs.to.plot = c("PC1","PC3"), color.by = "Animal")
 If we wish to specify what colors we want these to show up as, instead of accepting the default colors, we can link an annotation to specific colors by setting up the annot_cols parameter in the params list object. Here we will set the colors for Transcriptional State, Connectivity, and Animal. Now when we remake the PCAs, it will show our colors.
 ```{r fig.show='hold', out.width="47%"}
 state.cols <- RColorBrewer::brewer.pal(6,"Set1"); names(state.cols) <- LETTERS[1:6]
-annot_cols <- list('Connectivity'=c("Projecting"="blue","Non-Projecting"="violet","NONE"="grey"),
-                   'Animal'=c("Pig-M1"="#0571b0","Pig-F1"="#ca0020","Pig-M2"="#92c5de","Pig-F2"="#f4a582"),
+annot_cols <- list('Connectivity'=c("SAN-Projecting"="blue","Non-SAN-Projecting"="violet","NONE"="grey"),
+                   'Animal'=c("PR1534"="#0571b0","PR1643"="#ca0020","PR1705"="#92c5de","PR1729"="#f4a582"),
                    "State"=c(state.cols))
 set_annot_cols(annot_cols)
 

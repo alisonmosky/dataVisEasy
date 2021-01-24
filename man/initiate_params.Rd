@@ -8,11 +8,11 @@ Initiate Parameters
 A function that is run upon loading of the package. Brings the params object inthe the global environment so that it can be accessed and updated. Can also be used to reset the params to the default. See \link[dataVisEasy]{params} for the format of these parameters, their defaults, and how to set them.
 }
 \usage{
-initiate_params(parameters)
+initiate_params(params = parameters)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-\item{parameters}{the parameters}
+\item{params}{the parameters}
 }
 \details{
 should be run exactly as stated in the Usage section: "initiate_params(parameters)" where parameters is an internal data structure within the dataVisEasy package
@@ -40,7 +40,7 @@ should be run exactly as stated in the Usage section: "initiate_params(parameter
 See \link[dataVisEasy]{params} for the format of these parameters and their defaults.
 }
 \examples{
-
+initiate_params()
 
 ##---- Should be DIRECTLY executable !! ----
 ##-- ==>  Define data, use random,

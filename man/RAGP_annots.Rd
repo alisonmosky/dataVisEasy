@@ -9,6 +9,7 @@ A data frame with 405 rows (samples) and 7 variables:
 \describe{
   \item{Sample_ID}{Sample name for 405 single neurons}
   \item{Section}{Section number from which the sample was taken}
+  \item{Cap_ID}{Cap_ID indicating which sample from the given section}
   \item{Connectivity}{Whether the single neuron (sample) in question is projecting to the SA-Node (based on FastBlue tracer)}
   \item{Animal}{Animal specimen from which the sample originated}
   \item{State}{Identified transcriptional state (see Moss et al. in Review)}

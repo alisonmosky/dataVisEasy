@@ -1,0 +1,189 @@
+myHeatmap1 <- function(  ##basic heatmap, can subset for gene list
+  data,  ##this will be a matrix of values, with genes in the rows and samples in the columns
+  list = NULL,   ##list of gene or genes that will be extracted from the dataset, exact matches
+  exact = TRUE, ##if true, it'll find exact matches, if false, will use grep and find anything with the term in it
+  method = "pearson",   ##clustering and correlating method, default of pearson, can be switched to spearman
+  linkage = "complete",   ##linkage method, defulat complete linkage, can be changed
+  NA.handling = "pairwise.complete.obs",   ##use for correlations, can be overwritten
+  clust.rows = T, ##default for clustering rows, can be overwritten if error
+  clust.cols = T, ##same as clust.cols but for cols
+  row.groups = NA, ##number of groups to break the rows into based on dendrogram, can be overwritten
+  col.groups = NA, ##same as col.groups but for cols, can be overwritten
+  gaps.row = NULL, ##list of where to cut the rows if they're not clustered
+  gaps.col = NULL, ##same as gaps.row but for columns
+  gap.width=1,
+  main = NULL,  ##for title of chart, must be in quotes, will default to list of the genes
+  order.by.gene = NULL, ##gene to order by
+  order.by.sample = NULL, ##sample to order by
+  cell.width = NA,
+  cell.height = NA,
+  fontsize.row = 10,
+  fontsize.col = 10,
+  show.rownames=T,
+  show.colnames=F,
+  treeheight.row=20,
+  treeheight.col=20,
+  hide.plot=FALSE,
+  na.fix=FALSE,
+  na.offset = 2,
+  show.legend=TRUE,
+  show.annotations=TRUE,
+  is.raw.Ct=FALSE, ##if true, will reverse color scale to show yellow as high expressing
+  drop.annot.levels=TRUE,
+  annotation.names.row = TRUE,
+  annotation.names.col = TRUE,
+  border.color = NA,
+  na.color = "grey90"
+){
+  
+  if (("matrix" %in% class(data)) != TRUE ) {
+    data <- as.matrix(data)
+    warning('input data converted to matrix')
+  }
+  
+  if (is.null(main)==TRUE){
+    main <- paste("Genes of Interest:",paste(list, collapse = ","))
+    main <- paste(main,"\n Method:",method," Linkage:",linkage)}
+  
+  if (is.null(list) == TRUE) {list <- rownames(data)}
+  
+  
+  ##subset for list
+  if (exact == TRUE) {
+    subset <- as.matrix(data)[which(rownames(data) %in% list),]
+    if (length(subset) == 0 ) {stop('exact matches for list not found in rownames data')}
+  }else{
+    subset <- as.matrix(data)[grep(paste(list, collapse = "|"),rownames(data)),]
+    if (length(subset) == 0 ) {stop('inexact matches for list not found in rownames data')}
+  }
+  
+  
+  if (na.fix==TRUE) {
+    if (is.raw.Ct==TRUE) {subset[which(is.na(subset))] <- max(subset,na.rm=T)+na.offset}
+    if (is.raw.Ct==FALSE) {subset[which(is.na(subset))] <- min(subset,na.rm=T)-na.offset}
+  }
+  
+  
+  if (method %in% c("spearman","pearson", "kendall")) {
+    clust.genes<-(as.dist(1-cor(t(subset),method=method,use=NA.handling)));
+    clust.samps<-(as.dist(1-cor(subset,method=method,use=NA.handling)))
+  }
+  
+  if (method %in% c("euclidean","maximum","manhattan","canberra","binary","minkowski")){
+    clust.genes <- dist(subset,method=method)
+    clust.samps <- dist(t(subset), method=method)
+  }
+  
+  
+  if (is.null(order.by.gene)==FALSE){
+    if(is.raw.Ct==FALSE){subset <- subset[,order(data[which(rownames(data) %in% order.by.gene),],na.last = F)]}
+    if(is.raw.Ct==TRUE){subset <- subset[,order(data[which(rownames(data) %in% order.by.gene),],na.last = T)]}
+    clust.cols <- F
+  }
+  
+  if (is.null(order.by.sample)==FALSE){
+    if(is.raw.Ct==FALSE){subset <- subset[order(subset[,which(colnames(subset) %in% order.by.sample)],na.last = F),]}
+    if(is.raw.Ct==TRUE){subset <- subset[order(subset[,which(colnames(subset) %in% order.by.sample)],na.last = T),]}
+    clust.rows <- F
+  }
+  
+  if(clust.rows==T){heightrow <- treeheight.row}
+  if(clust.cols==T){heightcol <- treeheight.col}
+  
+  subset1 <- subset
+  subset <- scales::squish(subset,params$scale.range)
+  breaks <- seq(params$scale.range[1], params$scale.range[2],length.out=params$n.colors.range)
+  my_cols=colorRampPalette(params$scale.colors)(n=params$n.colors.range-1)
+  if(is.raw.Ct==TRUE){my_cols <- rev(my_cols)}
+  
+  if(na.fix==TRUE){
+    if(is.raw.Ct==TRUE){
+      subset[which(subset1==max(subset1))] <- params$scale.range[2]+0.04
+      breaks <- c(breaks, params$scale.range[2]+0.01, params$scale.range[2]+0.05)
+      my_cols <- c(my_cols,params$scale.colors[1],na.color)      ##may need an option to set na_col
+    }
+    if(is.raw.Ct==FALSE){
+      subset[which(subset1==min(subset1))] <- params$scale.range[1]-0.04
+      breaks <- c(params$scale.range[1]-0.05,params$scale.range[1]-0.01,breaks)
+      my_cols <- c(na.color,params$scale.colors[1],my_cols)
+    }
+  }
+  
+  if (sum( rownames(params$annot_samps) %in% colnames(subset)) != 0 ) {
+    temp.annot_samps <- params$annot_samps 
+  }else{ temp.annot_samps <- NA}
+  
+  if (sum( rownames(params$annot_genes) %in% rownames(subset)) != 0 ) {
+    temp.annot_genes <- params$annot_genes 
+  }else{ temp.annot_genes <- NA}
+  
+  temp.annot_cols <- params$annot_cols
+  
+  if (drop.annot.levels == TRUE) {
+    suppressWarnings( if (is.na(temp.annot_samps) == F) {
+      temp.annot_samps[] <- lapply(temp.annot_samps, as.factor)
+      #subset annot_samps and genes for subset so that annotations will be dropped in heatmap
+      temp.annot_samps <- temp.annot_samps %>% tibble::rownames_to_column("Sample")
+      temp.annot_samps <- droplevels(temp.annot_samps[which(temp.annot_samps$Sample %in% colnames(subset)),]) %>% as.data.frame() %>% tibble::remove_rownames() %>% tibble::column_to_rownames(var="Sample")
+      
+      spec.cols <- colnames(temp.annot_samps)[colnames(temp.annot_samps) %in% names(temp.annot_cols)]
+      
+      if (length(spec.cols) != 0 ) {
+        for (annot.i in 1:length(spec.cols)) {
+          annot <- colnames(temp.annot_samps)[annot.i]
+          temp.annot_cols[[which(names(temp.annot_cols)==annot)]] <- temp.annot_cols[[which(names(temp.annot_cols)==annot)]][which(   names(temp.annot_cols[[which(names(temp.annot_cols)==annot)]])   %in%   levels(temp.annot_samps[,which(colnames(temp.annot_samps)==annot)])  )]
+          if ( sum( levels(temp.annot_samps[,annot]) %in% names(temp.annot_cols[[which(names(temp.annot_cols)==annot)]])  ) != length(levels(temp.annot_samps[,annot]))) {
+            temp.annot_cols[[which(names(temp.annot_cols)==annot)]][c(levels(temp.annot_samps[,annot])[levels(temp.annot_samps[,annot]) %notin% names(temp.annot_cols[[which(names(temp.annot_cols)==annot)]])])] <- "white"
+          }
+        }
+      }
+    })
+    
+    
+    suppressWarnings( if (is.na(temp.annot_genes) == F) {
+      temp.annot_genes[] <- lapply(temp.annot_genes, as.factor)
+      #subset annot_samps and genes for subset so that annotations will be dropped in heatmap
+      temp.annot_genes <- temp.annot_genes %>% tibble::rownames_to_column("Gene")
+      temp.annot_genes <- droplevels(temp.annot_genes[which(temp.annot_genes$Gene %in% rownames(subset)),]) %>% as.data.frame() %>% tibble::remove_rownames() %>% tibble::column_to_rownames(var="Gene")
+      
+      spec.cols <- colnames(temp.annot_genes)[colnames(temp.annot_genes) %in% names(temp.annot_cols)]
+      
+      if (length(spec.cols) != 0) {
+        for (annot.i in 1:length(colnames(temp.annot_genes))) {
+          annot <- colnames(temp.annot_genes)[annot.i]
+          if (length(which(names(temp.annot_cols)==annot)) != 0) {
+            temp.annot_cols[[which(names(temp.annot_cols)==annot)]] <- temp.annot_cols[[which(names(temp.annot_cols)==annot)]][which(   names(temp.annot_cols[[which(names(temp.annot_cols)==annot)]])   %in%   levels(temp.annot_genes[,which(colnames(temp.annot_genes)==annot)])  )]
+            if ( sum( levels(temp.annot_genes[,annot]) %in% names(temp.annot_cols[[which(names(temp.annot_cols)==annot)]])  ) != length(levels(temp.annot_genes[,annot]))) {
+              temp.annot_cols[[which(names(temp.annot_cols)==annot)]][c(levels(temp.annot_genes[,annot])[levels(temp.annot_genes[,annot]) %notin% names(temp.annot_cols[[which(names(temp.annot_cols)==annot)]])])] <- "white"
+            }
+          }
+        }
+      }
+    })
+    
+  }
+  
+  
+  
+  
+  if (clust.cols == T) {
+    tryclustcols <- try(hclust(clust.samps, linkage), silent = T)
+    if (class(tryclustcols) == "try-error") {stop('cannot cluster columns, if too many NAs present, set na.fix = T to treat NA values as low expression instead of missing, otherwise set clust.cols = F or specify order.by.gene')}
+  }
+  
+  if (clust.rows == T) {
+    tryclustrows <- try(hclust(clust.genes, linkage), silent = T)
+    if (class(tryclustrows) == "try-error") {stop('cannot cluster rows, if too many NAs present, set na.fix = T to treat NA values as low expression instead of missing, otherwise set clust.rows = F or specify order.by.sample')}
+  }
+  
+  
+  
+  pheatmap(subset,col=my_cols, breaks=breaks, border_color = border.color, na_col = na.color, clustering_method=linkage,annotation_col=temp.annot_samps, annotation_colors = temp.annot_cols,
+           clustering_distance_rows = clust.genes, clustering_distance_cols = clust.samps, main=main,
+           cluster_rows = clust.rows, cluster_cols = clust.cols, cutree_rows = row.groups, cutree_cols = col.groups, gaps_row = gaps.row, gaps_col = gaps.col,
+           cellwidth = cell.width, cellheight = cell.height, fontsize_row = fontsize.row, fontsize_col = fontsize.col, show_rownames = show.rownames,show_colnames = show.colnames,
+           treeheight_row = heightrow ,treeheight_col = heightcol, silent = hide.plot, legend=show.legend, annotation_legend = show.annotations,
+           annotation_row=temp.annot_genes, drop_levels = drop.annot.levels, annotation_names_row = annotation.names.row, annotation_names_col = annotation.names.col)
+  
+  
+}
