@@ -136,7 +136,7 @@ myHeatmap <- function(  ##basic heatmap, can subset for gene list
 
       if (length(spec.cols) != 0 ) {
         for (annot.i in 1:length(spec.cols)) {
-          annot <- colnames(temp.annot_samps)[annot.i]
+          annot <- spec.cols[annot.i]
           temp.annot_cols[[which(names(temp.annot_cols)==annot)]] <- temp.annot_cols[[which(names(temp.annot_cols)==annot)]][which(   names(temp.annot_cols[[which(names(temp.annot_cols)==annot)]])   %in%   levels(temp.annot_samps[,which(colnames(temp.annot_samps)==annot)])  )]
           if ( sum( levels(temp.annot_samps[,annot]) %in% names(temp.annot_cols[[which(names(temp.annot_cols)==annot)]])  ) != length(levels(temp.annot_samps[,annot]))) {
             temp.annot_cols[[which(names(temp.annot_cols)==annot)]][c(levels(temp.annot_samps[,annot])[levels(temp.annot_samps[,annot]) %notin% names(temp.annot_cols[[which(names(temp.annot_cols)==annot)]])])] <- "white"
@@ -155,14 +155,14 @@ myHeatmap <- function(  ##basic heatmap, can subset for gene list
       spec.cols <- colnames(temp.annot_genes)[colnames(temp.annot_genes) %in% names(temp.annot_cols)]
 
       if (length(spec.cols) != 0) {
-        for (annot.i in 1:length(colnames(temp.annot_genes))) {
-          annot <- colnames(temp.annot_genes)[annot.i]
-          if (length(which(names(temp.annot_cols)==annot)) != 0) {
+        for (annot.i in 1:length(spec.cols)) {
+          annot <- spec.cols[annot.i]
+          #if (length(which(names(temp.annot_cols)==annot)) != 0) {
             temp.annot_cols[[which(names(temp.annot_cols)==annot)]] <- temp.annot_cols[[which(names(temp.annot_cols)==annot)]][which(   names(temp.annot_cols[[which(names(temp.annot_cols)==annot)]])   %in%   levels(temp.annot_genes[,which(colnames(temp.annot_genes)==annot)])  )]
             if ( sum( levels(temp.annot_genes[,annot]) %in% names(temp.annot_cols[[which(names(temp.annot_cols)==annot)]])  ) != length(levels(temp.annot_genes[,annot]))) {
               temp.annot_cols[[which(names(temp.annot_cols)==annot)]][c(levels(temp.annot_genes[,annot])[levels(temp.annot_genes[,annot]) %notin% names(temp.annot_cols[[which(names(temp.annot_cols)==annot)]])])] <- "white"
             }
-          }
+          #}
         }
       }
     })
@@ -627,7 +627,7 @@ myHeatmapByAnnotation <- function(
 
       if (length(spec.cols) != 0 ) {
         for (annot.i in 1:length(spec.cols)) {
-          annot <- colnames(temp.annot_samps)[annot.i]
+          annot <- spec.cols[annot.i]
           temp.annot_cols[[which(names(temp.annot_cols)==annot)]] <- temp.annot_cols[[which(names(temp.annot_cols)==annot)]][which(   names(temp.annot_cols[[which(names(temp.annot_cols)==annot)]])   %in%   levels(temp.annot_samps[,which(colnames(temp.annot_samps)==annot)])  )]
           if ( sum( levels(temp.annot_samps[,annot]) %in% names(temp.annot_cols[[which(names(temp.annot_cols)==annot)]])  ) != length(levels(temp.annot_samps[,annot]))) {
             temp.annot_cols[[which(names(temp.annot_cols)==annot)]][c(levels(temp.annot_samps[,annot])[levels(temp.annot_samps[,annot]) %notin% names(temp.annot_cols[[which(names(temp.annot_cols)==annot)]])])] <- "white"
@@ -646,14 +646,14 @@ myHeatmapByAnnotation <- function(
       spec.cols <- colnames(temp.annot_genes)[colnames(temp.annot_genes) %in% names(temp.annot_cols)]
 
       if (length(spec.cols) != 0) {
-        for (annot.i in 1:length(colnames(temp.annot_genes))) {
+        for (annot.i in 1:length(spec.cols)) {
           annot <- colnames(temp.annot_genes)[annot.i]
-          if (length(which(names(temp.annot_cols)==annot)) != 0) {
+          #if (length(which(names(temp.annot_cols)==annot)) != 0) {
             temp.annot_cols[[which(names(temp.annot_cols)==annot)]] <- temp.annot_cols[[which(names(temp.annot_cols)==annot)]][which(   names(temp.annot_cols[[which(names(temp.annot_cols)==annot)]])   %in%   levels(temp.annot_genes[,which(colnames(temp.annot_genes)==annot)])  )]
             if ( sum( levels(temp.annot_genes[,annot]) %in% names(temp.annot_cols[[which(names(temp.annot_cols)==annot)]])  ) != length(levels(temp.annot_genes[,annot]))) {
               temp.annot_cols[[which(names(temp.annot_cols)==annot)]][c(levels(temp.annot_genes[,annot])[levels(temp.annot_genes[,annot]) %notin% names(temp.annot_cols[[which(names(temp.annot_cols)==annot)]])])] <- "white"
             }
-          }
+          #}
         }
       }
     })

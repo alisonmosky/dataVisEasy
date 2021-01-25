@@ -3,23 +3,23 @@
     "path": "D:/Dropbox (SBG)/SHR-Work/Alison-DataVis-Package/dataVisEasy/vignettes/dataVisEasy-vignette.Rmd",
     "project_path": "vignettes/dataVisEasy-vignette.Rmd",
     "type": "r_markdown",
-    "hash": "4266124882",
+    "hash": "0",
     "contents": "",
     "dirty": false,
     "created": 1610035236284.0,
     "source_on_save": false,
     "relative_order": 4,
     "properties": {
-        "cursorPosition": "76,0",
-        "scrollLine": "68",
+        "cursorPosition": "70,65",
+        "scrollLine": "62",
         "last_setup_crc32": ""
     },
     "folds": "",
-    "lastKnownWriteTime": 1611518933,
+    "lastKnownWriteTime": 1611540297,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1611518933364,
+    "last_content_update": 1611540297907,
     "read_only": false,
     "read_only_alternatives": []
 }
