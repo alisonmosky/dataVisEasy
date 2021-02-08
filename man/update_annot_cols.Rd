@@ -21,53 +21,65 @@ title of annotation to be updated or added. If already found in the names of the
 values corresponding to the annotation to be updated or added.
 }
 }
-\details{
+%\details{
 %%  ~~ If necessary, more details than the description above ~~
-}
-\value{
+%}
+
+%\value{
 %%  ~Describe the value returned
 %%  If it is a LIST, use
 %%  \item{comp1 }{Description of 'comp1'}
 %%  \item{comp2 }{Description of 'comp2'}
 %% ...
-}
-\references{
+%}
+
+%\references{
 %% ~put references to the literature/web site here ~
-}
+%}
 \author{
 ~~Alison Moss~~
 }
-\note{
+%\note{
 %%  ~~further notes~~
-}
+%}
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+to set annot_cols, see \link[dataVisEasy]{set_annot_cols}
 }
 \examples{
 
 #genemod.cols <- brewer.pal(7,"Set3"); names(genemod.cols) <- LETTERS[1:7]
 #update_annot_cols("GeneMods",c(genemod.cols))
 
+##initiate parameters and annotations
+initiate_params()
+set_annotations(RAGP_annots)
 
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
 
-## The function is currently defined as
-function (annotation, values.list)
-{
-    if (annotation \%in\% names(params$annot_cols)) {
-        params$annot_cols[which(names(params$annot_cols) == annotation)] <<- values.list
-    }
-    else {
-        params$annot_cols$V1 <<- values.list
-        names(params$annot_cols)[names(params$annot_cols) ==
-            "V1"] <<- annotation
-    }
-  }
+##set up list for color annotations and set colors
+annot_cols <- list('Connectivity'=c("SAN-Projecting"="blue","Non-SAN-Projecting"="violet",
+                   "No Info Available"="grey"),
+                   'Animal'=c("PR1534"="#0571b0","PR1643"="#ca0020","PR1705"="#92c5de",
+                   "PR1729"="#f4a582"))
+set_annot_cols(annot_cols)
+
+scatterGenes(RAGP_norm, "Th","Chat", color.by = "State")
+
+##add specified color annotations to already existing list
+state.cols <- RColorBrewer::brewer.pal(6,"Set1"); names(state.cols) <- LETTERS[1:6]
+update_annot_cols("State", state.cols)
+
+scatterGenes(RAGP_norm, "Th","Chat", color.by = "State")
+
+
+##update and overwrite previous colors
+state.cols <-c("red","orange","yellow","green","purple","violet");names(state.cols) <- LETTERS[1:6]
+update_annot_cols("State", state.cols)
+
+scatterGenes(RAGP_norm, "Th","Chat", color.by = "State")
+
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory (show via RShowDoc("KEYWORDS")):

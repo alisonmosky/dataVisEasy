@@ -79,15 +79,15 @@ A ggplot object. Additional layers can be added to the returned ggplot object to
 
 If return.ggplot.input is set to TRUE, will return the dataframe used for plotting which will contain the expression levels of the chosen genes (if values are squished to fit the plot the values will be similarly squished) as well as the annotations if available.
 }
-\references{
+%\references{
 %% ~put references to the literature/web site here ~
-}
+%}
 \author{
 ~~Alison Moss~~
 }
-\note{
+%\note{
 %%  ~~further notes~~
-}
+%}
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
@@ -97,189 +97,27 @@ For more information on customizing the returned ggplot object, please see ggplo
 See \link[dataVisEasy]{params}, \link[dataVisEasy]{set_annotations}, and \link[dataVisEasy]{set_annot_cols} for more information on setting up annotations and associated colors.
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+##initiate parameters
+initiate_params()
 
-## The function is currently defined as
-function (data, gene1, gene2, is.raw.Ct = FALSE, na.fix = 2,
-    color.by = "blue", custom.color.vec = FALSE, xlimits = FALSE,
-    ylimits = FALSE, squish1 = FALSE, squish2 = FALSE, point.size = 5,
-    legend.position = "none", percent.mad = 0.5)
-{
-    if (gene1 \%notin\% rownames(data)) {
-        stop("gene1 not found in rownames data")
-    }
-    if (gene2 \%notin\% rownames(data)) {
-        stop("gene2 not found in rownames data")
-    }
-    dat1 <- data[which(rownames(data) \%in\% gene1), ]
-    if (is.raw.Ct == F & na.fix != F) {
-        dat1[which(is.na(dat1))] <- (min(dat1, na.rm = T) - na.fix)
-    }
-    if (is.raw.Ct == T & na.fix != F) {
-        dat1[which(is.na(dat1))] <- (max(dat1, na.rm = T) + na.fix)
-    }
-    dat2 <- data[which(rownames(data) \%in\% gene2), ]
-    if (is.raw.Ct == F & na.fix != F) {
-        dat2[which(is.na(dat2))] <- (min(dat2, na.rm = T) - na.fix)
-    }
-    if (is.raw.Ct == T & na.fix != F) {
-        dat2[which(is.na(dat2))] <- (max(dat2, na.rm = T) + na.fix)
-    }
-    temp.annotations <- params$annotations
-    dat.to.plot <- data.frame(Gene1 = dat1, Gene2 = dat2)
-    dat.to.plot <- cbind(dat.to.plot, temp.annotations)
-    if (color.by \%in\% rownames(data) | sum(custom.color.vec !=
-        FALSE) > 0) {
-        if (color.by \%in\% rownames(data)) {
-            genedat <- data[which(rownames(data) == color.by),
-                ]
-            cols <- myColorRamp5(params$expression_gradient.colors,
-                genedat, percent.mad = percent.mad)
-        }
-        else {
-            cols <- custom.color.vec
-        }
-        if (((xlimits == FALSE) && (ylimits == FALSE)) == TRUE) {
-            suppressWarnings(if (squish1 != FALSE) {
-                dat.to.plot$Gene1 <- scales::squish(dat.to.plot$Gene1,
-                  squish1)
-            })
-            suppressWarnings(if (squish2 != FALSE) {
-                dat.to.plot$Gene2 <- scales::squish(dat.to.plot$Gene2,
-                  squish2)
-            })
-            if (is.raw.Ct == T) {
-                p <- ggplot(dat.to.plot, aes(x = Gene1, y = Gene2,
-                  fill = cols)) + geom_point(pch = 21, color = "black",
-                  size = 5) + scale_fill_identity() + labs(x = paste(gene1),
-                  y = paste(gene2)) + ggtitle(paste(gene2, "vs.",
-                  gene1)) + theme_bw() + theme(panel.grid = element_blank(),
-                  plot.title = element_text(hjust = 0.5, size = 40),
-                  axis.text = element_text(size = 25), axis.title = element_text(size = 30),
-                  legend.position = legend.position) + scale_x_reverse() +
-                  scale_y_reverse()
-            }
-            else {
-                p <- ggplot(dat.to.plot, aes(x = Gene1, y = Gene2,
-                  fill = cols)) + geom_point(pch = 21, color = "black",
-                  size = 5) + scale_fill_identity() + labs(x = paste(gene1),
-                  y = paste(gene2)) + ggtitle(paste(gene2, "vs.",
-                  gene1)) + theme_bw() + theme(panel.grid = element_blank(),
-                  plot.title = element_text(hjust = 0.5, size = 40),
-                  axis.text = element_text(size = 25), axis.title = element_text(size = 30),
-                  legend.position = legend.position)
-            }
-        }
-        if ((xlimits || ylimits) == TRUE) {
-            if (is.raw.Ct == T) {
-                p <- ggplot(dat.to.plot, aes(x = Gene1, y = Gene2,
-                  fill = cols)) + geom_point(pch = 21, color = "black",
-                  size = 5) + scale_fill_identity() + labs(x = paste(gene1),
-                  y = paste(gene2)) + ggtitle(paste(gene2, "vs.",
-                  gene1)) + theme_bw() + theme(panel.grid = element_blank(),
-                  plot.title = element_text(hjust = 0.5, size = 40),
-                  axis.text = element_text(size = 25), axis.title = element_text(size = 30),
-                  legend.position = legend.position) + xlim(c(xlimits)) +
-                  ylim(c(ylimits))
-            }
-            else {
-                p <- ggplot(dat.to.plot, aes(x = Gene1, y = Gene2,
-                  fill = cols)) + geom_point(pch = 21, color = "black",
-                  size = 5) + scale_fill_identity() + labs(x = paste(gene1),
-                  y = paste(gene2)) + ggtitle(paste(gene2, "vs.",
-                  gene1)) + theme_bw() + theme(panel.grid = element_blank(),
-                  plot.title = element_text(hjust = 0.5, size = 40),
-                  axis.text = element_text(size = 25), axis.title = element_text(size = 30),
-                  legend.position = legend.position) + xlim(c(xlimits)) +
-                  ylim(c(ylimits))
-            }
-        }
-    }
-    else {
-        if (color.by \%in\% colnames(temp.annotations)) {
-            if (sum(colnames(data) \%notin\% rownames(temp.annotations)) !=
-                0) {
-                stop("colnames of input data do not match rownames of annotations,
-                cannot link annotations to data")
-            }
-            temp.annotations <- temp.annotations[match(colnames(data),
-                rownames(temp.annotations)), , drop = FALSE]
-            if (color.by \%in\% names(params$annot_cols)) {
-                cols <- as.factor(dat.to.plot[, which(colnames(dat.to.plot) ==
-                  color.by)])
-                colors <- params$annot_cols[[which(names(params$annot_cols) ==
-                  color.by)]]
-            }
-            else {
-                cols <- as.factor(pca.data[, which(colnames(pca.data) ==
-                  color.by)])
-                colors <- hue_pal()(length(levels(cols)))
-            }
-        }
-        else {
-            cols <- color.by
-            colors <- color.by
-        }
-        if (((xlimits == FALSE) && (ylimits == FALSE)) == TRUE) {
-            suppressWarnings(if (squish1 != FALSE) {
-                dat.to.plot$Gene1 <- scales::squish(dat.to.plot$Gene1,
-                  squish1)
-            })
-            suppressWarnings(if (squish2 != FALSE) {
-                dat.to.plot$Gene2 <- scales::squish(dat.to.plot$Gene2,
-                  squish2)
-            })
-            if (is.raw.Ct == T) {
-                p <- ggplot(dat.to.plot, aes(x = Gene1, y = Gene2,
-                  fill = cols)) + geom_point(pch = 21, color = "black",
-                  size = point.size) + scale_fill_manual(values = colors) +
-                  labs(x = paste(gene1), y = paste(gene2)) +
-                  ggtitle(paste(gene2, "vs.", gene1)) + theme_bw() +
-                  theme(panel.grid = element_blank(), plot.title = element_text(hjust = 0.5,
-                    size = 40), axis.text = element_text(size = 25),
-                    axis.title = element_text(size = 30), legend.position = legend.position) +
-                  scale_x_reverse() + scale_y_reverse()
-            }
-            else {
-                p <- ggplot(dat.to.plot, aes(x = Gene1, y = Gene2,
-                  fill = cols)) + geom_point(pch = 21, color = "black",
-                  size = point.size) + scale_fill_manual(values = colors) +
-                  labs(x = paste(gene1), y = paste(gene2)) +
-                  ggtitle(paste(gene2, "vs.", gene1)) + theme_bw() +
-                  theme(panel.grid = element_blank(), plot.title = element_text(hjust = 0.5,
-                    size = 40), axis.text = element_text(size = 25),
-                    axis.title = element_text(size = 30), legend.position = legend.position)
-            }
-        }
-        if ((xlimits || ylimits) == TRUE) {
-            if (is.raw.Ct == T) {
-                p <- ggplot(dat.to.plot, aes(x = Gene1, y = Gene2,
-                  fill = cols)) + geom_point(pch = 21, color = "black",
-                  size = point.size) + scale_fill_manual(values = colors) +
-                  labs(x = paste(gene1), y = paste(gene2)) +
-                  ggtitle(paste(gene2, "vs.", gene1)) + theme_bw() +
-                  theme(panel.grid = element_blank(), plot.title = element_text(hjust = 0.5,
-                    size = 40), axis.text = element_text(size = 25),
-                    axis.title = element_text(size = 30), legend.position = legend.position) +
-                  xlim(c(xlimits)) + ylim(c(ylimits))
-            }
-            else {
-                p <- ggplot(dat.to.plot, aes(x = Gene1, y = Gene2,
-                  fill = cols)) + geom_point(pch = 21, color = "black",
-                  size = point.size) + scale_fill_manual(values = colors) +
-                  labs(x = paste(gene1), y = paste(gene2)) +
-                  ggtitle(paste(gene2, "vs.", gene1)) + theme_bw() +
-                  theme(panel.grid = element_blank(), plot.title = element_text(hjust = 0.5,
-                    size = 40), axis.text = element_text(size = 25),
-                    axis.title = element_text(size = 30), legend.position = legend.position) +
-                  xlim(c(xlimits)) + ylim(c(ylimits))
-            }
-        }
-    }
-    return(p)
-  }
+scatterGenes(RAGP_norm, "Th","Chat")
+scatterGenes(RAGP_norm, "Th","Chat", color.by = "hotpink")
+
+
+##color by gene expression
+scatterGenes(RAGP_norm, "Th","Chat", color.by = "Th")
+scatterGenes(RAGP_norm, "Th","Chat", color.by = "Npy")
+
+##color by an annotation
+set_annotations(RAGP_annots) #see set_annot_cols to specify colors
+scatterGenes(RAGP_norm, "Th","Chat", color.by = "State")
+
+##Add layers onto ggplot object
+###the function returns a ggplot object, therefore aesthetics can be added with additional layers
+scatterGenes(RAGP_norm, "Th","Chat", color.by = "Connectivity") +
+    theme(axis.text.x = element_text(size = 15, angle = 45, hjust = 1),
+    legend.position = "bottom")
+
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory (show via RShowDoc("KEYWORDS")):

@@ -21,53 +21,31 @@ Draws from the annotations.genes parameter stored in the params list object to h
 
 To specify the colors that will accompany each level of each annotation, see \link[dataVisEasy]{set_annot_cols}. If colors are not specified, default color values will be applied when necessary. (Not all annotations need to have custom colors, those that do not will be given default colors while those that are specified will be shown as such.)
 }
-\value{
+%\value{
 %%  ~Describe the value returned
 %%  If it is a LIST, use
 %%  \item{comp1 }{Description of 'comp1'}
 %%  \item{comp2 }{Description of 'comp2'}
 %% ...
-}
-\references{
+%}
+%\references{
 %% ~put references to the literature/web site here ~
-}
+%}
 \author{
 ~~Alison Moss~~
 }
-\note{
+%\note{
 %%  ~~further notes~~
-}
+%}
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
 See \link[dataVisEasy]{set_annotations.genes} and \link[dataVisEasy]{set_annot_cols}
+Works the same as for sample annotations, see \link[dataVisEasy]{set_annot_samps} for examples
 }
-\examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
-
-## The function is currently defined as
-function (annotations = NULL)
-{
-    if (is.null(annotations) == TRUE) {
-        params$annot_genes <<- params$annotations.genes
-    }
-    else {
-        suppressWarnings(if (is.na(annotations)) {
-            params$annot_genes <<- NA
-        }
-        else {
-            params$annot_genes <<- params$annotations.genes[,
-                which(colnames(params$annotations.genes) \%in\%
-                  annotations), drop = FALSE]
-            params$annot_genes <<- params$annot_genes[, match(annotations,
-                colnames(params$annot_genes)), drop = FALSE]
-        })
-    }
-  }
-}
+%\examples{
+%}
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory (show via RShowDoc("KEYWORDS")):
 % \keyword{ ~kwd1 }

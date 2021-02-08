@@ -32,15 +32,15 @@ number of clusters along the rows for which the gaps should be extract. Default 
 number of clusters along the columns for which the gaps should be extract. Default set to 5.
 }
 }
-\details{
+%\details{
 %%  ~~ If necessary, more details than the description above ~~
-}
+%}
 \value{
 a numericvector or a list object of two numeric vectors (in a case where both rows and columns are extracted) where the positions of each gap along the rows/columns is indicated.
 }
-\references{
+%\references{
 %% ~put references to the literature/web site here ~
-}
+%}
 \author{
 ~~Alison Moss~~
 }
@@ -54,54 +54,26 @@ a similar output can be obtained from using \link[dataVisEasy]{extractClusters} 
 See also \link[dataVisEasy]{extractClusters}, \link[dataVisEasy]{ExtractMatrix}
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+##initate parameters
+initiate_params()
 
-## The function is currently defined as
-function (data, heatmap, extractRows = FALSE, extractCols = TRUE,
-    num_Rows = 5, num_Cols = 5)
-{
-    if (extractRows == TRUE) {
-        gene.groups <- cutree(heatmap$tree_row, k = num_Rows)
-        gene.tree.order <- heatmap$tree_row[["labels"]][heatmap$tree_row[["order"]]]
-        rowvec <- c(0)
-        ind = 1
-        for (i in 1:length(unique(gene.groups))) {
-            which.group <- gene.groups[which(names(gene.groups) ==
-                gene.tree.order[ind])]
-            names <- names(which(gene.groups == which.group))
-            rowvec <- c(rowvec, rowvec[i] + length(names))
-            ind <- ind + length(names)
-        }
-        rowvec <- rowvec[-length(rowvec)]
-        rowvec <- rowvec[-1]
-    }
-    if (extractCols == TRUE) {
-        sample.groups <- cutree(heatmap$tree_col, k = num_Cols)
-        sample.tree.order <- heatmap$tree_col[["labels"]][heatmap$tree_col[["order"]]]
-        colvec <- c(0)
-        ind = 1
-        for (i in 1:length(unique(sample.groups))) {
-            which.group <- sample.groups[which(names(sample.groups) ==
-                sample.tree.order[ind])]
-            names <- names(which(sample.groups == which.group))
-            colvec <- c(colvec, colvec[i] + length(names))
-            ind <- ind + length(names)
-        }
-        colvec <- colvec[-length(colvec)]
-        colvec <- colvec[-1]
-    }
-    if (extractRows == TRUE & extractCols == TRUE) {
-        return(c(list(Row_Groups = rowvec, Col_Groups = colvec)))
-    }
-    if (extractRows == TRUE & extractCols == FALSE) {
-        return(rowvec)
-    }
-    if (extractRows == FALSE & extractCols == TRUE) {
-        return(colvec)
-    }
-  }
+##view heatmap with clusters separated
+heatmap <- myHeatmap(RAGP_norm, row.groups = 7, col.groups = 6, show.colnames = TRUE)
+
+##extract gaps for numeric vector of where gaps should be
+gaps <- extractGaps(RAGP_norm, heatmap = heatmap, extractRows = TRUE, extractCols = TRUE,
+  num_Rows = 7, num_Cols = 6)
+
+##extract matrix, use matrix and gaps to plot heatmap with expanded space between gaps
+mat <- ExtractMatrix(RAGP_norm, heatmap = heatmap)
+myHeatmap(mat, clust.cols = FALSE, clust.rows = FALSE, gaps.row = gaps$Row_Groups,
+  gaps.col = gaps$Col_Groups)
+myHeatmap(mat, clust.cols = FALSE, clust.rows = FALSE, gaps.row = gaps$Row_Groups,
+  gaps.col = gaps$Col_Groups, gap.width = 3)  ##expands all gaps by gap.width
+
+myHeatmap(mat, clust.cols = FALSE, clust.rows = FALSE, gaps.row = sort(rep(gaps$Row_Groups,6)),
+  gaps.col = sort(rep(gaps$Col_Groups,2)))  ##expands row gaps by 6 and column gaps by 2
+
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory (show via RShowDoc("KEYWORDS")):

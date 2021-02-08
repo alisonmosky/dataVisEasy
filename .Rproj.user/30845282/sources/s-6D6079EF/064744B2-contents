@@ -1,0 +1,79 @@
+\name{myColorRamp5}
+\alias{myColorRamp5}
+%- Also NEED an '\alias' for EACH other topic documented here.
+\title{
+Creates a Color Gradient for a Numeric Vector
+}
+\description{
+Based on a provided numeric vector, returns a color gradient based on quartiles indicating level of expression.
+}
+\usage{
+myColorRamp5(colors, values, percent.mad = 0.5)
+}
+%- maybe also 'usage' for other objects documented here.
+\arguments{
+  \item{colors}{
+a character vector of length 5 providing the colors for which the gradient will be based on
+}
+  \item{values}{
+numeric vector for which the gradient will be based on
+}
+  \item{percent.mad}{
+percent of the median absolute deviation away from the median value that will determine the binning of the data
+}
+}
+\details{
+The function differs from the standard colorRamp in that the input values are binned before being assigned colors to avoid the heavy influence of extreme values on the color gradient. This function separates the values into quartiles based on the median value of the data and the indicated percent.mad which determines how the upper and lower bins are assigned.
+
+The lowest quartile set from colors[1]-colors[2] ranges from
+min(values) < x <= median(values) - percent.mad*mad(values)
+
+The lower middle quartile set from colors[2]-colors[3] ranges from
+median(values) - percent.mad*mad(values) < x <= median(values)
+
+The higher middle quartile set from colors[3]-colors[4] ranges from
+median(values) < x <= median(values) + percent.mad*mad(values)
+
+The highest quartile set from colors[4]-colors[5] ranges from
+median(values) + percent.mad*mad(values) < x <= max(values)
+
+(NAs are removed for all calculations)
+}
+\value{
+a vector of color assignments for the values provided (in the same order)
+}
+%\references{
+%% ~put references to the literature/web site here ~
+%}
+\author{
+~~Alison Moss~~
+}
+\note{
+Mostly used internally by plotting functions where points are colored by expression level
+}
+
+%% ~Make other sections like Warning with \section{Warning }{....} ~
+
+%\seealso{
+%% ~~objects to See Also as \code{\link{help}}, ~~~
+%}
+\examples{
+##initiate parameters
+initiate_params()
+
+##for a given gene of interest, color samples by expression level,
+goi <- "Th"
+genedat<- RAGP_norm[goi,]
+cols <- myColorRamp5(params$expression_gradient.colors,genedat, percent.mad = 0.5)
+
+cols <- myColorRamp5(c("red","orange","yellow","green","blue"),genedat, percent.mad = 0.75)
+}
+% Add one or more standard keywords, see file 'KEYWORDS' in the
+% R documentation directory (show via RShowDoc("KEYWORDS")):
+% \keyword{ ~kwd1 }
+% \keyword{ ~kwd2 }
+% Use only one keyword per line.
+% For non-standard keywords, use \concept instead of \keyword:
+% \concept{ ~cpt1 }
+% \concept{ ~cpt2 }
+% Use only one concept per line.

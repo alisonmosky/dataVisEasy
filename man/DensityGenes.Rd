@@ -56,15 +56,15 @@ A ggplot object. Additional layers can be added to the returned ggplot object to
 
 If return.ggplot.input is set to TRUE, will return the dataframe used for plotting which will contain the expression levels of the chosen genes (if values are squished to fit the plot the values will be similarly squished) as well as the annotations if available.
 }
-\references{
+%\references{
 %% ~put references to the literature/web site here ~
-}
+%}
 \author{
 ~~Alison Moss~~
 }
-\note{
+%\note{
 %%  ~~further notes~~
-}
+%}
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
@@ -74,124 +74,16 @@ For more information on customizing the returned ggplot object, please see ggplo
 See \link[dataVisEasy]{params}, \link[dataVisEasy]{set_annotations}, and \link[dataVisEasy]{set_annot_cols} for more information on setting up annotations and associated colors.
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+##initiate_parameters
+initiate_params()
 
-## The function is currently defined as
-function (data, list, exact = TRUE, color.by = "blue", is.raw.Ct = FALSE,
-    na.fix = 2, transparency = 0.5, ncols = 2, scales = "free",
-    legend.position = "right")
-{
-    if (exact == TRUE) {
-        dat <- data[which(rownames(data) \%in\% list), ]
-        if (length(dat) == 0) {
-            stop("exact matches for list not found in rownames data")
-        }
-        if (is.raw.Ct == F & na.fix != F) {
-            dat[which(is.na(dat))] <- (min(dat, na.rm = T) -
-                na.fix)
-        }
-        if (is.raw.Ct == T & na.fix != F) {
-            dat[which(is.na(dat))] <- (max(dat, na.rm = T) +
-                na.fix)
-        }
-    }
-    if (exact == FALSE) {
-        dat <- data[grep(paste(list, collapse = "|"), rownames(data)),
-            ]
-        if (length(dat) == 0) {
-            stop("inexact matches for list not found in rownames data")
-        }
-        if (is.raw.Ct == F & na.fix != F) {
-            dat[which(is.na(dat))] <- (min(dat, na.rm = T) -
-                na.fix)
-        }
-        if (is.raw.Ct == T & na.fix != F) {
-            dat[which(is.na(dat))] <- (max(dat, na.rm = T) +
-                na.fix)
-        }
-    }
-    temp.annotations <- params$annotations
-    if (color.by \%in\% colnames(temp.annotations)) {
-        if (sum(colnames(dat) \%notin\% rownames(temp.annotations)) !=
-            0) {
-            stop("colnames of input data do not match rownames of annotations,
-            cannot link annotations to data")
-        }
-        temp.annotations <- temp.annotations[match(colnames(dat),
-            rownames(temp.annotations)), , drop = FALSE]
-        dat.to.plot <- data.frame(t(dat))
-        dat.to.plot <- cbind(dat.to.plot, temp.annotations)
-        dat.to.plot <- melt(dat.to.plot, id.vars = colnames(temp.annotations))
-        if (color.by \%in\% names(params$annot_cols)) {
-            cols <- as.factor(dat.to.plot[, which(colnames(dat.to.plot) ==
-                color.by)])
-            colors <- params$annot_cols[[which(names(params$annot_cols) ==
-                color.by)]]
-        }
-        else {
-            cols <- as.factor(dat.to.plot[, which(colnames(dat.to.plot) ==
-                color.by)])
-            colors <- hue_pal()(length(levels(cols)))
-        }
-        if (is.raw.Ct == T) {
-            p <- ggplot(dat.to.plot, aes(x = value, fill = cols,
-                group = eval(parse(text = color.by)))) + geom_density(alpha = transparency) +
-                facet_wrap(~variable, ncol = ncols, scales = scales) +
-                scale_fill_manual(values = colors) + theme_bw() +
-                theme(panel.grid = element_blank(), plot.title = element_text(hjust = 0.5,
-                  size = 40), strip.text = element_text(size = 25),
-                  strip.background.x = element_blank(), legend.position = legend.position,
-                  axis.title = element_text(size = 20)) + xlab("Raw Ct Value") +
-                ylab("Denstiy") + scale_y_reverse()
-        }
-        else {
-            p <- ggplot(dat.to.plot, aes(x = value, fill = cols,
-                group = eval(parse(text = color.by)))) + geom_density(alpha = transparency) +
-                facet_wrap(~variable, ncol = ncols, scales = scales) +
-                scale_fill_manual(values = colors) + theme_bw() +
-                theme(panel.grid = element_blank(), plot.title = element_text(hjust = 0.5,
-                  size = 40), strip.text = element_text(size = 25),
-                  strip.background.x = element_blank(), legend.position = legend.position,
-                  axis.title = element_text(size = 20), axis.text.x = element_text(size = 15)) +
-                xlab("Normalized Expression Level") + ylab("Density")
-        }
-    }
-    else {
-        cols <- color.by
-        colors <- color.by
-        dat.to.plot <- data.frame(t(dat))
-        dat.to.plot <- cbind(dat.to.plot, temp.annotations)
-        dat.to.plot <- melt(dat.to.plot, id.vars = colnames(temp.annotations))
-        suppressWarnings(if (is.na(temp.annotations) == TRUE) {
-            dat.to.plot <- dat.to.plot[-which(dat.to.plot$variable ==
-                "temp.annotations"), ]
-        })
-        if (is.raw.Ct == T) {
-            p <- ggplot(dat.to.plot, aes(x = value, fill = cols)) +
-                geom_density(alpha = transparency) + facet_wrap(~variable,
-                ncol = ncols, scales = scales) + scale_fill_manual(values = colors) +
-                theme_bw() + theme(panel.grid = element_blank(),
-                plot.title = element_text(hjust = 0.5, size = 40),
-                strip.text = element_text(size = 25), strip.background.x = element_blank(),
-                legend.position = legend.position, axis.title = element_text(size = 20)) +
-                xlab("Raw Ct Value") + ylab("Denstiy") + scale_y_reverse()
-        }
-        else {
-            p <- ggplot(dat.to.plot, aes(x = value, fill = cols)) +
-                geom_density(alpha = transparency) + facet_wrap(~variable,
-                ncol = ncols, scales = scales) + scale_fill_manual(values = colors) +
-                theme_bw() + theme(panel.grid = element_blank(),
-                plot.title = element_text(hjust = 0.5, size = 40),
-                strip.text = element_text(size = 25), strip.background.x = element_blank(),
-                legend.position = legend.position, axis.title = element_text(size = 20),
-                axis.text.x = element_text(size = 15)) + xlab("Normalized Expression Level") +
-                ylab("Density")
-        }
-    }
-    return(p)
-  }
+##View density plots for selection of genes
+DensityGenes(RAGP_norm, "Sst", exact = FALSE)  ##Sst and its receptors
+DensityGenes(RAGP_rawCt, "Sst", exact = FALSE, is.raw.Ct = TRUE) #in raw Ct
+
+##set up annotations and view distribution by annotation
+set_annotations(RAGP_annots)
+DensityGenes(RAGP_norm, "Sst", exact = FALSE, color.by = "State", ncols = 1)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory (show via RShowDoc("KEYWORDS")):

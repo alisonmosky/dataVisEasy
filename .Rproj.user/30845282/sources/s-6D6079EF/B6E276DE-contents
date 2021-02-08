@@ -1,0 +1,115 @@
+\name{AOV2way}
+\alias{AOV2way}
+%- Also NEED an '\alias' for EACH other topic documented here.
+\title{
+Two-Way ANOVA
+}
+\description{
+A two-way ANOVA for the samples in the supplied data matrix based on annotations stored in the params list object.
+}
+\usage{
+AOV2way(data.to.aov, category1, category2, pthreshold = 0.05, additional.report = "NONE")
+}
+%- maybe also 'usage' for other objects documented here.
+\arguments{
+  \item{data.to.aov}{
+numeric data matrix with samples/observations in the columns and genes/variables in the rows
+}
+  \item{category1}{
+Character string pointing to a column of the annotations data frame stores in params$annotations
+}
+  \item{category2}{
+Character string pointing to a column of the annotations data frame stores in params$annotations
+}
+  \item{pthreshold}{
+pvalue threshold for which genes will be considered significant
+}
+  \item{additional.report}{
+Option to include full output of aov or TukeyHSD, options are "NONE", "AOV","TUKEY", or "ALL"
+}
+}
+\details{
+Runs a standard two-way ANOVA and subsequent TukeyHSD on the data provided using stored annotations as the categories for ANOVA groupings
+}
+\value{
+List object
+
+\item{AOV.Results}{dataframe giving the F statistic and pvalue of each gene in the original input matrix for each category indepenently and the interaction values}
+
+\item{Category1_Sig.Genes}{character vector of the genes with pvalues below the specified pthreshold for the levels in Category1}
+
+\item{Category2_Sig.Genes}{character vector of the genes with pvalues below the specified pthreshold for the levels in Category2}
+
+\item{Interaction_Sig.Genes}{character vector of the genes with pvalues below the specified pthreshold for the interaction between Category1 and Category2}
+
+\item{All.Sig.Genes}{character vector of the all genes with pvalues below the specified pthreshold for any contrast}
+
+\item{NonSig.Genes}{character vector of the genes with pvalues that did not pass the specified pthreshold for any contrast}
+
+\item{Category1_Tukey.pVals}{dataframe containing the adjusted pvalues from TukeyHSD for each contrast in Category2 for each gene in the original input matrix}
+
+\item{Category2_Tukey.pVals}{dataframe containing the adjusted pvalues from TukeyHSD for each contrast in Category2 for each gene in the original input matrix}
+
+\item{Interaction_Tukey.pVals}{dataframe containing the adjusted pvalues from TukeyHSD for each contrast of the interaction between Category1 and Category2 for each gene in the original input matrix}
+
+\item{Category1_Tukey.diffs}{dataframe containing the difference values from TukeyHSD for each contrast in Category1 for each gene in the original input matrix}
+
+\item{Category2_Tukey.diffs}{dataframe containing the difference values from TukeyHSD for each contrast in Category2 for each gene in the original input matrix}
+
+\item{Interaction_Tukey.diffs}{dataframe containing the difference values from TukeyHSD for each contrast of the interaction between Category1 and Category2 for each gene in the original input matrix}
+
+optional items
+
+\item{AOV.output}{list object containing the aov output for all genes in the original input matrix }
+
+\item{Tukey.output}{list object containing the TUkeyHSD output for all genes in the original input matrix }
+}
+%\references{
+%% ~put references to the literature/web site here ~
+%}
+\author{
+~~Alison Moss~~
+}
+\note{
+The function itself determines significant and non-significant genes based on the pthreshold
+provided. However, the AOV.Results provdied in the output supply the F value and p value,
+additional information can also be retrieved by setting additional report = TRUE, user can
+use any of this information for custom filtering of results.
+}
+
+%% ~Make other sections like Warning with \section{Warning }{....} ~
+
+%\seealso{
+%% ~~objects to See Also as \code{\link{help}}, ~~~
+%}
+\examples{
+
+##initiate parameteres and set up annotations
+
+initiate_params()
+data(RAGP_norm)
+data(RAGP_annots)
+set_annotations(RAGP_annots)
+
+##AOV for Connectivity and State
+aov2 <- AOV2way(RAGP_norm, "Connectivity","State", pthreshold = 0.01)
+summary(aov2)
+head(aov2$AOV.Results)  ##shows F vals and pVals for both categories and the interaction
+head(aov2$Category1_Sig.Genes)
+head(aov2$Category2_Sig.Genes)
+head(aov2$Interaction_Sig.Genes)
+
+##visualize significant genes in heatmap
+int.genes <- aov2$Interaction_Sig.Genes
+myHeatmapByAnnotation(RAGP_norm, int.genes, groupings = c("Connectivity","State"))
+
+}
+% Add one or more standard keywords, see file 'KEYWORDS' in the
+% R documentation directory (show via RShowDoc("KEYWORDS")):
+% \keyword{ ~kwd1 }
+% \keyword{ ~kwd2 }
+% Use only one keyword per line.
+% For non-standard keywords, use \concept instead of \keyword:
+% \concept{ ~cpt1 }
+% \concept{ ~cpt2 }
+% Use only one concept per line.

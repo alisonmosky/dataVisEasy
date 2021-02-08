@@ -21,16 +21,17 @@ colors used to generate heatmaps
 
 Please see \link[dataVisEasy]{params} for more information about accessing and setting up these variables.
 }
-\value{
+%\value{
 %%  ~Describe the value returned
 %%  If it is a LIST, use
 %%  \item{comp1 }{Description of 'comp1'}
 %%  \item{comp2 }{Description of 'comp2'}
 %% ...
-}
-\references{
+%}
+
+%\references{
 %% ~put references to the literature/web site here ~
-}
+%}
 \author{
 ~~Alison Moss~~
 }
@@ -46,15 +47,19 @@ In \link[dataVisEasy]{myHeatmap} and \link[dataVisEasy]{myHeatmapByAnnotation}, 
 \link[dataVisEasy]{set_scale.range} and \link[dataVisEasy]{set_n.colors.range}
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+##initiate parameters
+initiate_params()
 
-## The function is currently defined as
-function (colors)
-{
-    params$scale.colors <<- colors
-  }
+#view heatmap with default colors
+myHeatmap(RAGP_norm)
+
+##switch to green-black-red heatmap
+set_scale.colors(c("green","black","red"))
+myHeatmap(RAGP_norm)
+
+##custom color range
+set_scale.colors(c("purple","blue","green","yellow","orange","red"))
+myHeatmap(RAGP_norm)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory (show via RShowDoc("KEYWORDS")):

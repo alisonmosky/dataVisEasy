@@ -54,14 +54,14 @@ if return.vals == FALSE, will return a character vector of genes or samples that
 if return.vals == TRUE, will return a dataframe giving the pvalue and correlation value for each variable compared to the supplied template
 }
 \references{
-%% ~put references to the literature/web site here ~
+Pavlidis and Noble 2001
 }
 \author{
 ~~Alison Moss~~
 }
-\note{
+%\note{
 %%  ~~further notes~~
-}
+%}
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
@@ -69,98 +69,29 @@ if return.vals == TRUE, will return a dataframe giving the pvalue and correlatio
 See \link[dataVisEasy]{params},\link[dataVisEasy]{set_annotations}, \link[dataVisEasy]{set_annotations.genes}, for more information on setting up annotations.
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+##initiate parameters and annotations
+initiate_params()
+set_annotations(RAGP_annots)
 
-## The function is currently defined as
-function (data, match.template, set.high, custom.template = NA,
-    Find.Match.For = "genes", cutoff = 0.05, cut.by = "pvals",
-    method = "pearson", NA.handling = "pairwise.complete.obs",
-    return.vals = FALSE)
-{
-    if (tolower(Find.Match.For) == "genes") {
-        temp.annotations <- params$annotations
-        if (is.na(custom.template) == TRUE) {
-            if (match.template \%in\% colnames(temp.annotations)) {
-                suppressWarnings(if (is.na(temp.annotations) ==
-                  FALSE) {
-                  if (sum(colnames(data) \%notin\% rownames(temp.annotations)) !=
-                    0) {
-                    stop("colnames of input data do not match rownames of annotations,
-                    cannot link annotations to data")
-                  }
-                  temp.annotations <- temp.annotations[match(colnames(data),
-                    rownames(temp.annotations)), , drop = FALSE]
-                })
-                template <- rep(0, nrow(temp.annotations))
-                template[which(temp.annotations[, match.template] \%in\%
-                  set.high)] <- 1
-            }
-            if (match.template \%in\% rownames(data)) {
-                template <- data[which(rownames(data) == match.template),
-                  ]
-            }
-        }
-        else {
-            template <- custom.template
-        }
-        p.vals <- apply(data, 1, function(x) (cor.test(template,
-            x, method = method, use = NA.handling)$p.value))
-        corrs <- apply(data, 1, function(x) (cor.test(template,
-            x, method = method, use = NA.handling)$estimate))
-        if (cut.by == "pvals") {
-            corrs.past.cutoff <- names(p.vals)[which(p.vals <
-                cutoff & corrs > 0)]
-        }
-        if (cut.by == "rvals") {
-            corrs.past.cutoff <- names(corrs)[which(corrs > cutoff)]
-        }
-    }
-    if (tolower(Find.Match.For) == "samples") {
-        temp.annotations.genes <- params$annotations.genes
-        suppressWarnings(if (is.na(temp.annotations.genes) ==
-            FALSE) {
-            if (sum(rownames(data) \%notin\% rownames(temp.annotations.genes)) !=
-                0) {
-                stop("rownames of input data do not match rownames of annotations,
-                cannot link annotations to data")
-            }
-            temp.annotations.genes <- temp.annotations.genes[match(rownames(data),
-                rownames(temp.annotations.genes)), , drop = FALSE]
-        })
-        if (is.na(custom.template) == TRUE) {
-            if (match.template \%in\% colnames(temp.annotations.genes)) {
-                template <- rep(0, nrow(temp.annotations, gene))
-                template[which(temp.annotations.genes[, match.template] \%in\%
-                  set.high)] <- 1
-            }
-            if (match.template \%in\% colnames(data)) {
-                template <- data[, which(colnames(data) == match.template)]
-            }
-        }
-        else {
-            template <- custom.template
-        }
-        p.vals <- apply(data, 2, function(x) (cor.test(template,
-            x, method = method, use = NA.handling)$p.value))
-        corrs <- apply(data, 2, function(x) (cor.test(template,
-            x, method = method, use = NA.handling)$estimate))
-        if (cut.by == "pvals") {
-            corrs.past.cutoff <- names(p.vals)[which(p.vals <
-                cutoff & corrs > 0)]
-        }
-        if (cut.by == "rvals") {
-            corrs.past.cutoff <- names(corrs)[which(corrs > cutoff)]
-        }
-    }
-    if (return.vals == FALSE) {
-        return(corrs.past.cutoff)
-    }
-    if (return.vals == TRUE) {
-        cbind(p.vals, corrs)
-    }
-  }
+##using the "State" annotation, find genes were State A has high expression, return passes
+A.high <- PTM(RAGP_norm, match.template = "State", annotation.level.set.high = "A")
+head(A.high)
+A.high.01 <- PTM(RAGP_norm, match.template = "State", annotation.level.set.high = "A",
+  cutoff = 0.01)
+head(A.high.01)
+
+##return dataframe with pvalues and correlations to template
+A.high.results <- PTM(RAGP_norm, match.template = "State", annotation.level.set.high = "A",
+  , return.vals = TRUE)
+head(A.high.results)
+
+
+##find matches to a gene of interest
+Th.match <- PTM(RAGP_norm, match.template = "Th", cut.by = "rvals", cutoff = 0.8)
+Th.match
+
+##the same can be applied to find matches for samples
+##can also supply a custom vector to be matched against
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory (show via RShowDoc("KEYWORDS")):

@@ -25,54 +25,35 @@ optional string equal to one of the rownames of the supplied data frame. Columns
 whether or not to search for exact or inexact matches of 'list' in 'data'. If exact = T (default) heatmap will plot genes/variables that exactly match the list supplied. If set to FALSE, will search for inexact matches.
 }
 }
-\details{
+%\details{
 %%  ~~ If necessary, more details than the description above ~~
-}
+%}
+
 \value{
 data matrix with the same number of columns as the input data matrix but subset for the specified gene/variable list
 }
-\references{
+
+%\references{
 %% ~put references to the literature/web site here ~
-}
+%}
+
 \author{
 ~~Alison Moss~~
 }
-\note{
+
+%\note{
 %%  ~~further notes~~
-}
+%}
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
-\seealso{
+%\seealso{
 %% ~~objects to See Also as \code{\link{help}}, ~~~
-}
-\examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+%}
 
-## The function is currently defined as
-function (data, list, order.by = NULL, exact = TRUE)
-{
-    if (exact == TRUE) {
-        subset <- data[which(rownames(data) \%in\% list), ]
-        if (length(subset) == 0) {
-            stop("exact matches for list not found in rownames data")
-        }
-    }
-    if (exact == FALSE) {
-        subset <- data[grep(paste(list, collapse = "|"), rownames(data)),
-            ]
-        if (length(subset) == 0) {
-            stop("inexact matches for list not found in rownames data")
-        }
-    }
-    if (is.null(order.by) == FALSE) {
-        subset <- subset[, order(data[which(rownames(data) \%in\%
-            order.by), ], na.last = F)]
-    }
-    return(subset)
-  }
+
+\examples{
+ion.subset <- subsetGenes(RAGP_norm, c("Kcn","Cacn","Hcn","Scn"), exact = FALSE)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory (show via RShowDoc("KEYWORDS")):

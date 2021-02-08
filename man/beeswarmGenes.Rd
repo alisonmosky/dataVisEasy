@@ -87,15 +87,15 @@ A ggplot object. Additional layers can be added to the returned ggplot object to
 
 If return.ggplot.input is set to TRUE, will return the dataframe used for plotting which will contain the expression levels of the chosen genes (if values are squished to fit the plot the values will be similarly squished) as well as the annotations if available and Custom groupings or colorings if specified.
 }
-\references{
+%\references{
 %% ~put references to the literature/web site here ~
-}
+%}
 \author{
 ~~Alison Moss~~
 }
-\note{
+%\note{
 %%  ~~further notes~~
-}
+%}
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
@@ -106,406 +106,43 @@ See \link[dataVisEasy]{params}, \link[dataVisEasy]{set_annotations}, and \link[d
 
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
 
-## The function is currently defined as
-function (data, list, exact = TRUE, is.raw.Ct = FALSE, na.fix = 2,
-    squishy = FALSE, color.by = "blue", custom.color.vec = FALSE,
-    groupby.x = NULL, custom.group.vec = FALSE, facet.wrap = FALSE,
-    ncols = 2, scales = "free_y", legend.position = "none", axis.text.x.size = 25,
-    point.size = 3, percent.mad = 0.5)
-{
-    if (exact == TRUE) {
-        dat <- data[which(rownames(data) \%in\% list), ]
-        if (length(dat) == 0) {
-            stop("exact matches for list not found in rownames data")
-        }
-        if (is.raw.Ct == F & na.fix != F) {
-            dat[which(is.na(dat))] <- (min(dat, na.rm = T) -
-                na.fix)
-        }
-        if (is.raw.Ct == T & na.fix != F) {
-            dat[which(is.na(dat))] <- (max(dat, na.rm = T) +
-                na.fix)
-        }
-    }
-    if (exact == FALSE) {
-        dat <- data[grep(paste(list, collapse = "|"), rownames(data)),
-            ]
-        if (length(dat) == 0) {
-            stop("inexact matches for list not found in rownames data")
-        }
-        if (is.raw.Ct == F & na.fix != F) {
-            dat[which(is.na(dat))] <- (min(dat, na.rm = T) -
-                na.fix)
-        }
-        if (is.raw.Ct == T & na.fix != F) {
-            dat[which(is.na(dat))] <- (max(dat, na.rm = T) +
-                na.fix)
-        }
-    }
-    temp.annotations <- params$annotations
-    suppressWarnings(if (is.na(temp.annotations) == FALSE) {
-        if (sum(colnames(dat) \%notin\% rownames(temp.annotations)) !=
-            0) {
-            stop("colnames of input data do not match rownames of annotations,
-            cannot link annotations to data")
-        }
-        temp.annotations <- temp.annotations[match(colnames(dat),
-            rownames(temp.annotations)), , drop = FALSE]
-    })
-    if (is.null(groupby.x) == TRUE & (color.by \%in\% colnames(temp.annotations)) ==
-        FALSE) {
-        groupby.x <- FALSE
-    }
-    if (color.by \%in\% rownames(data) | sum(custom.color.vec !=
-        FALSE) > 0) {
-        if (color.by \%in\% rownames(data)) {
-            genedat <- data[which(rownames(data) == color.by),
-                ]
-            if (is.raw.Ct == FALSE) {
-                cols <- myColorRamp5(params$expression_gradient.colors,
-                  genedat, percent.mad = percent.mad)
-            }
-            if (is.raw.Ct == TRUE) {
-                cols <- myColorRamp5(rev(params$expression_gradient.colors),
-                  genedat, percent.mad = percent.mad)
-            }
-        }
-        else {
-            cols <- custom.color.vec
-        }
-        suppressWarnings(if (custom.group.vec != FALSE) {
-            dat.to.plot <- data.frame(t(dat))
-            dat.to.plot <- cbind(dat.to.plot, temp.annotations)
-            dat.to.plot$cols <- cols
-            dat.to.plot$Custom <- custom.group.vec
-            dat.to.plot <- melt(dat.to.plot, id.vars = c(colnames(temp.annotations),
-                "cols", "Custom"))
-            if (is.na(temp.annotations) == TRUE) {
-                dat.to.plot <- dat.to.plot[-which(dat.to.plot$variable ==
-                  "temp.annotations"), ]
-            }
-            groupby.x <- "Custom"
-            suppressWarnings(if (squishy != FALSE) {
-                dat.to.plot$value <- scales::squish(dat.to.plot$value,
-                  squishy)
-            })
-        }
-        else {
-            dat.to.plot <- data.frame(t(dat))
-            dat.to.plot <- cbind(dat.to.plot, temp.annotations)
-            dat.to.plot$cols <- cols
-            dat.to.plot <- melt(dat.to.plot, id.vars = c(colnames(temp.annotations),
-                "cols"))
-            if (is.na(temp.annotations) == TRUE) {
-                dat.to.plot <- dat.to.plot[-which(dat.to.plot$variable ==
-                  "temp.annotations"), ]
-            }
-            suppressWarnings(if (squishy != FALSE) {
-                dat.to.plot$value <- scales::squish(dat.to.plot$value,
-                  squishy)
-            })
-        })
-        if ((is.null(groupby.x) == FALSE)) {
-            if (groupby.x != FALSE) {
-                if (facet.wrap == FALSE) {
-                  if (is.raw.Ct == T) {
-                    (p <- ggplot(dat.to.plot, aes(x = variable,
-                      y = value, fill = cols, group = eval(parse(text = groupby.x)))) +
-                      geom_quasirandom(pch = 21, color = "black",
-                        dodge.width = 0.8, size = point.size) +
-                      scale_fill_identity() + theme_bw() + theme(panel.grid = element_blank(),
-                      plot.title = element_text(hjust = 0.5,
-                        size = 40), strip.text = element_text(size = 25),
-                      strip.background.x = element_blank(), legend.position = legend.position,
-                      axis.title.y = element_text(size = 20),
-                      axis.title.x = element_blank(), axis.text.x = element_text(size =
-                      axis.text.x.size)) +
-                      ylab("Raw Ct Value") + scale_y_reverse())
-                  }
-                  else {
-                    (p <- ggplot(dat.to.plot, aes(x = variable,
-                      y = value, fill = cols, group = eval(parse(text = groupby.x)))) +
-                      geom_quasirandom(pch = 21, color = "black",
-                        dodge.width = 0.8, size = point.size) +
-                      scale_fill_identity() + theme_bw() + theme(panel.grid = element_blank(),
-                      plot.title = element_text(hjust = 0.5,
-                        size = 40), strip.text = element_text(size = 25),
-                      strip.background.x = element_blank(), legend.position = legend.position,
-                      axis.title.y = element_text(size = 20),
-                      axis.title.x = element_blank(), axis.text.x = element_text(size =
-                      axis.text.x.size)) +
-                      ylab("Normalized Expression Level"))
-                  }
-                }
-                if (facet.wrap == TRUE) {
-                  if (is.raw.Ct == T) {
-                    (p <- ggplot(dat.to.plot, aes(x = eval(parse(text = groupby.x)),
-                      y = value, fill = cols, group = eval(parse(text = groupby.x)))) +
-                      geom_quasirandom(pch = 21, color = "black",
-                        dodge.width = 0.8, size = point.size) +
-                      scale_fill_identity() + theme_bw() + theme(panel.grid = element_blank(),
-                      plot.title = element_text(hjust = 0.5,
-                        size = 40), strip.text = element_text(size = 25),
-                      strip.background.x = element_blank(), legend.position = legend.position,
-                      axis.title.y = element_text(size = 20),
-                      axis.title.x = element_blank(), axis.text.x = element_text(size =
-                      axis.text.x.size)) +
-                      ylab("Raw Ct Value") + scale_y_reverse() +
-                      facet_wrap(~variable, ncol = ncols, scales = scales))
-                  }
-                  else {
-                    (p <- ggplot(dat.to.plot, aes(x = eval(parse(text = groupby.x)),
-                      y = value, fill = cols, group = eval(parse(text = groupby.x)))) +
-                      geom_quasirandom(pch = 21, color = "black",
-                        dodge.width = 0.8, size = point.size) +
-                      scale_fill_identity() + theme_bw() + theme(panel.grid = element_blank(),
-                      plot.title = element_text(hjust = 0.5,
-                        size = 40), strip.text = element_text(size = 25),
-                      strip.background.x = element_blank(), legend.position = legend.position,
-                      axis.title.y = element_text(size = 20),
-                      axis.title.x = element_blank(), axis.text.x = element_text(size =
-                      axis.text.x.size)) +
-                      ylab("Normalized Expression Level") + facet_wrap(~variable,
-                      ncol = ncols, scales = scales))
-                  }
-                }
-            }
-            else {
-                if (is.raw.Ct == T) {
-                  (p <- ggplot(dat.to.plot, aes(x = variable,
-                    y = value, fill = cols)) + geom_quasirandom(pch = 21,
-                    color = "black", size = point.size) + scale_fill_identity() +
-                    theme_bw() + theme(panel.grid = element_blank(),
-                    plot.title = element_text(hjust = 0.5, size = 40),
-                    strip.text = element_text(size = 25), strip.background.x = element_blank(),
-                    legend.position = legend.position, axis.title.y = element_text(size = 20),
-                    axis.title.x = element_blank(), axis.text.x = element_text(size =
-                    axis.text.x.size)) +
-                    ylab("Raw Ct Value") + scale_y_reverse())
-                }
-                else {
-                  (p <- ggplot(dat.to.plot, aes(x = variable,
-                    y = value, fill = cols)) + geom_quasirandom(pch = 21,
-                    color = "black", size = point.size) + scale_fill_identity() +
-                    theme_bw() + theme(panel.grid = element_blank(),
-                    plot.title = element_text(hjust = 0.5, size = 40),
-                    strip.text = element_text(size = 25), strip.background.x = element_blank(),
-                    legend.position = legend.position, axis.title.y = element_text(size = 20),
-                    axis.title.x = element_blank(), axis.text.x = element_text(size =
-                    axis.text.x.size)) +
-                    ylab("Normalized Expression Level"))
-                }
-            }
-        }
-    }
-    else {
-        suppressWarnings(if (custom.group.vec != FALSE) {
-            dat.to.plot <- data.frame(t(dat))
-            dat.to.plot <- cbind(dat.to.plot, temp.annotations)
-            dat.to.plot$Custom <- custom.group.vec
-            dat.to.plot <- melt(dat.to.plot, id.vars = c(colnames(temp.annotations),
-                "Custom"))
-            if (is.na(temp.annotations) == TRUE) {
-                dat.to.plot <- dat.to.plot[-which(dat.to.plot$variable ==
-                  "temp.annotations"), ]
-            }
-            groupby.x <- "Custom"
-            suppressWarnings(if (squishy != FALSE) {
-                dat.to.plot$value <- scales::squish(dat.to.plot$value,
-                  squishy)
-            })
-        }
-        else {
-            dat.to.plot <- data.frame(t(dat))
-            dat.to.plot <- cbind(dat.to.plot, temp.annotations)
-            dat.to.plot <- melt(dat.to.plot, id.vars = colnames(temp.annotations))
-            if (is.na(temp.annotations) == TRUE) {
-                dat.to.plot <- dat.to.plot[-which(dat.to.plot$variable ==
-                  "temp.annotations"), ]
-            }
-            suppressWarnings(if (squishy != FALSE) {
-                dat.to.plot$value <- scales::squish(dat.to.plot$value,
-                  squishy)
-            })
-        })
-        if (color.by \%in\% colnames(temp.annotations)) {
-            if (color.by \%in\% names(params$annot_cols)) {
-                cols <- as.factor(dat.to.plot[, which(colnames(dat.to.plot) ==
-                  color.by)])
-                colors <- params$annot_cols[[which(names(params$annot_cols) ==
-                  color.by)]]
-            }
-            else {
-                cols <- as.factor(dat.to.plot[, which(colnames(dat.to.plot) ==
-                  color.by)])
-                colors <- hue_pal()(length(levels(cols)))
-            }
-        }
-        else {
-            cols <- color.by
-            colors <- color.by
-        }
-        if ((is.null(groupby.x) == TRUE) & (color.by \%in\% colnames(temp.annotations))) {
-            if (facet.wrap == FALSE) {
-                if (is.raw.Ct == T) {
-                  (p <- ggplot(dat.to.plot, aes(x = variable,
-                    y = value, fill = cols, group = eval(parse(text = color.by)))) +
-                    geom_quasirandom(pch = 21, color = "black",
-                      dodge.width = 0.8, size = point.size) +
-                    scale_fill_manual(values = colors) + theme_bw() +
-                    theme(panel.grid = element_blank(), plot.title = element_text(hjust = 0.5,
-                      size = 40), strip.text = element_text(size = 25),
-                      strip.background.x = element_blank(), legend.position = legend.position,
-                      axis.title.y = element_text(size = 20),
-                      axis.title.x = element_blank(), axis.text.x = element_text(size =
-                      axis.text.x.size)) +
-                    ylab("Raw Ct Value") + scale_y_reverse())
-                }
-                else {
-                  (p <- ggplot(dat.to.plot, aes(x = variable,
-                    y = value, fill = cols, group = eval(parse(text = color.by)))) +
-                    geom_quasirandom(pch = 21, color = "black",
-                      dodge.width = 0.8, size = point.size) +
-                    scale_fill_manual(values = colors) + theme_bw() +
-                    theme(panel.grid = element_blank(), plot.title = element_text(hjust = 0.5,
-                      size = 40), strip.text = element_text(size = 25),
-                      strip.background.x = element_blank(), legend.position = legend.position,
-                      axis.title.y = element_text(size = 20),
-                      axis.title.x = element_blank(), axis.text.x = element_text(size =
-                      axis.text.x.size)) +
-                    ylab("Normalized Expression Level"))
-                }
-            }
-            if (facet.wrap == TRUE) {
-                if (is.raw.Ct == T) {
-                  (p <- ggplot(dat.to.plot, aes(x = eval(parse(text = color.by)),
-                    y = value, fill = cols)) + geom_quasirandom(pch = 21,
-                    color = "black", dodge.width = 0.8, size = point.size) +
-                    scale_fill_manual(values = colors) + theme_bw() +
-                    theme(panel.grid = element_blank(), plot.title = element_text(hjust = 0.5,
-                      size = 40), strip.text = element_text(size = 25),
-                      strip.background.x = element_blank(), legend.position = legend.position,
-                      axis.title.y = element_text(size = 20),
-                      axis.title.x = element_blank(), axis.text.x = element_text(size =
-                      axis.text.x.size)) +
-                    ylab("Raw Ct Value") + scale_y_reverse() +
-                    facet_wrap(~variable, ncol = ncols, scales = scales))
-                }
-                else {
-                  (p <- ggplot(dat.to.plot, aes(x = eval(parse(text = color.by)),
-                    y = value, fill = cols)) + geom_quasirandom(pch = 21,
-                    color = "black", dodge.width = 0.8, size = point.size) +
-                    scale_fill_manual(values = colors) + theme_bw() +
-                    theme(panel.grid = element_blank(), plot.title = element_text(hjust = 0.5,
-                      size = 40), strip.text = element_text(size = 25),
-                      strip.background.x = element_blank(), legend.position = legend.position,
-                      axis.title.y = element_text(size = 20),
-                      axis.title.x = element_blank(), axis.text.x = element_text(size =
-                      axis.text.x.size)) +
-                    ylab("Normalized Expression Level") + facet_wrap(~variable,
-                    ncol = ncols, scales = scales))
-                }
-            }
-        }
-        if ((is.null(groupby.x) == FALSE)) {
-            if (groupby.x != FALSE) {
-                if (facet.wrap == FALSE) {
-                  if (is.raw.Ct == T) {
-                    (p <- ggplot(dat.to.plot, aes(x = variable,
-                      y = value, fill = cols, group = eval(parse(text = groupby.x)))) +
-                      geom_quasirandom(pch = 21, color = "black",
-                        dodge.width = 0.8, size = point.size) +
-                      scale_fill_manual(values = colors) + theme_bw() +
-                      theme(panel.grid = element_blank(), plot.title = element_text(hjust = 0.5,
-                        size = 40), strip.text = element_text(size = 25),
-                        strip.background.x = element_blank(),
-                        legend.position = legend.position, axis.title.y = element_text(size = 20),
-                        axis.title.x = element_blank(), axis.text.x = element_text(size =
-                        axis.text.x.size)) +
-                      ylab("Raw Ct Value") + scale_y_reverse())
-                  }
-                  else {
-                    (p <- ggplot(dat.to.plot, aes(x = variable,
-                      y = value, fill = cols, group = eval(parse(text = groupby.x)))) +
-                      geom_quasirandom(pch = 21, color = "black",
-                        dodge.width = 0.8, size = point.size) +
-                      scale_fill_manual(values = colors) + theme_bw() +
-                      theme(panel.grid = element_blank(), plot.title = element_text(hjust = 0.5,
-                        size = 40), strip.text = element_text(size = 25),
-                        strip.background.x = element_blank(),
-                        legend.position = legend.position, axis.title.y = element_text(size = 20),
-                        axis.title.x = element_blank(), axis.text.x = element_text(size =
-                        axis.text.x.size)) +
-                      ylab("Normalized Expression Level"))
-                  }
-                }
-                if (facet.wrap == TRUE) {
-                  if (is.raw.Ct == T) {
-                    (p <- ggplot(dat.to.plot, aes(x = eval(parse(text = groupby.x)),
-                      y = value, fill = cols, group = eval(parse(text = groupby.x)))) +
-                      geom_quasirandom(pch = 21, color = "black",
-                        dodge.width = 0.8, size = point.size) +
-                      scale_fill_manual(values = colors) + theme_bw() +
-                      theme(panel.grid = element_blank(), plot.title = element_text(hjust = 0.5,
-                        size = 40), strip.text = element_text(size = 25),
-                        strip.background.x = element_blank(),
-                        legend.position = legend.position, axis.title.y = element_text(size = 20),
-                        axis.title.x = element_blank(), axis.text.x = element_text(size =
-                        axis.text.x.size)) +
-                      ylab("Raw Ct Value") + scale_y_reverse() +
-                      facet_wrap(~variable, ncol = ncols, scales = scales))
-                  }
-                  else {
-                    (p <- ggplot(dat.to.plot, aes(x = eval(parse(text = groupby.x)),
-                      y = value, fill = cols, group = eval(parse(text = groupby.x)))) +
-                      geom_quasirandom(pch = 21, color = "black",
-                        dodge.width = 0.8, size = point.size) +
-                      scale_fill_manual(values = colors) + theme_bw() +
-                      theme(panel.grid = element_blank(), plot.title = element_text(hjust = 0.5,
-                        size = 40), strip.text = element_text(size = 25),
-                        strip.background.x = element_blank(),
-                        legend.position = legend.position, axis.title.y = element_text(size = 20),
-                        axis.title.x = element_blank(), axis.text.x = element_text(size =
-                        axis.text.x.size)) +
-                      ylab("Normalized Expression Level") + facet_wrap(~variable,
-                      ncol = ncols, scales = scales))
-                  }
-                }
-            }
-            else {
-                if (is.raw.Ct == T) {
-                  (p <- ggplot(dat.to.plot, aes(x = variable,
-                    y = value, fill = cols)) + geom_quasirandom(pch = 21,
-                    color = "black", size = point.size) + scale_fill_manual(values = colors) +
-                    theme_bw() + theme(panel.grid = element_blank(),
-                    plot.title = element_text(hjust = 0.5, size = 40),
-                    strip.text = element_text(size = 25), strip.background.x = element_blank(),
-                    legend.position = legend.position, axis.title.y = element_text(size = 20),
-                    axis.title.x = element_blank(), axis.text.x = element_text(size =
-                    axis.text.x.size)) +
-                    ylab("Raw Ct Value") + scale_y_reverse())
-                }
-                else {
-                  (p <- ggplot(dat.to.plot, aes(x = variable,
-                    y = value, fill = cols)) + geom_quasirandom(pch = 21,
-                    color = "black", size = point.size) + scale_fill_manual(values = colors) +
-                    theme_bw() + theme(panel.grid = element_blank(),
-                    plot.title = element_text(hjust = 0.5, size = 40),
-                    strip.text = element_text(size = 25), strip.background.x = element_blank(),
-                    legend.position = legend.position, axis.title.y = element_text(size = 20),
-                    axis.title.x = element_blank(), axis.text.x = element_text(size =
-                    axis.text.x.size)) +
-                    ylab("Normalized Expression Level"))
-                }
-            }
-        }
-    }
-    return(p)
-  }
+initiate_params()
+data(RAGP_norm)
+data(RAGP_annots)
+set_annotations(RAGP_annots)
+
+gene.list <- c("Npy","Sst","Gal","Th","NeuN","")
+beeswarmGenes(RAGP_norm, gene.list)
+beeswarmGenes(RAGP_norm, gene.list, color.by = "purple")
+beeswarmGenes(RAGP_rawCt, gene.list, is.raw.Ct = TRUE)
+
+##Color by an annotation
+beeswarmGenes(RAGP_norm, gene.list, color.by = "State")
+beeswarmGenes(RAGP_norm, gene.list, color.by = "State", facet.wrap = TRUE) ##Facet, separate plots
+
+##Color by one annotation, group by another annotation or no groupings
+beeswarmGenes(RAGP_norm, gene.list, color.by = "State", groupby.x = "Connectivity",
+  facet.wrap = TRUE)
+beeswarmGenes(RAGP_norm, gene.list, color.by = "State", groupby.x = FALSE)
+
+##limit scale
+###add xlimits onto ggplot object, points outside limits will be removed
+beeswarmGenes(RAGP_norm, gene.list, color.by = "State", groupby.x = FALSE) + ylim(c(-5,5))
+###point outside limits will be set to the max/min
+beeswarmGenes(RAGP_norm, gene.list, color.by = "State", groupby.x = FALSE, squishy = c(-5,5))
+
+
+##change other asthetics within the function
+beeswarmGenes(RAGP_norm, gene.list, color.by = "Connectivity", groupby.x = FALSE,
+point.size = 5, transparency = 0.5)
+
+
+##Add layers onto ggplot object
+###the function returns a ggplot object, therefore aesthetics can be added with additional layers
+beeswarmGenes(RAGP_norm, gene.list, color.by = "Connectivity", groupby.x = FALSE) +
+    theme(axis.text.x = element_text(size = 15, angle = 45, hjust = 1),
+    legend.position = "bottom") + ggtitle("Beeswarm of Select Genes")
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory (show via RShowDoc("KEYWORDS")):

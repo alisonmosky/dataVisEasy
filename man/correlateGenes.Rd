@@ -29,53 +29,39 @@ method to be used to calculate the correlation. Accepts values to be passed to c
 how missing values should be handled in the case of correlations, passed to the "use" argument of cor()
 }
 }
-\details{
+%\details{
 %%  ~~ If necessary, more details than the description above ~~
-}
+%}
 \value{
 If limits are not provided, returns a plot histogram. If limits are provided, returns a data frame with three columns where the first two columns indicate the gene pair and the third column gives the correlation between them.
 }
-\references{
+%\references{
 %% ~put references to the literature/web site here ~
-}
+%}
 \author{
 ~~Alison Moss~~
 }
-\note{
+%\note{
 %%  ~~further notes~~
-}
+%}
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+See Also as \link[dataVisEasy]{corrs2Gene} for comparisons against a single gene of interest
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
 
-## The function is currently defined as
-function (data, limits = NULL, nbreaks = 20, method = "pearson",
-    NA.handling = "pairwise.complete.obs")
-{
-    main = paste("Gene Correlations")
-    cor.dat <- cor(t(data), use = NA.handling, method = method)
-    cor.dat[!upper.tri(cor.dat)] <- NA
-    if (is.null(limits) == TRUE) {
-        hist(cor.dat, breaks = nbreaks, main = main)
-    }
-    if (is.null(limits) == FALSE) {
-        below <- limits[1]
-        above <- limits[2]
-        picked.cors <- which((cor.dat > above & cor.dat < 0.99) |
-            cor.dat < below, arr.ind = T)
-        cor.genes <- as.matrix(apply(picked.cors, 2, function(x) (colnames(t(data))[x])))
-        genes.and.cors <- as.data.frame(cbind(cor.genes, Correlation = cor.dat[picked.cors]))
-        colnames(genes.and.cors) <- c("Gene1", "Gene2", "Correlation")
-        return(genes.and.cors)
-    }
-  }
+##initiate parameters
+initiate_params()
+
+##histogram showing range of gene correlations
+correlateGenes(RAGP_norm)
+
+##return correlation pairs above lower limit and above upper limit
+cors <- correlateGenes(RAGP_norm, limits=c(-0.5, 0.85))
+head(cors)
+
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory (show via RShowDoc("KEYWORDS")):

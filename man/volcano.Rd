@@ -80,9 +80,9 @@ if return.summary == TRUE
 if return.ggplot.input == TRUE
   the input dataframe used for plotting which contains the same dataframe as return.summary but with the addition of colored groups based on significance, gene names, and if a desired number of genes were supplied to highlight, those will be in a separate column.
 }
-\references{
+%\references{
 %% ~put references to the literature/web site here ~
-}
+%}
 \author{
 ~~Alison Moss~~
 }
@@ -98,106 +98,38 @@ For more information on customizing the returned ggplot object, please see ggplo
 See \link[dataVisEasy]{params}, \link[dataVisEasy]{set_annotations}, and \link[dataVisEasy]{set_annot_cols} for more information on setting up annotations and associated colors.
 }
 \examples{
-
-#####Volcano Plot
-#volcano(data, "Sex")
-#volcano(data, "Cell_Type", levels = c("CV","FB"))
-#volcano(data, "Cell_Type", levels = c("CV","FB"), pval.cut = 0.1, FC.cut = 1.5,
-#upreg.color = "yellow", downreg.color = "blue", nosig.color = "gray90")
-#
-####add things to ggplot object
-#volcano(data, "Cell_Type", levels = c("CV","FB")) + geom_text(aes(label=Gene),
-#nudge_x = 0.1, nudge_y = -.1)
-#
-#volcano(data, "Cell_Type", levels = c("CV","FB")) + geom_text(aes(label=Sig.Genes),
-#nudge_x = 0.5, nudge_y = -.5)
-#
-###if show.genes is specified
-#volcano(data, "Cell_Type", levels = c("CV","FB")) + geom_text(aes(label=My.Genes),
-#nudge_x = 0.1, nudge_y = -.1)
-#
-###add lines
-#horiz.lines <- c(0.05)
-#vert.lines <- c(2,3)
-#
-#volcano(data, "Cell_Type", levels = c("CV","FB")) + geom_hline(yintercept =
-#c(-log10(horiz.lines))) + geom_vline(xintercept =
-#c(log2(vert.lines), -log2(vert.lines)))
+##initiate parameters and annotations
+initiate_params()
+set_annotations(RAGP_annots)
 
 
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+####Volcano Plot
+volcano(RAGP_norm, "Sex")
+volcano(RAGP_norm, "Connectivity", levels = c("Non-SAN-Projecting","SAN-Projecting"))
+volcano(RAGP_norm, "Connectivity", levels = c("Non-SAN-Projecting","SAN-Projecting"),
+  pval.cut = 0.1, FC.cut = 1.5,upreg.color = "yellow", downreg.color = "blue",
+  nosig.color = "grey90")
 
-## The function is currently defined as
-function (data, groups, levels = NULL, is.log2 = TRUE, pval.cut = 0.05,
-    FC.cut = 2, return.summary = FALSE, downreg.color = "green",
-    upreg.color = "red", nosig.color = "gray")
-{
-    temp.annotations <- params$annotations
-    if (groups \%in\% colnames(temp.annotations)) {
-        if (sum(colnames(data) \%notin\% rownames(temp.annotations)) !=
-            0) {
-            stop("colnames of input data do not match rownames of annotations,
-            cannot link annotations to data")
-        }
-        temp.annotations <- temp.annotations[match(colnames(data),
-            rownames(temp.annotations)), , drop = FALSE]
-        groupings <- as.factor(temp.annotations[, groups])
-        if (is.null(levels) == TRUE) {
-            levels <- levels(groupings)
-        }
-        G1 <- data[, which(groupings == levels[1])]
-        G2 <- data[, which(groupings == levels[2])]
-    }
-    else {
-        G1 <- data[, which(groups == levels[1])]
-        G2 <- data[, which(groups == levels[2])]
-    }
-    pvals <- NULL
-    log2foldchanges <- NULL
-    for (i in 1:nrow(G1)) {
-        ttest <- t.test(G1[i, ], G2[i, ])
-        pvals <- c(pvals, ttest$p.value)
-        if (is.log2 == TRUE) {
-            log2foldch <- ttest$estimate[2] - ttest$estimate[1]
-        }
-        else {
-            log2foldch <- log2(ttest$estimate[2]/ttest$estimate[1])
-        }
-        log2foldchanges <- c(log2foldchanges, log2foldch)
-    }
-    names(pvals) <- rownames(data)
-    names(log2foldchanges) <- rownames(data)
-    volcano.summary <- data.frame(LFC = log2foldchanges, FoldChange = 2^(log2foldchanges),
-        pvals, `-log10pvals` = -log10(pvals))
-    group <- rep("No Sig", nrow(volcano.summary))
-    group[which(volcano.summary$pvals < pval.cut & (volcano.summary$LFC) >
-        log2(FC.cut))] <- "Upregulated"
-    group[which(volcano.summary$pvals < pval.cut & (volcano.summary$LFC) <
-        -log2(FC.cut))] <- "Downregulated"
-    mat <- cbind(volcano.summary, Color = group, Gene = rownames(volcano.summary))
-    p <- ggplot(mat, aes(x = LFC, y = -log10(pvals), col = Color)) +
-        geom_point(size = 2) + theme(panel.grid = element_blank(),
-        panel.background = element_rect(fill = "white"), panel.border =
-        element_rect(color = "black", fill = NA), strip.background = element_blank(),
-        strip.text = element_text(size = 25), axis.text.x = element_text(size = 15),
-        axis.text.y = element_text(size = 15), axis.title = element_text(size = 20),
-        plot.title = element_text(size = 15,
-            hjust = 0.5)) + xlab("Log2 Fold Change") + ylab("-log10(Pvalue)") +
-        scale_color_manual(name = paste(paste0("FC.cut = ", FC.cut),
-            paste0("Pval.cut = ", pval.cut), sep = "\n"),
-            values = c(Downregulated = downreg.color,
-            Upregulated = upreg.color, `No Sig` = nosig.color)) +
-        ggtitle(paste("-log10(pvalue) vs. log2(Fold Change) for",
-            levels[2], "over", levels[1]))
-    if (return.summary == FALSE) {
-        return(p)
-    }
-    if (return.summary == TRUE) {
-        return(volcano.summary)
-    }
-  }
+###add things to ggplot object
+volcano(RAGP_norm, "Connectivity", levels = c("Non-SAN-Projecting","SAN-Projecting")) +
+  geom_text(aes(label=Gene),nudge_x = 0.1, nudge_y = -.1)
+
+volcano(RAGP_norm, "Connectivity", levels = c("Non-SAN-Projecting","SAN-Projecting")) +
+  geom_text(aes(label=Sig.Genes),nudge_x = 0.5, nudge_y = -.5)
+
+##if show.genes is specified
+volcano(RAGP_norm, "Connectivity", levels = c("Non-SAN-Projecting","SAN-Projecting"),
+  show.genes = c("Th","Chat","NeuN","Gal","Sst")) + geom_text(aes(label=My.Genes),
+  nudge_x = 0.1, nudge_y = -.1)
+
+##add lines
+horiz.lines <- c(0.05)
+vert.lines <- c(2,3)
+
+volcano(RAGP_norm, "Connectivity", levels = c("Non-SAN-Projecting","SAN-Projecting")) +
+  geom_hline(yintercept = c(-log10(horiz.lines))) +
+  geom_vline(xintercept = c(log2(vert.lines), -log2(vert.lines)))
+
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory (show via RShowDoc("KEYWORDS")):

@@ -1,0 +1,167 @@
+\name{corrs2Gene}
+\alias{corrs2Gene}
+%- Also NEED an '\alias' for EACH other topic documented here.
+\title{
+Examine Correlations to a Specific Gene in a Datamatrix
+}
+\description{
+Provides a quick way to check for correlations to a specific gene in a given data matrix. If no limits are supplied, will return a histogram of all gene correlations to the gene in question. When limits are supplied, acts as a wrapper for myHeatmap() where a heatmap is  returned including all genes with  corrleations that are more negatively correlated than the lower limit and more positively correlated than the upper limit.
+}
+\usage{
+corrs2Gene(data, gene, limits = NULL, method = "pearson", linkage = "complete",
+  NA.handling = "pairwise.complete.obs", nbreaks = 20, show.report = F, clust.rows = T,
+  clust.cols = T, row.groups = NA, col.groups = NA, gaps.row = NULL, gaps.col = NULL,
+  gap.width = 1, order.by.gene = NULL, order.by.sample = NULL, cell.width = NA,
+  cell.height = NA, fontsize.row = 10, fontsize.col = 10, show.rownames = T,
+  show.colnames = F, treeheight.row = 20, treeheight.col = 20, hide.plot = FALSE,
+  na.fix = FALSE, na.offset = 2, show.legend = TRUE, show.annotations = TRUE,
+  is.raw.Ct = FALSE, drop.annot.levels = TRUE)
+}
+%- maybe also 'usage' for other objects documented here.
+\arguments{
+  \item{data}{
+numeric data matrix with samples/observations in the columns and genes/variables in the rows
+}
+  \item{gene}{
+name of gene to which all other genes will be correlated with
+}
+  \item{limits}{
+vector of two numbers, giving the lower and upper bounds of the returned correlations. If NULL (the default) will return a histogram of all correlations to the gene in question. When limits are provided, correlations below the lower limit and above the upper limit will be displayed in a heatmap.
+}
+  \item{method}{
+method to be used to calculate correlations. Accepts values to be passed to cor() such as "pearson" (default), "spearman", and "kendall".
+}
+  \item{linkage}{
+linkage clustering method used for clustering and to be passed to hclust().  Accepts all methods accepted by hclust()
+}
+  \item{NA.handling}{
+how missing values should be handled in the case of correlations, passed to the "use" argument of cor()
+}
+  \item{nbreaks}{
+number of breaks for histogram when limits are NULL
+}
+  \item{show.report}{
+If TRUE, will return correlations to the gene of interest based on the limits provided
+}
+
+additional arguments passed to \link[dataVisEasy]{myHeatmap}
+
+  \item{clust.rows}{
+should rows be clustered, default = TRUE. When TRUE, rows will be clustered within each annotation
+}
+  \item{clust.cols}{
+should columns be clustered, default = TRUE. When TRUE, columns will be clustered within each annotation
+}
+  \item{row.groups}{
+numeric to be passed to cutree(). Will split the dendrogram into the number of groups indicated. Only usable if groupings.genes is not provided
+}
+  \item{col.groups}{
+numeric to be passed to cutree(). Will split the dendrogram into the number of groups indicated. Only usable if groupings is set to FALSE
+}
+  \item{gaps.row}{
+numeric vector specifying gaps to be inserted into rows of the data, only works if clust.rows = FALSE
+}
+  \item{gaps.col}{
+numeric vector specifying gaps to be inserted into columns of the data, only works if clust.cols = FALSE
+}
+  \item{gap.width}{
+numeric indicating the width of gaps along both rows and columns. Works in tandem with both gaps.row.spec/gaps.col.spec and groupings.gaps/groupings.genes.gaps where the indicated gaps from the previous arguments will be widened by the factor indicated.
+}
+  \item{order.by.gene}{
+optional character equal to one of the rownames of the data to order the columns of the data by increasing levels of indicated row. If groupings is supplied, each group of the annotations will be ordered by the supplied gene.
+}
+  \item{order.by.sample}{
+optional character equal to one of the colnames of the data to order the rows of the data by increasing levels of indicated column. If groupings.genes is supplied, each group of the row annotaitons will be ordered by the supplied sample
+}
+  \item{cell.width}{
+individual cell width in points. If left as NA, then the values depend on the size of plotting window.
+}
+  \item{cell.height}{
+individual cell height in points. If left as NA, then the values depend on the size of plotting window.
+}
+  \item{fontsize.row}{
+size of font for row names
+}
+  \item{fontsize.col}{
+size of font for column names
+}
+  \item{show.rownames}{
+logical value determining if rownames should be displayed, default = TRUE
+}
+  \item{show.colnames}{
+logical value determining if colnames should be displayed, default = FALSE
+}
+  \item{treeheight.row}{
+the height of a dendrogram tree for rows, if these are clustered. Default value 20 points
+}
+  \item{treeheight.col}{
+the height of a dendrogram tree for columns if these are clustered. Default value 20 points.
+}
+  \item{hide.plot}{
+should the plot be displayed
+}
+  \item{na.fix}{
+logical: should missing values be treated as NA or be set to a low value (see na.offset). Values will still be colored gray in heatmap but may aid in clustering when many missing values are present.
+}
+  \item{na.offset}{
+option to treat missing/NA values as an offset from the minimum value. Ex a value of 2 will set missing values to min(data) - 2. Values will still be colored gray in heatmap but may aid in clustering when many missing values are present.
+}
+  \item{show.legend}{
+logical, should legend be shown
+}
+  \item{show.annotations}{
+logical, should annotation legend be shown
+}
+  \item{is.raw.Ct}{
+logical. If set to TRUE, will reverse the scale of the data to indicate low values as high expression as in the case of raw Ct values from qPCR, in this case, missing values will also be set to a high value to reflect low expression level
+}
+  \item{drop.annot.levels}{
+logial, should annotations not included in the output heatmap be shown in the annotation legend.
+}
+}
+\details{
+%%  ~~ If necessary, more details than the description above ~~
+}
+\value{
+If limits are NULL returns a plot histogram. If limits are provided, returns a pheatmap object, see \link[dataVisEasy]{myHeatmap}
+}
+\references{
+%% ~put references to the literature/web site here ~
+}
+\author{
+~~Alison Moss~~
+}
+\note{
+%%  ~~further notes~~
+}
+
+%% ~Make other sections like Warning with \section{Warning }{....} ~
+
+\seealso{
+See Also as \link[dataVisEasy]{myHeatmap}
+}
+\examples{
+##initiate parameters
+initiate_params()
+
+
+##View range of correlations with gene of interest as histogram
+corrs2Gene(RAGP_norm, gene = "NeuN")
+
+##provide limits to show heatmap of genes with negative correlations below/above lower/upper limit
+corrs2Gene(RAGP_norm, gene = "NeuN", limits = c(-0.4, 0.5))
+corrs2Gene(RAGP_norm, "NeuN", c(-0.4, 0.5), order.by.gene = "NeuN")
+
+##return list of correlations passing provided limits
+corrs2Gene(RAGP_norm, "NeuN", c(-0.4, 0.5), show.report = TRUE)
+
+}
+% Add one or more standard keywords, see file 'KEYWORDS' in the
+% R documentation directory (show via RShowDoc("KEYWORDS")):
+% \keyword{ ~kwd1 }
+% \keyword{ ~kwd2 }
+% Use only one keyword per line.
+% For non-standard keywords, use \concept instead of \keyword:
+% \concept{ ~cpt1 }
+% \concept{ ~cpt2 }
+% Use only one concept per line.

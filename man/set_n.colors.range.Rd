@@ -17,16 +17,16 @@ a single numeric
 }
 }
 \details{
-this value is used in creating breaks and color scale for heatmaps. A sequence is created along the scale range set by \link[dataVisEasy]{set_scale.range} of length n.colors.range set in this function. n.colors.range - 1 colors will then be use to generate the colors in the heatmap. (See notes for the code where this is used)
+this value is used in creating breaks and color scale for heatmaps. A sequence is created along the scale range set by \link[dataVisEasy]{set_scale.range} of length n.colors.range set in this function. n.colors.range - 1 colors will then be use to generate the colors in the heatmap. (See notes for the code where this is used). Default is n = 100
 
 Please see \link[dataVisEasy]{params} for more information about accessing and setting up these variables.
 }
-\value{
+%\value{
 
-}
-\references{
+%}
+%\references{
 %% ~put references to the literature/web site here ~
-}
+%}
 \author{
 ~~Alison Moss~~
 }
@@ -42,16 +42,18 @@ In \link[dataVisEasy]{myHeatmap} and \link[dataVisEasy]{myHeatmapByAnnotation}, 
 \seealso{
 \link[dataVisEasy]{set_scale.range} and \link[dataVisEasy]{set_scale.colors}
 }
-\examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
 
-## The function is currently defined as
-function (n)
-{
-    params$n.colors.range <<- n
-  }
+\examples{
+##initiate parameters
+initiate_params()
+
+#view heatmap with default
+myHeatmap(RAGP_norm)
+
+##set range to desired and view difference
+set_n.colors.range(n = 5)
+myHeatmap(RAGP_norm)
+
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory (show via RShowDoc("KEYWORDS")):

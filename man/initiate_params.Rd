@@ -17,22 +17,22 @@ initiate_params(params = parameters)
 \details{
 should be run exactly as stated in the Usage section: "initiate_params(parameters)" where parameters is an internal data structure within the dataVisEasy package
 }
-\value{
+%\value{
 %%  ~Describe the value returned
 %%  If it is a LIST, use
 %%  \item{comp1 }{Description of 'comp1'}
 %%  \item{comp2 }{Description of 'comp2'}
 %% ...
-}
-\references{
+%}
+%\references{
 %% ~put references to the literature/web site here ~
-}
+%}
 \author{
 ~~Alison Moss~~
 }
-\note{
+%\note{
 %%  ~~further notes~~
-}
+%}
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
@@ -41,15 +41,6 @@ See \link[dataVisEasy]{params} for the format of these parameters and their defa
 }
 \examples{
 initiate_params()
-
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
-
-## The function is currently defined as
-initiate_params <- function(){
-  assign(params,params,envir =  .GlobalEnv)
-}
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory (show via RShowDoc("KEYWORDS")):

@@ -34,10 +34,10 @@ optional name for the groupings to be extracted
 }
 
   \item{all.genes}{
-gene names, if annotations should be in placed in larger gene list than matrix in question. Default assumes that the rownames of the input data represent all genes in question (this is true even if the genes in the heatmap are a subset of the input data). Genes not represented in the heatmap or input data that do not have a cluster designation will be assigned "_".
+gene names, if annotations should be in placed in larger gene list than matrix in question. Default assumes that the rownames of the input data represent all genes in question (this is true even if the genes in the heatmap are a subset of the input data). Genes not represented in the heatmap or input data that do not have a cluster designation will be assigned "No_Annot".
 }
   \item{all.samples}{
-sample names, if annotations should be in placed in larger sample list than matrix in question. Default assumes that the colnames of the input data represent all samples in question. If these annotations should be placed within a larger list (for example if the samples in the input data are a subset of all samples). Samples not represented in the heatmap or input data that do not have a cluster designation will be assigned "_".
+sample names, if annotations should be in placed in larger sample list than matrix in question. Default assumes that the colnames of the input data represent all samples in question. If these annotations should be placed within a larger list (for example if the samples in the input data are a subset of all samples). Samples not represented in the heatmap or input data that do not have a cluster designation will be assigned "No_Annot".
 }
 }
 \details{
@@ -48,15 +48,15 @@ If GeneGroup_Name and/or SampleGroup_Name are provided, these vectors can be pas
 \value{
 a named vector or a list object of two named vectors (in a case where both genes and samples are extracted) where the assignments of each gene/sample are designated by letter A:num.groups. Importantly, these groupings are assigned as they appear in the heatmap itself where cluster assignment A is located on the top left (going across from left to right in the case of extractSamples and going down from top to bottom in the case of extractGenes)
 }
-\references{
+%\references{
 %% ~put references to the literature/web site here ~
-}
+%}
 \author{
 ~~Alison Moss~~
 }
-\note{
+%\note{
 %%  ~~further notes~~
-}
+%}
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
@@ -64,71 +64,50 @@ a named vector or a list object of two named vectors (in a case where both genes
 See \link[dataVisEasy]{set_annotations} and \link[dataVisEasy]{update_annotations.genes} or \link[dataVisEasy]{update_annotations} and \link[dataVisEasy]{update_annotations.genes} for how the output of this function can be passed directly to these functions to set or update annotations stored in the params list object
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+##initiate parameters
+initiate_params()
 
-## The function is currently defined as
-function (data, heatmap, extractGenes = FALSE, GeneGroup_Name = NULL,
-    extractSamples = TRUE, SampleGroup_Name = NULL, num_Gene.groups = 5,
-    num_Sample.groups = 5, all.genes = NULL, all.samples = NULL)
-{
-    if (is.null(all.genes) == TRUE) {
-        all.genes <- rownames(data)
-    }
-    if (is.null(all.samples) == TRUE) {
-        all.samples <- colnames(data)
-    }
-    if (extractGenes == TRUE) {
-        report.gene.groups <- rep("_", length(all.genes))
-        gene.groups <- cutree(heatmap$tree_row, k = num_Gene.groups)
-        alph <- LETTERS[1:num_Gene.groups]
-        gene.tree.order <- heatmap$tree_row[["labels"]][heatmap$tree_row[["order"]]]
-        ind = 1
-        for (i in 1:length(unique(gene.groups))) {
-            which.group <- gene.groups[which(names(gene.groups) ==
-                gene.tree.order[ind])]
-            names <- names(which(gene.groups == which.group))
-            report.gene.groups[which(all.genes \%in\% names)] <- alph[i]
-            ind <- ind + length(names)
-        }
-        report.gene.groups <- data.frame(Gene.Groups = report.gene.groups,
-            stringsAsFactors = T)
-        rownames(report.gene.groups) <- all.genes
-        if (is.null(GeneGroup_Name) == FALSE) {
-            colnames(report.gene.groups) <- GeneGroup_Name
-        }
-    }
-    if (extractSamples == TRUE) {
-        report.sample.groups <- rep("_", length(all.samples))
-        sample.groups <- cutree(heatmap$tree_col, k = num_Sample.groups)
-        alph <- LETTERS[1:num_Sample.groups]
-        sample.tree.order <- heatmap$tree_col[["labels"]][heatmap$tree_col[["order"]]]
-        ind = 1
-        for (i in 1:length(unique(sample.groups))) {
-            which.group <- sample.groups[which(names(sample.groups) ==
-                sample.tree.order[ind])]
-            names <- names(which(sample.groups == which.group))
-            report.sample.groups[which(all.samples \%in\% names)] <- alph[i]
-            ind <- ind + length(names)
-        }
-        report.sample.groups <- data.frame(Sample.Groups = report.sample.groups,
-            stringsAsFactors = T)
-        rownames(report.sample.groups) <- all.samples
-        if (is.null(SampleGroup_Name) == FALSE) {
-            colnames(report.sample.groups) <- SampleGroup_Name
-        }
-    }
-    if (extractGenes == TRUE & extractSamples == TRUE) {
-        return(c(list(Gene_Groups = report.gene.groups, Sample_Groups = report.sample.groups)))
-    }
-    if (extractGenes == TRUE & extractSamples == FALSE) {
-        return(report.gene.groups)
-    }
-    if (extractGenes == FALSE & extractSamples == TRUE) {
-        return(report.sample.groups)
-    }
-  }
+##create clustered heatmap, defining how many groups clusters should split into
+heatmap <- myHeatmap(RAGP_norm, row.groups = 6, col.groups = 5)
+
+##extract clusters for rows, named from top to bottom
+row.clusts <- extractClusters(RAGP_norm, heatmap = heatmap, to.extract = "genes", nclusters = 6)
+head(row.clusts)
+
+##extract clusters for columns, named from left to right
+col.clusts <- extractClusters(RAGP_norm, heatmap = heatmap, to.extract = "samples", nclusters = 5)
+head(col.clusts)
+
+##extract both
+all.clusts <- extractClusters(RAGP_norm, heatmap = heatmap, to.extract = "both", nclusters = c(6,5))
+head(all.clusts$Gene_Groups)
+head(all.clusts$Sample_Groups)
+
+
+
+###extract clusters from a heatmap with subsetted genes, catecholaminergic/cholinergic receptors
+#subset data for receptors
+RAGP_norm.receptors <- subsetGenes(RAGP_norm, list = c("Chrm","Chrn","Adr"), exact = FALSE)
+heatmap.receptors <- myHeatmap(RAGP_norm.receptors,
+  main = "Catecholaminergic and Cholinergic Receptors", row.groups = 6)
+
+receptor.groups <- extractClusters(RAGP_norm.receptors, heatmap = heatmap.receptors,
+  to.extract = "genes", nclusters = 6, GeneGroup_Name = "Receptor_Groups")
+head(receptor.groups)
+
+##if we want the annotations to include genes not present in the heatmap, set all.genes
+###genes not present in the heatmap will be assigned "No_Annot" for no annotation
+receptor.groups1 <- extractClusters(RAGP_norm.receptors, heatmap = heatmap.receptors,
+  to.extract = "genes", nclusters = 6, GeneGroup_Name = "Receptor_Groups",
+  all.genes = rownames(RAGP_norm))
+head(receptor.groups1)
+
+##the same result would be true if a list was supplied to the heatmap to subset
+heatmap.receptors2 <- myHeatmap(RAGP_norm, list = c("Chrm","Chrn","Adr"), exact = FALSE,
+  main = "Catecholaminergic and Cholinergic Receptors", row.groups = 6)
+receptor.groups2 <- extractClusters(RAGP_norm, heatmap = heatmap.receptors2,
+  to.extract = "genes", nclusters = 6, GeneGroup_Name = "Receptor_Groups")
+head(receptor.groups2)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory (show via RShowDoc("KEYWORDS")):

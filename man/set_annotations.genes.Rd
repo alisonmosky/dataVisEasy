@@ -23,49 +23,32 @@ To specify the colors that will accompany each level of each annotation, see \li
 
 Please see \link[dataVisEasy]{params} for more information about accessing and setting up these variables.
 }
-\value{
+%\value{
 %%  ~Describe the value returned
 %%  If it is a LIST, use
 %%  \item{comp1 }{Description of 'comp1'}
 %%  \item{comp2 }{Description of 'comp2'}
 %% ...
-}
-\references{
+%}
+%\references{
 %% ~put references to the literature/web site here ~
-}
+%}
 \author{
 ~~Alison Moss~~
 }
-\note{
+%\note{
 %%  ~~further notes~~
-}
+%}
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
 See \link[dataVisEasy]{set_annot_genes} and \link[dataVisEasy]{update_annotations.genes} for more usage and update these annotations and see \link[dataVisEasy]{set_annotations} for the corresponding annotations for the samples/columns of the data.
-}
-\examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
 
-## The function is currently defined as
-function (annotations.genes)
-{
-    params$annotations.genes <<- annotations.genes
-    if (sum(is.na(params$annotations.genes) != 0)) {
-        if (length(annotations.genes) == 1) {
-            params$annotations.genes <<- NA
-        }
-        else {
-            params$annotations.genes[is.na(params$annotations.genes)] <<- "No_Annot"
-            warning("NAs present in annotations.genes,
-            converted to \"No_Annot\" for functionality purposes")
-        }
-    }
-  }
+Works the same as for sample annotations, see \link[dataVisEasy]{set_annotations} for examples
 }
+%\examples{
+%}
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory (show via RShowDoc("KEYWORDS")):
 % \keyword{ ~kwd1 }

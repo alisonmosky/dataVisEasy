@@ -37,7 +37,7 @@ Runs a standard one-way ANOVA and subsequent TukeyHSD on the data provided using
 
 \item{NonSig.Genes}{character vector of the genes with pvalues that did not pass the specified pthreshold}
 
- \item{Tukey.pVals}{dataframe containing the adjusted pvalues from TukeyHSD for each contrast for each gene in the original input matrix}
+\item{Tukey.pVals}{dataframe containing the adjusted pvalues from TukeyHSD for each contrast for each gene in the original input matrix}
 
 \item{Tukey.diffs}{dataframe containing the difference values from TukeyHSD for each contrast for each gene in the original input matrix}
 
@@ -47,78 +47,47 @@ optional items
 
 \item{Tukey.output}{list object containing the TUkeyHSD output for all genes in the original input matrix }
 }
-\references{
+%\references{
 %% ~put references to the literature/web site here ~
-}
+%}
 \author{
  ~~Alison Moss~~
 }
 \note{
-%%  ~~further notes~~
+The function itself determines significant and non-significant genes based on the pthreshold
+provided. However, the AOV.Results provdied in the output supply the F value and p value,
+additional information can also be retrieved by setting additional report = TRUE, user can
+use any of this information for custom filtering of results.
 }
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
-\seealso{
+%\seealso{
 %% ~~objects to See Also as \code{\link{help}}, ~~~
-}
+%}
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+##initiate parameteres and set up annotations
 
-## The function is currently defined as
-function (data.to.aov, category, pthreshold = 0.05, additional.report = "NONE")
-{
-    if (sum(colnames(data.to.aov) \%notin\% rownames(params$annotations)) !=
-        0) {
-        stop("colnames of input data do not match rownames of annotations, cannot link annotations
-        to data and assign groupings for ANOVA")
-    }
-    temp.annotations <- params$annotations[match(colnames(data.to.aov),
-        rownames(params$annotations)), ]
-    groupings <- temp.annotations[, category]
-    aov.all <- apply(data.to.aov, 1, function(x) (summary(aov(x ~
-        groupings))))
-    aov.results <- data.frame(FVal = unlist(lapply(aov.all, function(x) ((x[[1]]$`F value`[1])))),
-        pVal = unlist(lapply(aov.all, function(x) ((x[[1]]$`Pr(>F)`[1])))),
-        row.names = names(aov.all))
-    sig.genes <- rownames(aov.results)[which(aov.results$pVal <=
-        pthreshold)]
-    nonsig.genes <- rownames(aov.results)[which(aov.results$pVal >
-        pthreshold)]
-    sig.set <- data.to.aov[which(rownames(data.to.aov) \%in\% sig.genes),
-        ]
-    tukey.all <- apply(sig.set, 1, function(x) (TukeyHSD(aov(x ~
-        groupings))))
-    tukey.pvals <- data.frame(Reduce(rbind, lapply(tukey.all,
-        function(x) (x$groupings[, 4]))), row.names = names(tukey.all))
-    #colnames(tukey.pvals) <- gsub("\\.", "-", colnames(tukey.pvals))
-    tukey.diffs <- data.frame(Reduce(rbind, lapply(tukey.all,
-        function(x) (x$groupings[, 1]))), row.names = names(tukey.all))
-    #colnames(tukey.diffs) <- gsub("\\.", "-", colnames(tukey.diffs))
-    if (toupper(additional.report) == "ALL") {
-        return(list(AOV.output = aov.all, AOV.Results = aov.results,
-            Sig.Genes = sig.genes, NonSig.Genes = nonsig.genes,
-            Tukey.output = tukey.all, Tukey.pVals = tukey.pvals),
-            Tukey.diffs = tukey.diffs)
-    }
-    if (toupper(additional.report) == "TUKEY") {
-        return(list(AOV.Results = aov.results, Sig.Genes = sig.genes,
-            NonSig.Genes = nonsig.genes, Tukey.output = tukey.all,
-            Tukey.pVals = tukey.pvals, Tukey.diffs = tukey.diffs))
-    }
-    if (toupper(additional.report) == "AOV") {
-        return(list(AOV.output = aov.all, AOV.Results = aov.results,
-            Sig.Genes = sig.genes, NonSig.Genes = nonsig.genes,
-            Tukey.pVals = tukey.pvals, Tukey.diffs = tukey.diffs))
-    }
-    if (toupper(additional.report) == "NONE") {
-        return(list(AOV.Results = aov.results, Sig.Genes = sig.genes,
-            NonSig.Genes = nonsig.genes, Tukey.pVals = tukey.pvals,
-            Tukey.diffs = tukey.diffs))
-    }
-  }
+initiate_params()
+data(RAGP_norm)
+data(RAGP_annots)
+set_annotations(RAGP_annots)
+
+##AOV for Connectivity
+state.aov <- AOV1way(RAGP_norm, "State")
+head(state.aov$AOV.Results)
+head(state.aov$Sig.Genes)
+
+##visualize significant genes in heatmap
+set_annot_samps("State")
+myHeatmapByAnnotation(RAGP_norm, state.aov$Sig.Genes, groupings = "State")
+
+
+##AOV for Animal
+animal.aov <- AOV1way(RAGP_norm, "Animal", pthreshold = 0.01)
+summary(animal.aov)
+head(animal.aov$Tukey.pVals) ##look at pvalues from tukey post hoc analysis
+
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory (show via RShowDoc("KEYWORDS")):

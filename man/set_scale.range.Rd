@@ -16,22 +16,25 @@ set_scale.range(range)
 numeric of length 2
 }
 }
+
 \details{
 scale of heatmaps
 }
-\value{
+%\value{
 %%  ~Describe the value returned
 %%  If it is a LIST, use
 %%  \item{comp1 }{Description of 'comp1'}
 %%  \item{comp2 }{Description of 'comp2'}
 %% ...
-}
-\references{
+%}
+
+%\references{
 %% ~put references to the literature/web site here ~
-}
+%}
 \author{
 ~~Alison Moss~~
 }
+
 \note{
 In \link[dataVisEasy]{myHeatmap} and \link[dataVisEasy]{myHeatmapByAnnotation}, breaks and colors are set using these and other parameters.
   breaks <- seq(params$scale.range[1], params$scale.range[2],length.out=params$n.colors.range)
@@ -42,24 +45,21 @@ In \link[dataVisEasy]{myHeatmap} and \link[dataVisEasy]{myHeatmapByAnnotation}, 
 
 \seealso{
 \link[dataVisEasy]{set_scale.colors} and \link[dataVisEasy]{set_n.colors.range}
-}
-\examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
 
-## The function is currently defined as
-function (range)
-{
-    if (length(range) == 2 & class(range) == "numeric" & range[2] >
-        range[1]) {
-        params$scale.range <<- range
-    }
-    else {
-        stop("range must be a numeric of length 2 and the second
-        element must be greater than the first")
-    }
-  }
+See \link[dataVisEasy]{assessScale} to see how the data fits into the set scale
+}
+
+\examples{
+#initiate parameters
+initiate_params()
+
+##view heatmap with default range of -1 to 1
+myHeatmap(RAGP_norm)
+
+##set scale to -2 to 2, view with new range
+set_scale.range(c(-2,2))
+myHeatmap(RAGP_norm)
+
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory (show via RShowDoc("KEYWORDS")):

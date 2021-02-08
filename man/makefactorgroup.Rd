@@ -25,112 +25,35 @@ numeric vector the same length as a character vector supplied to levels. The def
 logical. Should gaps a vector of gaps be returned. Necessary when called upon in the \link[dataVisEasy]{myHeatmapByAnnotation}.
 }
 }
-\details{
+
+%\details{
 %%  ~~ If necessary, more details than the description above ~~
-}
+%}
 \value{
 if return.gaps is set to FALSE (default) will return a factor the same length as the number of rows in the provided annots
 
 if return.gaps is set to TRUE, will return a list object where "factor.group" will contain the factor indicated above and "gaps" will contain a numeric vector of where gaps should be placed in a heatmap according to the specified annotations and spacing.
 }
-\references{
+%\references{
 %% ~put references to the literature/web site here ~
-}
+%}
 \author{
 ~~Alison Moss~~
 }
 \note{
-%%  ~~further notes~~
+This function is mainly used internally by \link[dataVisEasy]{myHeatmapByAnnotation} to organize heatmaps by multiple annotations.
 }
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
-\seealso{
+%\seealso{
 %% ~~objects to See Also as \code{\link{help}}, ~~~
-}
+%}
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+##initiate_parameters
+initiate_params()
 
-## The function is currently defined as
-function (annots, levels, specify.gaps = NULL, return.gaps = FALSE)
-{
-    if (length(levels) == 1) {
-        Level.1 <- annots[, which(colnames(annots) == levels[1])]
-        factor.group <- factor(Level.1)
-        names(factor.group) <- rownames(annots)
-        if (is.null(specify.gaps) == FALSE) {
-            if (length(specify.gaps) != length(levels)) {
-                stop("length of gap specifications not equal to number of levels provided")
-            }
-            gaps <- rep(cumsum(rev(rev(rle(as.vector(sort(factor.group)))$lengths)[-1])),
-                specify.gaps[1])
-        }
-        else {
-            gaps <- cumsum(rev(rev(rle(as.vector(sort(factor.group)))$lengths)[-1]))
-        }
-    }
-    if (length(levels) == 2) {
-        Level.1 <- annots[, which(colnames(annots) == levels[1])]
-        Level.2 <- annots[, which(colnames(annots) == levels[2])]
-        combo <- data.frame((Level.1), (Level.2), paste(Level.1,
-            Level.2))
-        colnames(combo) <- c("Level1", "Level2", "Combo")
-        rownames(combo) <- rownames(annots)
-        bylevel1 <- combo[order(combo[, 1]), ]
-        bylevel2 <- bylevel1[order(bylevel1[, 2]), ]
-        factor.group <- factor(combo[, which(colnames(combo) ==
-            "Combo")], levels = c(unique(as.character(bylevel2[,
-            which(colnames(bylevel2) == "Combo")]))))
-        names(factor.group) <- rownames(annots)
-        if (is.null(specify.gaps) == FALSE) {
-            if (length(specify.gaps) != length(levels)) {
-                stop("length of gap specifications not equal to number of levels provided")
-            }
-            gaps <- sort(c(rep(cumsum(rev(rev(rle(as.vector(bylevel2$Level1))$lengths)[-1])),
-              specify.gaps[1]), rep(cumsum(rev(rev(rle(as.vector(bylevel2$Level2))$lengths)[-1])),
-              specify.gaps[2])))
-        }
-        else {
-            gaps <- cumsum(rev(rev(rle(as.vector(bylevel2$Combo))$lengths)[-1]))
-        }
-    }
-    if (length(levels) == 3) {
-        Level.1 <- annots[, which(colnames(annots) == levels[1])]
-        Level.2 <- annots[, which(colnames(annots) == levels[2])]
-        Level.3 <- annots[, which(colnames(annots) == levels[3])]
-        combo <- data.frame((Level.1), (Level.2), (Level.3),
-            paste(Level.1, Level.2, Level.3))
-        colnames(combo) <- c("Level1", "Level2", "Level3", "Combo")
-        rownames(combo) <- rownames(annots)
-        bylevel1 <- combo[order(combo[, 1]), ]
-        bylevel2 <- bylevel1[order(bylevel1[, 2]), ]
-        bylevel3 <- bylevel2[order(bylevel2[, 3]), ]
-        factor.group <- factor(combo[, which(colnames(combo) ==
-            "Combo")], levels = c(unique(as.character(bylevel3[,
-            which(colnames(bylevel3) == "Combo")]))))
-        names(factor.group) <- rownames(annots)
-        if (is.null(specify.gaps) == FALSE) {
-            if (length(specify.gaps) != length(levels)) {
-                stop("length of gap specifications not equal to number of levels provided")
-            }
-            gaps <- sort(c(rep(cumsum(rev(rev(rle(as.vector(bylevel3$Level1))$lengths)[-1])),
-              specify.gaps[1]), rep(cumsum(rev(rev(rle(as.vector(bylevel3$Level2))$lengths)[-1])),
-              specify.gaps[2]), rep(cumsum(rev(rev(rle(as.vector(bylevel3$Level3))$lengths)[-1])),
-              specify.gaps[3])))
-        }
-        else {
-            gaps <- cumsum(rev(rev(rle(as.vector(bylevel3$Combo))$lengths)[-1]))
-        }
-    }
-    if (return.gaps == FALSE) {
-        return(factor.group)
-    }
-    if (return.gaps == TRUE) {
-        return(list(factor.group = factor.group, gaps = gaps))
-    }
-  }
+factorgroupings <- makefactorgroup(RAGP_annots, c("State","Connectivity"))
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory (show via RShowDoc("KEYWORDS")):

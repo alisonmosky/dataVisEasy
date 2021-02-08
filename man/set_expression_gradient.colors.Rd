@@ -21,16 +21,16 @@ Storing the colors in the params list object allows them to be accessed by all f
 
 Please see \link[dataVisEasy]{params} for more information about accessing and setting up these variables.
 }
-\value{
+%\value{
 %%  ~Describe the value returned
 %%  If it is a LIST, use
 %%  \item{comp1 }{Description of 'comp1'}
 %%  \item{comp2 }{Description of 'comp2'}
 %% ...
-}
-\references{
+%}
+%\references{
 %% ~put references to the literature/web site here ~
-}
+%}
 \author{
 ~~Alison Moss~~
 }
@@ -45,30 +45,19 @@ Example code where these colors are used:
 \link[dataVisEasy]{myColorRamp5}
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+##intiate parameters
+initiate_params()
 
-## The function is currently defined as
-function (colors)
-{
-    if (length(colors) == 5) {
-        is.color = sapply(colors, function(x) {
-            tryCatch(is.matrix(col2rgb(x)), error = function(e) FALSE)
-        })
-        if (any(is.na(names(is.color))))
-            is.color[is.na(names(is.color))] = FALSE
-        if (sum(is.color) == 5) {
-            params$expression_gradient.colors <<- colors
-        }
-        else {
-            stop("must contain valid colors")
-        }
-    }
-    else {
-        stop("must be a vector of colors of length 5")
-    }
-  }
+##check default values of expression gradient colors
+params$expression_gradient.colors
+
+scatterGenes(RAGP_norm, "Th","Chat", color.by = "Npy")
+
+##change expression gradient colors to desired palette, must have length of 5
+set_expression_gradient.colors(c("red","orange","yellow","green","blue"))
+
+scatterGenes(RAGP_norm, "Th","Chat", color.by = "Npy")
+
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory (show via RShowDoc("KEYWORDS")):

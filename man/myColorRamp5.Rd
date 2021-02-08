@@ -40,76 +40,33 @@ median(values) + percent.mad*mad(values) < x <= max(values)
 (NAs are removed for all calculations)
 }
 \value{
-a vector of color assignments for the values provided
+a vector of color assignments for the values provided (in the same order)
 }
-\references{
+%\references{
 %% ~put references to the literature/web site here ~
-}
+%}
 \author{
 ~~Alison Moss~~
 }
 \note{
-%%  ~~further notes~~
+Mostly used internally by plotting functions where points are colored by expression level
 }
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
-\seealso{
+%\seealso{
 %% ~~objects to See Also as \code{\link{help}}, ~~~
-}
+%}
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+##initiate parameters
+initiate_params()
 
-## The function is currently defined as
-function (colors, values, percent.mad = 0.5)
-{
-    out <- rep(rgb(0, 0, 0), length(values))
-    for (i in 1:length(values)) {
-        if (is.na(values[i])) {
-        }
-        else {
-            if (values[i] <= (median(values, na.rm = T) - percent.mad *
-                mad(values, na.rm = T))) {
-                v <- (values[i] - min(values, na.rm = T))/((median(values,
-                  na.rm = T) - percent.mad * mad(values, na.rm = T)) -
-                  min(values, na.rm = T))
-                x <- colorRamp(colors[1:2])(v)
-                out[i] <- rgb(x[, 1], x[, 2], x[, 3], maxColorValue = 255)
-            }
-            if (values[i] > median(values, na.rm = T) - percent.mad *
-                mad(values, na.rm = T) & values[i] <= median(values,
-                na.rm = T)) {
-                v <- (values[i] - (median(values, na.rm = T) -
-                  percent.mad * mad(values, na.rm = T)))/(median(values,
-                  na.rm = T) - (median(values, na.rm = T) - percent.mad *
-                  mad(values, na.rm = T)))
-                x <- colorRamp(colors[2:3])(v)
-                out[i] <- rgb(x[, 1], x[, 2], x[, 3], maxColorValue = 255)
-            }
-            if (values[i] <= median(values, na.rm = T) + percent.mad *
-                mad(values, na.rm = T) & values[i] > median(values,
-                na.rm = T)) {
-                v <- (values[i] - median(values, na.rm = T))/((median(values,
-                  na.rm = T) + percent.mad * mad(values, na.rm = T)) -
-                  median(values, na.rm = T))
-                x <- colorRamp(colors[3:4])(v)
-                out[i] <- rgb(x[, 1], x[, 2], x[, 3], maxColorValue = 255)
-            }
-            if (values[i] > median(values, na.rm = T) + percent.mad *
-                mad(values, na.rm = T)) {
-                v <- (values[i] - (median(values, na.rm = T) +
-                  percent.mad * mad(values, na.rm = T)))/(max(values,
-                  na.rm = T) - (median(values, na.rm = T) + percent.mad *
-                  mad(values, na.rm = T)))
-                x <- colorRamp(colors[4:5])(v)
-                out[i] <- rgb(x[, 1], x[, 2], x[, 3], maxColorValue = 255)
-            }
-        }
-    }
-    return(out)
-  }
+##for a given gene of interest, color samples by expression level,
+goi <- "Th"
+genedat<- RAGP_norm[goi,]
+cols <- myColorRamp5(params$expression_gradient.colors,genedat, percent.mad = 0.5)
+
+cols <- myColorRamp5(c("red","orange","yellow","green","blue"),genedat, percent.mad = 0.75)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory (show via RShowDoc("KEYWORDS")):

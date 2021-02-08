@@ -23,22 +23,22 @@ To specify the colors that will accompany each level of each annotation, see \li
 
 Please see \link[dataVisEasy]{params} for more information about accessing and setting up these variables.
 }
-\value{
+%\value{
 %%  ~Describe the value returned
 %%  If it is a LIST, use
 %%  \item{comp1 }{Description of 'comp1'}
 %%  \item{comp2 }{Description of 'comp2'}
 %% ...
-}
-\references{
+%}
+%\references{
 %% ~put references to the literature/web site here ~
-}
+%}
 \author{
 ~~Alison Moss~~
 }
-\note{
+%\note{
 %%  ~~further notes~~
-}
+%}
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
@@ -46,25 +46,13 @@ Please see \link[dataVisEasy]{params} for more information about accessing and s
 See \link[dataVisEasy]{set_annot_samps} and \link[dataVisEasy]{update_annotations} for more usage and update these annotations and see \link[dataVisEasy]{set_annotations.genes} for the corresponding annotations for the genes/rows of the data.
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+##initiate parameters
+initiate_params()
 
-## The function is currently defined as
-function (annotations)
-{
-    params$annotations <<- annotations
-    if (sum(is.na(params$annotations) != 0)) {
-        if (length(annotations) == 1) {
-            params$annotations <<- NA
-        }
-        else {
-            params$annotations[is.na(params$annotations)] <<- "No_Annot"
-            warning("NAs present in annotations, converted to \"No_Annot\" for
-            functionality purposes")
-        }
-    }
-  }
+##set annotations to data frame where the rownames of the annotations match the colnames of data
+head(RAGP_annots)
+head(colnames(RAGP_norm)) #(names must match but need not be in the same order)
+set_annotations(RAGP_annots)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory (show via RShowDoc("KEYWORDS")):

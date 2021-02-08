@@ -31,43 +31,36 @@ The heatmap supplied here MUST have show.colnames and show.rownames = TRUE. If t
 \value{
 a data matrix of the same dimensions as the input heatmap
 }
-\references{
+%\references{
 %% ~put references to the literature/web site here ~
-}
+%}
 \author{
 ~~Alison Moss~~
 }
-\note{
+%\note{
 %%  ~~further notes~~
-}
+%}
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+See also \link[dataVisEasy]{extractClusters}, \link[dataVisEasy]{extractGaps}
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
 
-## The function is currently defined as
-function (data, heatmap, clustered.cols = TRUE, clustered.rows = TRUE)
-{
-    attributes <- unlist(lapply(heatmap$gtable$grobs, function(x) (x$name)))
-    text.attributes <- grep("GRID.text", attributes)
-    ordered <- data
-    if (clustered.cols == TRUE) {
-        colord <- heatmap$gtable[["grobs"]][[text.attributes[2]]][["label"]]
-        ordered <- ordered[, match(colord, colnames(ordered))]
-    }
-    if (clustered.rows == TRUE) {
-        roword <- heatmap$gtable[["grobs"]][[text.attributes[3]]][["label"]]
-        ordered <- ordered[match(roword, rownames(ordered)),
-            ]
-    }
-    return(ordered)
-  }
+##initiate_parameters
+initiate_params()
+
+##plot heatmap, ensure both colnames and rownames are being shown
+heatmap <- myHeatmap(RAGP_norm, c("Kcn","Cacn","Scn","Hcn"), exact = FALSE, show.rownames = TRUE,
+  show.colnames = TRUE, main = "Ion Channels")
+
+channel.matrix <- ExtractMatrix(RAGP_norm, heatmap = heatmap)
+
+##making a heatmap of the extracted matrix without clustering should give the same result as above
+myHeatmap(channel.matrix, clust.rows = FALSE, clust.cols = FALSE)
+
+##matrix can also be appended to other matrices or saved for other purposes
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory (show via RShowDoc("KEYWORDS")):

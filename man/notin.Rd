@@ -25,29 +25,23 @@ the same details as for \%in\%
 \value{
 the same as for \%in\%
 }
-\references{
+%\references{
 %% ~put references to the literature/web site here ~
-}
-\author{
+%}
+%\author{
 %%  ~~who you are~~
-}
-\note{
+%}
+%\note{
 %%  ~~further notes~~
-}
+%}
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
-\seealso{
+%\seealso{
 %% ~~objects to See Also as \code{\link{help}}, ~~~
-}
-\examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
-
-## The function is currently defined as
-"\%notin\%" <- function(x, table) !(match(x, table, nomatch = 0) > 0)
-}
+%}
+%\examples{
+%}
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory (show via RShowDoc("KEYWORDS")):
 % \keyword{ ~kwd1 }

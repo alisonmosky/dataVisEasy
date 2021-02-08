@@ -55,164 +55,66 @@ logical. If true, will return the input dataframe to the ggplot object. Useful i
 logical. If true, will return the loadings from the pca.
 }
 }
-\details{
+%\details{
 %%  ~~ If necessary, more details than the description above ~~
-}
+%}
 \value{
 A ggplot object. The input data frame to the ggplot object contains the scores, the sample/gene names, and annotations/gene annotations if an annotation is specified. This input object can be accessed by setting return.ggplot.input to TRUE. The inclusion of the gene and sample names allows the user to add the text of gene or sample names to the plot (see examples, these are specifically designed to be added outside the function itself for proper positioning). Additional layers can be added to the returned ggplot object to further customize theme and aesthetics.
 
 If return.loadings is set to TRUE, will return a matrix of the loadings from the PCA.
 }
-\references{
+%\references{
 %% ~put references to the literature/web site here ~
-}
+%}
 \author{
 ~~Alison Moss~~
 }
-\note{
+%\note{
 %%  ~~further notes~~
-}
+%}
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
-\seealso{
+%\seealso{
 %% ~~objects to See Also as \code{\link{help}}, ~~~
-}
+%}
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+##initiate parameters
+initiate_params()
 
-## The function is currently defined as
-function (data, to.pca = "samples", nPcs = 3, color.by = "blue",
-    custom.color.vec = FALSE, PCs.to.plot = c("PC1", "PC2"),
-    legend.position = "right", main = NULL, percent.mad = 0.5)
-{
-    if (to.pca == "samples") {
-        temp.annotations <- params$annotations
-        pca <- pcaMethods::pca(t(data), nPcs = nPcs)
-        pca.scrs <- pcaMethods::scores(pca)
-        pca.ldgs <- pcaMethods::loadings(pca)
-        pca.data <- data.frame(pca.scrs, temp.annotations)
-        if (color.by \%in\% rownames(data) | sum(custom.color.vec !=
-            FALSE) > 0) {
-            if (color.by \%in\% rownames(data)) {
-                genedat <- data[which(rownames(data) == color.by),
-                  ]
-                cols <- myColorRamp5(params$expression_gradient.colors,
-                  genedat, percent.mad = percent.mad)
-            }
-            else {
-                cols <- custom.color.vec
-            }
-            p <- ggplot(pca.data, aes(x = eval(parse(text = PCs.to.plot[1])),
-                y = eval(parse(text = PCs.to.plot[2])), fill = cols)) +
-                geom_point(pch = 21, color = "black", size = 5) +
-                scale_fill_identity() + labs(x = paste(PCs.to.plot[1]),
-                y = paste(PCs.to.plot[2])) + ggtitle(main) +
-                theme_bw() + theme(panel.grid = element_blank(),
-                plot.title = element_text(hjust = 0.5, size = 40),
-                axis.text = element_text(size = 25), axis.title = element_text(size = 30),
-                legend.position = legend.position)
-        }
-        else {
-            if (color.by \%in\% colnames(temp.annotations)) {
-                suppressWarnings(if (is.na(temp.annotations) ==
-                  FALSE) {
-                  if (sum(colnames(data) \%notin\% rownames(temp.annotations)) !=
-                    0) {
-                    stop("colnames of input data do not match rownames of annotations,
-                    cannot link annotations to data")
-                  }
-                  temp.annotations <- temp.annotations[match(colnames(data),
-                    rownames(temp.annotations)), ]
-                })
-                if (color.by \%in\% names(params$annot_cols)) {
-                  cols <- as.factor(pca.data[, which(colnames(pca.data) ==
-                    color.by)])
-                  colors <- params$annot_cols[[which(names(params$annot_cols) ==
-                    color.by)]]
-                }
-                else {
-                  cols <- as.factor(pca.data[, which(colnames(pca.data) ==
-                    color.by)])
-                  colors <- hue_pal()(length(levels(cols)))
-                }
-            }
-            else {
-                cols <- color.by
-                colors <- color.by
-            }
-            p <- ggplot(pca.data, aes(x = eval(parse(text = PCs.to.plot[1])),
-                y = eval(parse(text = PCs.to.plot[2])), fill = cols)) +
-                geom_point(pch = 21, color = "black", size = 5) +
-                scale_fill_manual(values = colors) + labs(x = paste(PCs.to.plot[1]),
-                y = paste(PCs.to.plot[2])) + ggtitle(main) +
-                theme_bw() + theme(panel.grid = element_blank(),
-                plot.title = element_text(hjust = 0.5, size = 40),
-                axis.text = element_text(size = 25), axis.title = element_text(size = 30),
-                legend.position = legend.position)
-        }
-    }
-    if (to.pca == "genes") {
-        temp.annotations.genes <- params$annotations.genes
-        pca <- pcaMethods::pca((data), nPcs = nPcs)
-        pca.scrs <- pcaMethods::scores(pca)
-        pca.ldgs <- pcaMethods::loadings(pca)
-        pca.data <- data.frame(pca.scrs, temp.annotations.genes)
-        if (sum(custom.color.vec != FALSE) > 0) {
-            cols <- custom.color.vec
-            p <- ggplot(pca.data, aes(x = eval(parse(text = PCs.to.plot[1])),
-                y = eval(parse(text = PCs.to.plot[2])), fill = cols)) +
-                geom_point(pch = 21, color = "black", size = 5) +
-                scale_fill_identity() + labs(x = paste(PCs.to.plot[1]),
-                y = paste(PCs.to.plot[2])) + ggtitle(main) +
-                theme_bw() + theme(panel.grid = element_blank(),
-                plot.title = element_text(hjust = 0.5, size = 40),
-                axis.text = element_text(size = 25), axis.title = element_text(size = 30),
-                legend.position = legend.position)
-        }
-        else {
-            if (color.by \%in\% colnames(temp.annotations.genes)) {
-                suppressWarnings(if (is.na(temp.annotations.genes) ==
-                  FALSE) {
-                  if (sum(rownames(data) \%notin\% rownames(temp.annotations.genes)) !=
-                    0) {
-                    stop("rownames of input data do not match rownames of annotations,
-                    cannot link annotations to data")
-                  }
-                  temp.annotations.genes <- temp.annotations.genes[match(rownames(data),
-                    rownames(temp.annotations.genes)), ]
-                })
-                if (color.by \%in\% names(params$annot_cols)) {
-                  cols <- as.factor(pca.data[, which(colnames(pca.data) ==
-                    color.by)])
-                  colors <- params$annot_cols[[which(names(params$annot_cols) ==
-                    color.by)]]
-                }
-                else {
-                  cols <- as.factor(pca.data[, which(colnames(pca.data) ==
-                    color.by)])
-                  colors <- hue_pal()(length(levels(cols)))
-                }
-            }
-            else {
-                cols <- color.by
-                colors <- color.by
-            }
-            p <- ggplot(pca.data, aes(x = eval(parse(text = PCs.to.plot[1])),
-                y = eval(parse(text = PCs.to.plot[2])), fill = cols)) +
-                geom_point(pch = 21, color = "black", size = 5) +
-                scale_fill_manual(values = colors) + labs(x = paste(PCs.to.plot[1]),
-                y = paste(PCs.to.plot[2])) + ggtitle(main) +
-                theme_bw() + theme(panel.grid = element_blank(),
-                plot.title = element_text(hjust = 0.5, size = 40),
-                axis.text = element_text(size = 25), axis.title = element_text(size = 30),
-                legend.position = legend.position)
-        }
-    }
-    return(p)
-  }
+##view PCA, specify PCs (default is to PCA samples, can also do genes)
+myPCA(RAGP_norm)
+myPCA(RAGP_norm, nPcs = 5, PCs.to.plot = c("PC1","PC3"))
+
+##color by gene expression
+myPCA(RAGP_norm, color.by = "Th")
+
+##color by annotation
+set_annotations(RAGP_annots)
+myPCA(RAGP_norm, nPcs = 5,  color.by = "Animal")
+myPCA(RAGP_norm, PCs.to.plot = c("PC1","PC3"), color.by = "Connectivity")
+
+##specify colors
+state.cols <- RColorBrewer::brewer.pal(6,"Set1"); names(state.cols) <- LETTERS[1:6]
+annot_cols <- list('Connectivity'=c("SAN-Projecting"="blue","Non-SAN-Projecting"="violet",
+                  "No Info Available"="grey"),
+                   'Animal'=c("PR1534"="#0571b0","PR1643"="#ca0020","PR1705"="#92c5de",
+                   "PR1729"="#f4a582"),
+                   "State"=c(state.cols))
+set_annot_cols(annot_cols)
+
+myPCA(RAGP_norm, nPcs = 5,  color.by = "Animal")
+
+
+##Add layers onto ggplot object
+###the function returns a ggplot object, therefore aesthetics can be added with additional layers
+myPCA(RAGP_norm, PCs.to.plot = c("PC1","PC3"), color.by = "Connectivity") +
+  ggtitle("PCA colored by Connectivity") +
+  theme(legend.position = "bottom", legend.direction = "vertical",
+  axis.text.x = element_text(size = 15, angle = 45, hjust = 1),
+  plot.title = element_text(size = 25))
+
+
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory (show via RShowDoc("KEYWORDS")):

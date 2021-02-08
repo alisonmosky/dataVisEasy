@@ -22,38 +22,29 @@ Based off of the scale range stored in params, will calculate what proportion of
 \value{
 Printed output indicating percentage of data below, within, and above the set scale range
 }
-\references{
+%\references{
 %% ~put references to the literature/web site here ~
-}
+%}
 \author{
 ~~Alison Moss~~
 }
-\note{
+%\note{
 %%  ~~further notes~~
-}
+%}
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+See Also as \link[dataVisEasy]{set_scale.range} for how to adjust the scale of the heatmaps
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
 
-## The function is currently defined as
-function (data)
-{
-    above <- sum(data > params$scale.range[2], na.rm = T)/sum(!is.na(data))
-    within <- sum(data <= params$scale.range[2] & data >= params$scale.range[1],
-        na.rm = T)/sum(!is.na(data))
-    below <- sum(data < params$scale.range[1], na.rm = T)/sum(!is.na(data))
-    report <- c(below, within, above)
-    names(report) <- c("Percent Below Range", "Percent Within Range",
-        "Percent Above Range")
-    return(report)
-  }
+##initiate parameters
+initiate_params()
+
+assessScale(RAGP_norm)
+
+
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory (show via RShowDoc("KEYWORDS")):

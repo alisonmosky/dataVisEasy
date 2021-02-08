@@ -20,14 +20,14 @@ Alison Moss -- alisonmoss3@gmail.com
 %Maintainer: \packageMaintainer{dataVisEasy}
 %Alison Moss~alisonmoss3@gmail.com
 }
-\references{
+%\references{
 %%~~ Literature or other references for background information ~~
-}
+%}
 
 \keyword{ package }
 \seealso{
 See \link[dataVisEasy]{params}, \link[dataVisEasy]{myHeatmap}, \link[dataVisEasy]{myHeatmapByAnnotation}, \link[dataVisEasy]{scatterGenes}, \link[dataVisEasy]{beeswarmGenes}
 }
-\examples{
+%\examples{
 %%~~ simple examples of the most important functions ~~
-}
+%}

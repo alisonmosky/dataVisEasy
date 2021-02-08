@@ -22,46 +22,55 @@ values corresponding to the annotation to be updated or added.
 \details{
 If the name of the supplied annotation already exists, will overwrite the previous values. Number of values in updated annotation do not need to be the same length as the pre-existing annotations. This function will merge the annotations, see \link[dplyr]{full_join}. Any missing values will be set to "No_Annot" signifying that no annotation was provided. This is especially useful if annotating clusters where the genes being clustered and annotated is a subset of all genes present, see \link[dataVisEasy]{extractClusters} if added annotations are identifications of cluster groups. If new or updated values should be shown in the heatmap, must rerun \link[dataVisEasy]{set_annot_samps}. To add specific colors for the new annotations, see \link[dataVisEasy]{set_annot_cols} and \link[dataVisEasy]{update_annot_cols}
 }
-\value{
+%\value{
 %%  ~Describe the value returned
 %%  If it is a LIST, use
 %%  \item{comp1 }{Description of 'comp1'}
 %%  \item{comp2 }{Description of 'comp2'}
 %% ...
-}
-\references{
+%}
+
+%\references{
 %% ~put references to the literature/web site here ~
-}
+%}
+
 \author{
 ~~Alison Moss~~
 }
-\note{
+%\note{
 %%  ~~further notes~~
-}
+%}
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+See \link[dataVisEasy]{set_annotations} for how to set up the initial annotations
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+##initiate parameters and annotations
+initiate_params()
+set_annotations(RAGP_annots)
+set_annot_samps(c("Connectivity","Animal","State"))
 
-## The function is currently defined as
-function (annotation, values)
-{
-    if (annotation \%in\% colnames(annotations)) {
-        params$annotations[, which(colnames(params$annotations) ==
-            annotation)] <<- values
-    }
-    else {
-        params$annotations$V1 <<- values
-        colnames(params$annotations)[colnames(params$annotations) ==
-            "V1"] <<- annotation
-    }
-  }
+#view heatmap, extract samples for state A
+myHeatmapByAnnotation(RAGP_norm, groupings = "State")
+state.A <- subsetSamples(RAGP_norm, group = "State", take.out = "A")
+
+##view heatmap of state A alone and identify clusters
+myHeatmap(state.A, col.groups = 3)
+
+##extract clusters of identified state A substates
+heatmap.A <- myHeatmap(state.A, col.groups = 3, show.colnames = TRUE)
+state.A.sub <- extractClusters(state.A, heatmap = heatmap.A, to.extract = "samples",
+  nclusters = 3, SampleGroup_Name = "State_A_Substates")
+
+##update annotations with new cluster identifications, function will properly merge samples
+update_annotations("State_A_Substates", state.A.sub)
+
+##reset tracks for heatmaps and visualize
+set_annot_samps(c("Connectivity","Animal","State", "State_A_Substates"))
+myHeatmapByAnnotation(RAGP_norm, groupings = "State")
+
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory (show via RShowDoc("KEYWORDS")):

@@ -132,15 +132,15 @@ This function utilizes pheatmap to display a heatmap of supplied data. User can 
 \value{
 a pheatmap object
 }
-\references{
+%\references{
 %% ~put references to the literature/web site here ~
-}
+%}
 \author{
 ~~Alison Moss~~
 }
-\note{
+%\note{
 %%  ~~further notes~~
-}
+%}
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
@@ -148,187 +148,33 @@ a pheatmap object
 See \link[dataVisEasy]{params}, \link[dataVisEasy]{set_scale.range}, \link[dataVisEasy]{set_scale.colors}, \link[dataVisEasy]{set_n.colors.range},\link[dataVisEasy]{set_annotations}, \link[dataVisEasy]{set_annotations.genes}, \link[dataVisEasy]{set_annot_samps}, \link[dataVisEasy]{set_annot_genes}, and \link[dataVisEasy]{set_annot_cols} for more information on setting up annotations and associated colors.
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+##initiate parameters
+initiate_params()
 
-## The function is currently defined as
-function (data, list = NULL, exact = TRUE, method = "pearson",
-    linkage = "complete", NA.handling = "pairwise.complete.obs",
-    clust.rows = T, clust.cols = T, row.groups = NA, col.groups = NA,
-    gaps.row = NULL, gaps.col = NULL, gap.width = 1, main = NULL,
-    order.by.gene = NULL, order.by.sample = NULL, cell.width = NA,
-    cell.height = NA, fontsize.row = 10, fontsize.col = 10, show.rownames = T,
-    show.colnames = F, treeheight.row = 20, treeheight.col = 20,
-    hide.plot = FALSE, na.fix = FALSE, na.offset = 2, show.legend = TRUE,
-    show.annotations = TRUE, is.raw.Ct = FALSE, drop.annot.levels = TRUE)
-{
-    if (is.null(main) == TRUE) {
-        main <- paste("Genes of Interest:", paste(list, collapse = ","))
-    }
-    if (is.null(list) == TRUE) {
-        list <- rownames(data)
-    }
-    if (exact == TRUE) {
-        subset <- data[which(rownames(data) \%in\% list), ]
-        if (length(subset) == 0) {
-            stop("exact matches for list not found in rownames data")
-        }
-    }
-    else {
-        subset <- data[grep(paste(list, collapse = "|"), rownames(data)),
-            ]
-        if (length(subset) == 0) {
-            stop("inexact matches for list not found in rownames data")
-        }
-    }
-    if (na.fix == TRUE) {
-        if (is.raw.Ct == TRUE) {
-            subset[which(is.na(subset))] <- max(subset, na.rm = T) +
-                na.offset
-        }
-        if (is.raw.Ct == FALSE) {
-            subset[which(is.na(subset))] <- min(subset, na.rm = T) -
-                na.offset
-        }
-    }
-    if (method \%in\% c("spearman", "pearson", "kendall")) {
-        clust.genes <- (as.dist(1 - cor(t(subset), method = method,
-            use = NA.handling)))
-        clust.samps <- (as.dist(1 - cor(subset, method = method,
-            use = NA.handling)))
-    }
-    if (method \%in\% c("euclidean", "maximum", "manhattan", "canberra",
-        "binary", "minkowski")) {
-        clust.genes <- dist(subset, method = method)
-        clust.samps <- dist(t(subset), method = method)
-    }
-    if (is.null(order.by.gene) == FALSE) {
-        if (is.raw.Ct == FALSE) {
-            subset <- subset[, order(data[which(rownames(data) \%in\%
-                order.by.gene), ], na.last = F)]
-        }
-        if (is.raw.Ct == TRUE) {
-            subset <- subset[, order(data[which(rownames(data) \%in\%
-                order.by.gene), ], na.last = T)]
-        }
-        clust.cols <- F
-    }
-    if (is.null(order.by.sample) == FALSE) {
-        if (is.raw.Ct == FALSE) {
-            subset <- subset[order(subset[, which(colnames(subset) \%in\%
-                order.by.sample)], na.last = F), ]
-        }
-        if (is.raw.Ct == TRUE) {
-            subset <- subset[order(subset[, which(colnames(subset) \%in\%
-                order.by.sample)], na.last = T), ]
-        }
-        clust.rows <- F
-    }
-    if (clust.rows == T) {
-        heightrow <- treeheight.row
-    }
-    if (clust.cols == T) {
-        heightcol <- treeheight.col
-    }
-    subset1 <- subset
-    subset <- scales::squish(subset, params$scale.range)
-    breaks <- seq(params$scale.range[1], params$scale.range[2],
-        length.out = params$n.colors.range)
-    my_cols = colorRampPalette(params$scale.colors)(n = params$n.colors.range -
-        1)
-    if (is.raw.Ct == TRUE) {
-        my_cols <- rev(my_cols)
-    }
-    if (na.fix == TRUE) {
-        if (is.raw.Ct == TRUE) {
-            subset[which(subset1 == max(subset1))] <- params$scale.range[2] +
-                0.04
-            breaks <- c(breaks, params$scale.range[2] + 0.01,
-                params$scale.range[2] + 0.05)
-            my_cols <- c(my_cols, params$scale.colors[1], "grey90")
-        }
-        if (is.raw.Ct == FALSE) {
-            subset[which(subset1 == min(subset1))] <- params$scale.range[1] -
-                0.04
-            breaks <- c(params$scale.range[1] - 0.05, params$scale.range[1] -
-                0.01, breaks)
-            my_cols <- c("grey90", params$scale.colors[1], my_cols)
-        }
-    }
-    temp.annot_samps <- params$annot_samps
-    temp.annot_genes <- params$annot_genes
-    temp.annot_cols <- params$annot_cols
-    if (drop.annot.levels == TRUE) {
-        suppressWarnings(if (is.na(temp.annot_samps) == F) {
-            temp.annot_samps[] <- lapply(temp.annot_samps, as.factor)
-            temp.annot_samps <- temp.annot_samps \%>\% tibble::rownames_to_column("Sample")
-            temp.annot_samps <- droplevels(temp.annot_samps[which(temp.annot_samps$Sample \%in\%
-                colnames(subset)), ]) \%>\% as.data.frame() \%>\%
-                tibble::remove_rownames() \%>\% tibble::column_to_rownames(var = "Sample")
-            spec.cols <- colnames(temp.annot_samps)[colnames(temp.annot_samps) \%in\%
-                names(temp.annot_cols)]
-            if (length(spec.cols) != 0) {
-                for (annot.i in 1:length(spec.cols)) {
-                  annot <- colnames(temp.annot_samps)[annot.i]
-                  temp.annot_cols[[which(names(temp.annot_cols) ==
-                    annot)]] <- temp.annot_cols[[which(names(temp.annot_cols) ==
-                    annot)]][which(names(temp.annot_cols[[which(names(temp.annot_cols) ==
-                    annot)]]) \%in\% levels(temp.annot_samps[,
-                    which(colnames(temp.annot_samps) == annot)]))]
-                }
-            }
-        })
-        suppressWarnings(if (is.na(params$annot_genes) == F) {
-            temp.annot_genes[] <- lapply(temp.annot_genes, as.factor)
-            temp.annot_genes <- temp.annot_genes \%>\% tibble::rownames_to_column("Gene")
-            temp.annot_genes <- droplevels(temp.annot_genes[which(temp.annot_genes$Gene \%in\%
-                rownames(subset)), ]) \%>\% as.data.frame() \%>\%
-                tibble::remove_rownames() \%>\% tibble::column_to_rownames(var = "Gene")
-            spec.cols <- colnames(temp.annot_samps)[colnames(temp.annot_genes) \%in\%
-                names(temp.annot_cols)]
-            if (length(spec.cols) != 0) {
-                for (annot.i in 1:length(colnames(temp.annot_genes))) {
-                  annot <- colnames(temp.annot_genes)[annot.i]
-                  temp.annot_cols[[which(names(temp.annot_cols) ==
-                    annot)]] <- temp.annot_cols[[which(names(temp.annot_cols) ==
-                    annot)]][which(names(temp.annot_cols[[which(names(temp.annot_cols) ==
-                    annot)]]) \%in\% levels(temp.annot_genes[,
-                    which(colnames(temp.annot_genes) == annot)]))]
-                }
-            }
-        })
-    }
-    if (clust.cols == T) {
-        tryclustcols <- try(hclust(clust.samps, linkage), silent = T)
-        if (class(tryclustcols) == "try-error") {
-            stop("cannot cluster columns, if too many NAs present, set na.fix = T to treat NA
-            values as low expression instead of missing, otherwise set clust.cols = F or
-            specify order.by.gene")
-        }
-    }
-    if (clust.rows == T) {
-        tryclustrows <- try(hclust(clust.genes, linkage), silent = T)
-        if (class(tryclustrows) == "try-error") {
-            stop("cannot cluster rows, if too many NAs present, set na.fix = T to treat NA
-            values as low expression instead of missing, otherwise set clust.rows = F or
-            specify order.by.sample")
-        }
-    }
-    pheatmap(subset, col = my_cols, breaks = breaks, border_color = NA,
-        clustering_method = linkage, annotation_col = temp.annot_samps,
-        annotation_colors = temp.annot_cols, clustering_distance_rows = clust.genes,
-        clustering_distance_cols = clust.samps, main = paste(main,
-            "\n Method_", method, "_Linkage_", linkage), cluster_rows = clust.rows,
-        cluster_cols = clust.cols, cutree_rows = row.groups,
-        cutree_cols = col.groups, gaps_row = gaps.row, gaps_col = gaps.col,
-        cellwidth = cell.width, cellheight = cell.height, fontsize_row = fontsize.row,
-        fontsize_col = fontsize.col, show_rownames = show.rownames,
-        show_colnames = show.colnames, treeheight_row = heightrow,
-        treeheight_col = heightcol, silent = hide.plot, legend = show.legend,
-        annotation_legend = show.annotations, annotation_row = temp.annot_genes,
-        drop_levels = drop.annot.levels)
-  }
+##heatmap of all data
+myHeatmap(RAGP_norm)
+
+##heatmap of selected genes (inexact matches)
+myHeatmap(RAGP_norm, c("Kcn","Scn","Hcn","Cacn"), exact = FALSE, main = "Ion Channels")
+
+##split clusters into groups
+myHeatmap(RAGP_norm, row.groups = 6, col.groups = 5)
+
+##order by gene expression
+myHeatmap(RAGP_norm, order.by.gene = "NeuN")
+
+##set width, height, other aesthetics
+myHeatmap(RAGP_norm, c("Sst","Npy","Gal","Tac","Bdk"), exact = FALSE,
+  treeheight.row = 25, treeheight.col = 5, cell.width = .5, cell.height = 20, fontsize.row = 20)
+
+
+##add annotation tracks
+set_annotations(RAGP_annots) ##sets annotations
+set_annot_samps(c("Animal","Connectivity")) ##choose which annotations show up on heatmap
+myHeatmap(RAGP_norm)
+
+
+
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory (show via RShowDoc("KEYWORDS")):

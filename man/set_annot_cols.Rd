@@ -21,22 +21,22 @@ Setting up colors for annotations through use of this function allows for a wide
 
 Please see \link[dataVisEasy]{params} for more information about accessing and setting up these variables.
 }
-\value{
+%\value{
 %%  ~Describe the value returned
 %%  If it is a LIST, use
 %%  \item{comp1 }{Description of 'comp1'}
 %%  \item{comp2 }{Description of 'comp2'}
 %% ...
-}
-\references{
+%}
+%\references{
 %% ~put references to the literature/web site here ~
-}
+%}
 \author{
 ~~Alison Moss~~
 }
-\note{
+%\note{
 %%  ~~further notes~~
-}
+%}
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
@@ -45,28 +45,24 @@ Add or update values with \link[dataVisEasy]{update_annot_cols}
 }
 \examples{
 
-#initiate_params(parameters)
-#state.cols <- RColorBrewer::brewer.pal(6,"Set1"); names(state.cols) <- LETTERS[1:6]
-#annot_cols <- list('Cell_Type'=c("FB"="blue","CV"="violet","NONE"="grey"),
-   #                'Animal'=c("PR1534"="#0571b0","PR1643"="#ca0020","PR1705"="#92c5de",
-    #               "PR1729"="#f4a582"),
-     #              "State"=c(state.cols))
+##initiate parameters and annotations
+initiate_params()
+set_annotations(RAGP_annots)
 
-###set color annotations
-#set_annot_cols(annot_cols)
+scatterGenes(RAGP_norm, "Th","Chat", color.by = "State")
 
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+##set up list for color annotations and set colors
+state.cols <- RColorBrewer::brewer.pal(6,"Set1"); names(state.cols) <- LETTERS[1:6]
+annot_cols <- list('Connectivity'=c("SAN-Projecting"="blue","Non-SAN-Projecting"="violet",
+                   "No Info Available"="grey"),
+                   'Animal'=c("PR1534"="#0571b0","PR1643"="#ca0020","PR1705"="#92c5de",
+                   "PR1729"="#f4a582"),
+                   "State"=c(state.cols))
+set_annot_cols(annot_cols)
 
-## The function is currently defined as
-function (annot_cols)
-{
-    params$annot_cols <<- annot_cols
-    suppressWarnings(if (is.na(annot_cols)) {
-        params$annot_cols <<- NA
-    })
-  }
+
+scatterGenes(RAGP_norm, "Th","Chat", color.by = "State")
+
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory (show via RShowDoc("KEYWORDS")):

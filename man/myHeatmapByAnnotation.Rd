@@ -154,15 +154,15 @@ For more details on how the groupings and groupings.genes as well as the corresp
 \value{
 a pheatmap object
 }
-\references{
+%\references{
 %% ~put references to the literature/web site here ~
-}
+%}
 \author{
 ~~Alison Moss~~
 }
-\note{
+%\note{
 %%  ~~further notes~~
-}
+%}
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
@@ -170,476 +170,47 @@ a pheatmap object
 See \link[dataVisEasy]{params}, \link[dataVisEasy]{set_scale.range}, \link[dataVisEasy]{set_scale.colors}, \link[dataVisEasy]{set_n.colors.range},\link[dataVisEasy]{set_annotations}, \link[dataVisEasy]{set_annotations.genes}, \link[dataVisEasy]{set_annot_samps}, \link[dataVisEasy]{set_annot_genes}, and \link[dataVisEasy]{set_annot_cols} for more information on setting up annotations and associated colors.
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+##initiate parameters, set up annotations
+initiate_params()
+set_annotations(RAGP_annots)
+set_annot_samps(c("Connectivity","Animal","State")) ##which annotations show up in heatmap
 
-## The function is currently defined as
-function (data, list = NULL, exact = TRUE, groupings, groupings.gaps = NULL,
-    groupings.genes = FALSE, groupings.genes.gaps = NULL, method = "pearson",
-    linkage = "complete", NA.handling = "pairwise.complete.obs",
-    clust.rows = TRUE, clust.cols = TRUE, row.groups = NA, col.groups = NA,
-    gaps.row = TRUE, gaps.row.spec = NULL, gaps.col = TRUE, gaps.col.spec = NULL,
-    gap.width = 1, main = NULL, order.by.gene = NULL, order.by.sample = NULL,
-    fontsize.row = 10, fontsize.col = 10, show.rownames = T,
-    show.colnames = F, treeheight.row = 20, treeheight.col = 20,
-    cell.width = NA, cell.height = NA, hide.plot = FALSE, na.fix = FALSE,
-    na.offset = 2, is.raw.Ct = FALSE, show.legend = TRUE, show.annotations = TRUE,
-    drop.annot.levels = TRUE)
-{
-    if (is.null(main) == TRUE) {
-        main <- paste("Genes of Interest:", paste(list, collapse = ","))
-    }
-    if (is.null(list) == TRUE) {
-        list <- rownames(data)
-    }
-    if (exact == TRUE) {
-        data.subset <- as.matrix(data[which(rownames(data) \%in\%
-            list), ])
-        colnames(data.subset) <- colnames(data)
-        if (length(data.subset) == 0) {
-            stop("exact matches for list not found in rownames data")
-        }
-    }
-    else {
-        data.subset <- as.matrix(data[grep(paste(list, collapse = "|"),
-            rownames(data)), ])
-        colnames(data.subset) <- colnames(data)
-        if (length(data.subset) == 0) {
-            stop("exact matches for list not found in rownames data")
-        }
-    }
-    suppressWarnings(if (is.na(params$annotations) == FALSE) {
-        if (sum(colnames(data.subset) \%notin\% rownames(params$annotations)) !=
-            0) {
-            stop("colnames of input data do not match rownames of annotations,
-            cannot link annotations to data")
-        }
-        temp.annotations <- params$annotations[match(colnames(data.subset),
-            rownames(params$annotations)), , drop = FALSE]
-    })
-    suppressWarnings(if (is.na(params$annotations.genes) == FALSE) {
-        if (sum(rownames(data.subset) \%notin\% rownames(params$annotations.genes)) !=
-            0) {
-            stop("rownames of input data do not match rownames of annotations.genes,
-            cannot link annotations to data")
-        }
-        temp.annotations.genes <- params$annotations.genes[match(rownames(data.subset),
-            rownames(params$annotations.genes)), , drop = FALSE]
-    })
-    if (class(groupings) == "character") {
-        if (sum(groupings \%notin\% colnames(temp.annotations)) !=
-            0) {
-            stop("supplied character vector for groupings not found in sample annotations")
-        }
-        factorgroupings <- makefactorgroup(temp.annotations,
-            groupings, specify.gaps = groupings.gaps, return.gaps = TRUE)
-        groupings <- factorgroupings$factor.group
-        gaps.groupings <- c(factorgroupings$gaps)
-    }
-    else {
-        if (class(groupings) == "data.frame") {
-            groupings <- droplevels(groupings[match(colnames(data.subset),
-                rownames(groupings)), 1]) \%>\% as.factor()
-            if (sum(is.na(groupings) != 0)) {
-                groupings <- as.character(groupings)
-                groupings[is.na(groupings)] <- "No_Annot"
-                groupings <- as.factor(groupings)
-            }
-        }
-        if (class(groupings) == "factor") {
-            if (is.null(names(groupings)) == FALSE) {
-                groupings <- droplevels(groupings[match(colnames(data.subset),
-                  names(groupings))]) \%>\% as.factor()
-                if (sum(is.na(groupings) != 0)) {
-                  groupings <- as.character(groupings)
-                  groupings[is.na(groupings)] <- "No_Annot"
-                  groupings <- as.factor(groupings)
-                }
-            }
-            else {
-                if (length(groupings) != ncol(data.subset)) {
-                  stop("unnamed factor supplied to groupings not the same length as
-                  number of columns in data")
-                }
-            }
-        }
-    }
-    if (class(groupings.genes) == "character") {
-        if (sum(groupings.genes \%notin\% colnames(temp.annotations.genes)) !=
-            0) {
-            stop("supplied character vector for groupings.genes not found in gene annotations")
-        }
-        factorgroupings.genes <- makefactorgroup(temp.annotations.genes,
-            groupings.genes, specify.gaps = groupings.genes.gaps,
-            return.gaps = TRUE)
-        groupings.genes <- factorgroupings.genes$factor.group
-        gaps.groupings.genes <- c(factorgroupings.genes$gaps)
-    }
-    else {
-        if (class(groupings.genes) == "data.frame") {
-            groupings.genes <- droplevels(groupings.genes[match(rownames(data.subset),
-                rownames(groupings.genes)), 1]) \%>\% as.factor()
-            if (sum(is.na(groupings.genes) != 0)) {
-                groupings.genes <- as.character(groupings.genes)
-                groupings.genes[is.na(groupings.genes)] <- "No_Annot"
-                groupings.genes <- as.factor(groupings.genes)
-            }
-        }
-        if (class(groupings.genes) == "factor") {
-            if (is.null(names(groupings.genes)) == FALSE) {
-                groupings.genes <- droplevels(groupings.genes[match(rownames(data.subset),
-                  names(groupings.genes))]) \%>\% as.factor()
-                if (sum(is.na(groupings.genes) != 0)) {
-                  groupings.genes <- as.character(groupings.genes)
-                  groupings.genes[is.na(groupings.genes)] <- "No_Annot"
-                  groupings.genes <- as.factor(groupings.genes)
-                }
-            }
-            else {
-                if (length(groupings.genes) != nrow(data.subset)) {
-                  stop("unnamed factor supplied to groupings.genes not the same length as
-                  number of rows from data or number of rows after subsetting for supplied list")
-                }
-            }
-        }
-    }
-    if (na.fix == TRUE) {
-        if (is.raw.Ct == TRUE) {
-            data.subset[which(is.na(data.subset))] <- max(data,
-                na.rm = T) + na.offset
-        }
-        if (is.raw.Ct == FALSE) {
-            data.subset[which(is.na(data.subset))] <- min(data,
-                na.rm = T) - na.offset
-        }
-    }
-    if (is.null(order.by.gene) == FALSE) {
-        if ((order.by.gene \%in\% rownames(data.subset)) == FALSE) {
-            order.by.gene <- NULL
-        }
-    }
-    if (is.null(order.by.sample) == FALSE) {
-        if ((order.by.sample \%in\% colnames(data.subset)) == FALSE) {
-            order.by.sample <- NULL
-        }
-    }
-    if (sum(groupings != FALSE, na.rm = T) != 0) {
-        ind.col = 0
-        gaps.col.n = NULL
-        samp.order <- NULL
-        for (i in 1:length(unique(groupings))) {
-            subset <- as.matrix(data.subset[, which(groupings ==
-                levels(groupings)[i])])
-            colnames(subset) <- colnames(data.subset)[which(groupings ==
-                levels(groupings)[i])]
-            if (ncol(subset) > 1) {
-                if (clust.cols == TRUE) {
-                  if (method \%in\% c("spearman", "pearson", "kendall")) {
-                    clust.samps <- (as.dist(1 - cor(subset, method = method,
-                      use = NA.handling)))
-                  }
-                  if (method \%in\% c("euclidean", "maximum", "manhattan",
-                    "canberra", "binary", "minkowski")) {
-                    clust.samps <- dist(t(subset), method = method)
-                  }
-                  tryclustcols <- try(hclust(clust.samps, linkage),
-                    silent = T)
-                  if (class(tryclustcols) == "try-error") {
-                    stop("cannot cluster columns, if too many NAs present, set na.fix = T to
-                    treat NA values as low expression instead of missing, otherwise set
-                    clust.cols = F or specify order.by.gene")
-                  }
-                  a <- hclust(clust.samps, method = linkage)
-                  samp.order <- c(samp.order, a$labels[a$order])
-                }
-                if (clust.cols == FALSE) {
-                  samp.order <- c(samp.order, colnames(subset))
-                }
-            }
-            if (ncol(subset) == 1) {
-                samp.order <- c(samp.order, colnames(data.subset)[which(groupings ==
-                  levels(groupings)[i])])
-            }
-            if (is.null(order.by.gene) == FALSE) {
-                if (is.raw.Ct == FALSE) {
-                  subset <- subset[, order(subset[which(rownames(subset) \%in\%
-                    order.by.gene), ], na.last = F)]
-                }
-                if (is.raw.Ct == TRUE) {
-                  subset <- subset[, order(subset[which(rownames(subset) \%in\%
-                    order.by.gene), ], na.last = T)]
-                }
-                clust.cols <- F
-            }
-            if (i == 1) {
-                combined <- subset
-            }
-            if (i != 1) {
-                combined <- cbind(combined, subset)
-            }
-            if (exists("factorgroupings") == FALSE) {
-                if (gaps.col == TRUE) {
-                  ind.col <- ind.col + ncol(subset)
-                  gaps.col.n <- c(gaps.col.n, ind.col)
-                }
-            }
-        }
-        if (is.null(order.by.gene) == TRUE) {
-            combined <- combined[, samp.order]
-        }
-        if (sum(groupings.genes == FALSE, na.rm = T) != 0) {
-            if (is.null(order.by.sample) == FALSE) {
-                if (is.raw.Ct == FALSE) {
-                  combined <- combined[order(combined[, which(colnames(combined) \%in\%
-                    order.by.sample)], na.last = F), ]
-                }
-                if (is.raw.Ct == TRUE) {
-                  combined <- combined[order(combined[, which(colnames(combined) \%in\%
-                    order.by.sample)], na.last = T), ]
-                }
-                clust.rows <- F
-            }
-            else {
-                if (method \%in\% c("spearman", "pearson", "kendall")) {
-                  clust.genes <- (as.dist(1 - cor(t(combined),
-                    method = method, use = NA.handling)))
-                }
-                if (method \%in\% c("euclidean", "maximum", "manhattan",
-                  "canberra", "binary", "minkowski")) {
-                  clust.genes <- dist((combined), method = method)
-                }
-            }
-            gaps.row <- NULL
-        }
-        if (gaps.col == TRUE) {
-            if (exists("factorgroupings") == FALSE) {
-                gaps.col <- gaps.col.n[-length(gaps.col.n)]
-            }
-            else {
-                gaps.col <- gaps.groupings
-            }
-            gaps.col <- sort(rep(gaps.col, gap.width))
-        }
-        clust.cols <- F
-        data.subset <- combined
-    }
-    if (sum(groupings.genes != FALSE, na.rm = T) != 0) {
-        ind.row = 0
-        gaps.row.n = NULL
-        gene.order <- NULL
-        for (i in 1:length(unique(groupings.genes))) {
-            subset <- as.matrix(data.subset[which(groupings.genes ==
-                levels(groupings.genes)[i]), ])
-            if (ncol(subset) > 1) {
-                rownames(subset) <- rownames(data.subset)[which(groupings.genes ==
-                  levels(groupings.genes)[i])]
-                if (clust.rows == TRUE) {
-                  if (method \%in\% c("spearman", "pearson", "kendall")) {
-                    clust.genes <- (as.dist(1 - cor(t(subset),
-                      method = method, use = NA.handling)))
-                  }
-                  if (method \%in\% c("euclidean", "maximum", "manhattan",
-                    "canberra", "binary", "minkowski")) {
-                    clust.genes <- dist((subset), method = method)
-                  }
-                  tryclustrows <- try(hclust(clust.genes, linkage),
-                    silent = T)
-                  if (class(tryclustrows) == "try-error") {
-                    stop("cannot cluster rows, if too many NAs present, set na.fix = T to treat NA
-                    values as low expression instead of missing, otherwise set clust.rows = F or
-                    specify order.by.sample")
-                  }
-                  a <- hclust(clust.genes, linkage)
-                  gene.order <- c(gene.order, a$labels[a$order])
-                }
-                if (clust.rows == FALSE) {
-                  gene.order <- c(gene.order, rownames(subset))
-                }
-            }
-            if (ncol(subset) == 1) {
-                colnames(subset) <- rownames(data.subset)[which(groupings.genes ==
-                  levels(groupings.genes)[i])]
-                gene.order <- c(gene.order, colnames(subset))
-                subset <- t(subset)
-            }
-            if (is.null(order.by.sample) == FALSE) {
-                if (nrow(subset) > 1) {
-                  if (is.raw.Ct == FALSE) {
-                    subset <- subset[order(subset[, which(colnames(subset) \%in\%
-                      order.by.sample)], na.last = F), ]
-                  }
-                  if (is.raw.Ct == TRUE) {
-                    subset <- subset[order(subset[, which(colnames(subset) \%in\%
-                      order.by.sample)], na.last = T), ]
-                  }
-                  clust.rows <- F
-                }
-            }
-            if (i == 1) {
-                combined <- subset
-            }
-            if (i != 1) {
-                combined <- rbind(combined, subset)
-            }
-            if (exists("factorgroupings.genes") == FALSE) {
-                if (gaps.row == TRUE) {
-                  ind.row <- ind.row + nrow(subset)
-                  gaps.row.n <- c(gaps.row.n, ind.row)
-                }
-            }
-        }
-        if (is.null(order.by.sample) == TRUE) {
-            combined <- combined[gene.order, ]
-        }
-        if (sum(groupings == FALSE, na.rm = T) != 0) {
-            if (is.null(order.by.gene) == FALSE) {
-                if (is.raw.Ct == FALSE) {
-                  combined <- combined[, order(combined[which(rownames(combined) \%in\%
-                    order.by.gene), ], na.last = F)]
-                }
-                if (is.raw.Ct == TRUE) {
-                  combined <- combined[, order(combined[which(rownames(combined) \%in\%
-                    order.by.gene), ], na.last = T)]
-                }
-                clust.cols <- F
-            }
-            else {
-                if (method \%in\% c("spearman", "pearson", "kendall")) {
-                  clust.samps <- (as.dist(1 - cor(combined, method = method,
-                    use = NA.handling)))
-                }
-                if (method \%in\% c("euclidean", "maximum", "manhattan",
-                  "canberra", "binary", "minkowski")) {
-                  clust.samps <- dist(t(combined), method = method)
-                }
-            }
-            gaps.col <- NULL
-        }
-        if (gaps.row == TRUE) {
-            if (exists("factorgroupings.genes") == FALSE) {
-                gaps.row <- gaps.row.n[-length(gaps.row.n)]
-            }
-            else {
-                gaps.row <- gaps.groupings.genes
-            }
-            gaps.row <- sort(rep(gaps.row, gap.width))
-        }
-        clust.rows <- F
-        data.subset <- combined
-    }
-    if (is.null(gaps.col.spec) == FALSE) {
-        gaps.col <- gaps.col.spec
-        gaps.col <- sort(rep(gaps.col, gap.width))
-    }
-    if (is.null(gaps.row.spec) == FALSE) {
-        gaps.row <- gaps.row.spec
-        gaps.row <- sort(rep(gaps.row, gap.width))
-    }
-    if (clust.rows == T) {
-        heightrow <- treeheight.row
-    }
-    if (clust.cols == T) {
-        heightcol <- treeheight.col
-    }
-    data.subset1 <- data.subset
-    data.subset <- scales::squish(data.subset, params$scale.range)
-    breaks <- seq(params$scale.range[1], params$scale.range[2],
-        length.out = params$n.colors.range)
-    my_cols = colorRampPalette(params$scale.colors)(n = params$n.colors.range -
-        1)
-    if (is.raw.Ct == TRUE) {
-        my_cols <- rev(my_cols)
-    }
-    if (na.fix == TRUE) {
-        if (is.raw.Ct == TRUE) {
-            data.subset[which(data.subset1 == max(data.subset1))] <- params$scale.range[2] +
-                0.04
-            breaks <- c(breaks, params$scale.range[2] + 0.01,
-                params$scale.range[2] + 0.05)
-            my_cols <- c(my_cols, params$scale.colors[1], "grey90")
-        }
-        if (is.raw.Ct == FALSE) {
-            data.subset[which(data.subset1 == min(data.subset1))] <- params$scale.range[1] -
-                0.04
-            breaks <- c(params$scale.range[1] - 0.05, params$scale.range[1] -
-                0.01, breaks)
-            my_cols <- c("grey90", params$scale.colors[1], my_cols)
-        }
-    }
-    temp.annot_samps <- params$annot_samps
-    temp.annot_genes <- params$annot_genes
-    temp.annot_cols <- params$annot_cols
-    if (drop.annot.levels == TRUE) {
-        suppressWarnings(if (is.na(temp.annot_samps) == F) {
-            temp.annot_samps[] <- lapply(temp.annot_samps, as.factor)
-            temp.annot_samps <- temp.annot_samps \%>\% tibble::rownames_to_column("Sample")
-            temp.annot_samps <- droplevels(temp.annot_samps[which(temp.annot_samps$Sample \%in\%
-                colnames(data.subset)), ]) \%>\% as.data.frame() \%>\%
-                tibble::remove_rownames() \%>\% tibble::column_to_rownames(var = "Sample")
-            spec.cols <- colnames(temp.annot_samps)[colnames(temp.annot_samps) \%in\%
-                names(temp.annot_cols)]
-            if (length(spec.cols) != 0) {
-                for (annot.i in 1:length(spec.cols)) {
-                  annot <- colnames(temp.annot_samps)[annot.i]
-                  temp.annot_cols[[which(names(temp.annot_cols) ==
-                    annot)]] <- temp.annot_cols[[which(names(temp.annot_cols) ==
-                    annot)]][which(names(temp.annot_cols[[which(names(temp.annot_cols) ==
-                    annot)]]) \%in\% levels(temp.annot_samps[,
-                    which(colnames(temp.annot_samps) == annot)]))]
-                }
-            }
-        })
-        suppressWarnings(if (is.na(params$annot_genes) == F) {
-            temp.annot_genes[] <- lapply(temp.annot_genes, as.factor)
-            temp.annot_genes <- temp.annot_genes \%>\% tibble::rownames_to_column("Gene")
-            temp.annot_genes <- droplevels(temp.annot_genes[which(temp.annot_genes$Gene \%in\%
-                rownames(data.subset)), ]) \%>\% as.data.frame() \%>\%
-                tibble::remove_rownames() \%>\% tibble::column_to_rownames(var = "Gene")
-            spec.cols <- colnames(temp.annot_samps)[colnames(temp.annot_genes) \%in\%
-                names(temp.annot_cols)]
-            if (length(spec.cols) != 0) {
-                for (annot.i in 1:length(colnames(temp.annot_genes))) {
-                  annot <- colnames(temp.annot_genes)[annot.i]
-                  temp.annot_cols[[which(names(temp.annot_cols) ==
-                    annot)]] <- temp.annot_cols[[which(names(temp.annot_cols) ==
-                    annot)]][which(names(temp.annot_cols[[which(names(temp.annot_cols) ==
-                    annot)]]) \%in\% levels(temp.annot_genes[,
-                    which(colnames(temp.annot_genes) == annot)]))]
-                }
-            }
-        })
-    }
-    if (clust.cols == T) {
-        tryclustcols <- try(hclust(clust.samps, linkage), silent = T)
-        if (class(tryclustcols) == "try-error") {
-            stop("cannot cluster columns, if too many NAs present, set na.fix = T to treat NA
-            values as low expression instead of missing, otherwise set clust.cols = F or
-            specify order.by.gene")
-        }
-    }
-    if (clust.rows == T) {
-        tryclustrows <- try(hclust(clust.genes, linkage), silent = T)
-        if (class(tryclustrows) == "try-error") {
-            stop("cannot cluster rows, if too many NAs present, set na.fix = T to treat NA
-            values as low expression instead of missing, otherwise set clust.rows = F or
-            specify order.by.sample")
-        }
-    }
-    pheatmap(data.subset, col = my_cols, breaks = breaks, border_color = NA,
-        clustering_method = linkage, annotation_col = temp.annot_samps,
-        annotation_colors = temp.annot_cols, clustering_distance_rows = clust.genes,
-        clustering_distance_cols = clust.samps, main = paste(main,
-            "\n Method_", method, "_Linkage_", linkage), cluster_rows = clust.rows,
-        cluster_cols = clust.cols, cutree_rows = row.groups,
-        cutree_cols = col.groups, gaps_row = gaps.row, gaps_col = gaps.col,
-        fontsize_row = fontsize.row, fontsize_col = fontsize.col,
-        cellwidth = cell.width, cellheight = cell.height, show_rownames = show.rownames,
-        show_colnames = show.colnames, treeheight_row = heightrow,
-        treeheight_col = heightcol, silent = hide.plot, legend = show.legend,
-        annotation_legend = show.annotations, annotation_row = temp.annot_genes,
-        drop_levels = drop.annot.levels)
-  }
+##specify colors of annotations
+state.cols <- RColorBrewer::brewer.pal(6,"Set1"); names(state.cols) <- LETTERS[1:6]
+annot_cols <- list('Connectivity'=c("SAN-Projecting"="blue","Non-SAN-Projecting"="violet",
+                          "No Info Available"="grey"),
+                   'Animal'=c("PR1534"="#0571b0","PR1643"="#ca0020","PR1705"="#92c5de",
+                            "PR1729"="#f4a582"),
+                   "State"=c(state.cols))
+set_annot_cols(annot_cols)
+
+
+
+##plot heatmap according to annotations, adjust width
+myHeatmapByAnnotation(RAGP_norm, groupings = "State")
+myHeatmapByAnnotation(RAGP_norm, groupings = "State", gap.width = 3)
+
+##ordering by specific gene will order in each annotation group separately
+myHeatmapByAnnotation(RAGP_norm, list = c("Th","Chat","Gal","Sst","NeuN","Adra1b","Chrm2"),
+    groupings = "State", order.by.gene = "Th")
+myHeatmapByAnnotation(RAGP_norm, list = c("Th","Chat","Gal","Sst","NeuN","Adra1b","Chrm2"),
+    groupings = "State", order.by.gene = "Chrm2")
+
+##plot according to multiple annotations, specify gaps between annotations
+myHeatmapByAnnotation(RAGP_norm, groupings = c("Connectivity","State"))
+myHeatmapByAnnotation(RAGP_norm, groupings = c("Connectivity","State"), groupings.gaps = c(0,3))
+myHeatmapByAnnotation(RAGP_norm, groupings = c("Animal","Connectivity","State"),
+  groupings.gaps = c(0,1,3))
+
+#separate by annotations in not shown heatmap tracks
+myHeatmapByAnnotation(RAGP_norm, groupings = "Sex")
+
+##customize gaps
+myHeatmapByAnnotation(RAGP_norm, groupings = "Sex", gaps.col.spec = c(100, 200, 300, 400))
+
+#see \link[dataVisEasy]{myHeatmap} for more examples of aesthetics
+#all the above specifications can be applied to gene annotations (if available) as well
+
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory (show via RShowDoc("KEYWORDS")):

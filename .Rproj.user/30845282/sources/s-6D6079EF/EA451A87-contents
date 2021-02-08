@@ -1,0 +1,33 @@
+\name{dataVisEasy-package}
+\alias{dataVisEasy-package}
+\alias{dataVisEasy}
+\docType{package}
+\title{
+datavisEasy: Data visualizations Using Annotations Made Easy
+%%\packageTitle{dataVisEasy}
+}
+\description{
+A user friendly package to aid in visualization of transcriptomic (or proteomic or any other type of expression) datasets. By setting up annotations to the data, the user can seamlessly run a variety of analysis and data visualziations that integrate annotations in an intuitive way.
+%%\packageDescription{dataVisEasy}
+}
+\details{
+Functions in this package are heavily dependent on the params list object that stores parameters and annotations common to the dataset being analyzed and is utilized across most functions within the dataVisEasy pacakge. Please see \link[dataVisEasy]{params} for more information about accessing and setting up these variables.
+}
+\author{
+%\packageAuthor{dataVisEasy}
+Alison Moss -- alisonmoss3@gmail.com
+
+%Maintainer: \packageMaintainer{dataVisEasy}
+%Alison Moss~alisonmoss3@gmail.com
+}
+%\references{
+%%~~ Literature or other references for background information ~~
+%}
+
+\keyword{ package }
+\seealso{
+See \link[dataVisEasy]{params}, \link[dataVisEasy]{myHeatmap}, \link[dataVisEasy]{myHeatmapByAnnotation}, \link[dataVisEasy]{scatterGenes}, \link[dataVisEasy]{beeswarmGenes}
+}
+%\examples{
+%%~~ simple examples of the most important functions ~~
+%}

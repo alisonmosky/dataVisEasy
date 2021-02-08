@@ -119,21 +119,21 @@ logical. If set to TRUE, will reverse the scale of the data to indicate low valu
 logial, should annotations not included in the output heatmap be shown in the annotation legend.
 }
 }
-\details{
+%\details{
 %%  ~~ If necessary, more details than the description above ~~
-}
+%}
 \value{
 If limits are NULL returns a plot histogram. If limits are provided, returns a pheatmap object, see \link[dataVisEasy]{myHeatmap}
 }
-\references{
+%\references{
 %% ~put references to the literature/web site here ~
-}
+%}
 \author{
 ~~Alison Moss~~
 }
-\note{
+%\note{
 %%  ~~further notes~~
-}
+%}
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
@@ -141,51 +141,20 @@ If limits are NULL returns a plot histogram. If limits are provided, returns a p
 See Also as \link[dataVisEasy]{myHeatmap}
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+##initiate parameters
+initiate_params()
 
-## The function is currently defined as
-function (data, gene, limits = NULL, method = "pearson", linkage = "complete",
-    NA.handling = "pairwise.complete.obs", nbreaks = 20, show.report = F,
-    clust.rows = T, clust.cols = T, row.groups = NA, col.groups = NA,
-    gaps.row = NULL, gaps.col = NULL, gap.width = 1, order.by.gene = NULL,
-    order.by.sample = NULL, cell.width = NA, cell.height = NA,
-    fontsize.row = 10, fontsize.col = 10, show.rownames = T,
-    show.colnames = F, treeheight.row = 20, treeheight.col = 20,
-    hide.plot = FALSE, na.fix = FALSE, na.offset = 2, show.legend = TRUE, show.annotations = TRUE,
-    is.raw.Ct = FALSE, drop.annot.levels = TRUE)
-{
-    main <- paste("Correlations_to_", gene)
-    gen.cor <- cor(x = (data[which(rownames(data) == gene), ]),
-        y = t(data), use = NA.handling, method = method)
-    if (is.null(limits) == TRUE) {
-        hist(gen.cor, breaks = nbreaks, main = main)
-    }
-    if (is.null(limits) == FALSE) {
-        below <- limits[1]
-        above <- limits[2]
-        subset <- data[which(gen.cor > above | gen.cor < below),
-            ]
-        myHeatmap(subset, method = method, linkage = linkage,
-            NA.handling = NA.handling, clust.rows = clust.rows,
-            clust.cols = clust.cols, row.groups = row.groups,
-            gaps.row = gaps.row, gaps.col = gaps.col, gap.width = gap.width,
-            order.by.gene = order.by.gene, order.by.sample = order.by.sample,
-            cell.width = cell.width, cell.height = cell.height,
-            fontsize.row = fontsize.row, fontsize.col = fontsize.col,
-            show.rownames = show.rownames, show.colnames = show.colnames,
-            treeheight.row = treeheight.row, treeheight.col = treeheight.col,
-            hide.plot = hide.plot, na.fix = na.fix, na.offset = na.offset, show.legend =
-            show.legend,show.annotations = show.annotations, is.raw.Ct = is.raw.Ct,
-            drop.annot.levels = drop.annot.levels)
-        if (show.report == T) {
-            report <- gen.cor[, which(gen.cor > above | gen.cor <
-                below)]
-            return(report)
-        }
-    }
-  }
+
+##View range of correlations with gene of interest as histogram
+corrs2Gene(RAGP_norm, gene = "NeuN")
+
+##provide limits to show heatmap of genes with negative correlations below/above lower/upper limit
+corrs2Gene(RAGP_norm, gene = "NeuN", limits = c(-0.4, 0.5))
+corrs2Gene(RAGP_norm, "NeuN", c(-0.4, 0.5), order.by.gene = "NeuN")
+
+##return list of correlations passing provided limits
+corrs2Gene(RAGP_norm, "NeuN", c(-0.4, 0.5), show.report = TRUE)
+
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory (show via RShowDoc("KEYWORDS")):

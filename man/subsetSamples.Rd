@@ -22,58 +22,38 @@ character string pointing to a column name in the annotations stored in params. 
 level or levels of the group vector supplied indicating the samples to be extracted
 }
 }
-\details{
+%\details{
 %%  ~~ If necessary, more details than the description above ~~
-}
+%}
 \value{
 data matrix with the same number of rows as the input data matrix but subset for the specified samples
 }
-\references{
+%\references{
 %% ~put references to the literature/web site here ~
-}
+%}
 \author{
 ~~Alison Moss~~
 }
-\note{
+%\note{
 %%  ~~further notes~~
-}
+%}
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
-\seealso{
+%\seealso{
 %% ~~objects to See Also as \code{\link{help}}, ~~~
-}
+%}
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+##initiate parameters and set up annotations
+initiate_params()
+set_annotations(RAGP_annots)
 
-## The function is currently defined as
-function (data, group, take.out)
-{
-    temp.annotations <- params$annotations
-    if (group \%in\% colnames(temp.annotations)) {
-        if (sum(colnames(data) \%notin\% rownames(temp.annotations)) !=
-            0) {
-            stop("colnames of input data do not match rownames of annotations,
-            cannot link annotations to data")
-        }
-        temp.annotations <- temp.annotations[match(colnames(data),
-            rownames(temp.annotations)), , drop = FALSE]
-        groupings <- as.factor(temp.annotations[, group])
-        if (sum(take.out \%in\% groupings) != length(take.out)) {
-            stop("provided arguments to take.out not found in indicated group")
-        }
-        set <- data[, which(groupings \%in\% take.out)]
-    }
-    else {
-        if (sum(take.out \%in\% group) != length(take.out)) {
-            stop("provided arguments to take.out not found in indicated group")
-        }
-        set <- data[, which(group \%in\% take.out)]
-    }
-    return(set)
-  }
+##subset samples for SAN-Projecting cells
+SAN.proj <- subsetSamples(RAGP_norm, group = "Connectivity", take.out = "SAN-Projecting")
+
+##subset samples for cells with projection information
+proj.ino <- subsetSamples(RAGP_norm, group = "Connectivity",
+  take.out = c("SAN-Projecting", "Non-SAN-Projecting"))
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory (show via RShowDoc("KEYWORDS")):

@@ -21,22 +21,22 @@ Draws from the annotations parameter stored in the params list object to hold on
 
 To specify the colors that will accompany each level of each annotation, see \link[dataVisEasy]{set_annot_cols}. If colors are not specified, default color values will be applied when necessary. (Not all annotations need to have custom colors, those that do not will be given default colors while those that are specified will be shown as such.)
 }
-\value{
+%\value{
 %%  ~Describe the value returned
 %%  If it is a LIST, use
 %%  \item{comp1 }{Description of 'comp1'}
 %%  \item{comp2 }{Description of 'comp2'}
 %% ...
-}
-\references{
+%}
+%\references{
 %% ~put references to the literature/web site here ~
-}
+%}
 \author{
 ~~Alison Moss~~
 }
-\note{
+%\note{
 %%  ~~further notes~~
-}
+%}
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
@@ -44,28 +44,20 @@ To specify the colors that will accompany each level of each annotation, see \li
 See \link[dataVisEasy]{set_annotations} and \link[dataVisEasy]{set_annot_cols}
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+##initiate parameters and annotations
+initiate_params()
+set_annotations(RAGP_annots)
 
-## The function is currently defined as
-function (annotations = NULL)
-{
-    if (is.null(annotations) == TRUE) {
-        params$annot_samps <<- params$annotations
-    }
-    else {
-        suppressWarnings(if (is.na(annotations)) {
-            params$annot_samps <<- NA
-        }
-        else {
-            params$annot_samps <<- params$annotations[, which(colnames(params$annotations) \%in\%
-                annotations), drop = FALSE]
-            params$annot_samps <<- params$annot_samps[, match(annotations,
-                colnames(params$annot_samps)), drop = FALSE]
-        })
-    }
-  }
+##without setting annot_samps, no annotations will be shown in heatmap
+myHeatmap(RAGP_norm)
+
+##with no argument, assumes all annotations should be shown in heatmap
+set_annot_samps()
+myHeatmap(RAGP_norm)
+
+##specify annotations to be shown in heatmap, first annotation will be shown closest to heatmap
+set_annot_samps(c("Connectivity","Animal","State"))
+myHeatmap(RAGP_norm)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory (show via RShowDoc("KEYWORDS")):
