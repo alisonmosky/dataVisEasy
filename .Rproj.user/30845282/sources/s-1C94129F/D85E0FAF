@@ -1,0 +1,25 @@
+{
+    "id": "D85E0FAF",
+    "path": "D:/Dropbox (SBG)/SHR-Work/Alison-DataVis-Package/dataVisEasy/R/statistics_correlations_functions.R",
+    "project_path": "R/statistics_correlations_functions.R",
+    "type": "r_source",
+    "hash": "3313940425",
+    "contents": "",
+    "dirty": false,
+    "created": 1611527376908.0,
+    "source_on_save": false,
+    "relative_order": 5,
+    "properties": {
+        "tempName": "Untitled1",
+        "cursorPosition": "84,0",
+        "scrollLine": "0"
+    },
+    "folds": "11|2|80|0|\n90|2|198|0|\n217|2|329|0|\n301|55|308|8|\n346|2|433|0|\n368|49|372|112|\n408|55|412|130|\n472|2|504|0|\n517|2|544|0|\n556|2|608|0|\n631|2|724|0|\n",
+    "lastKnownWriteTime": 1612727387,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1614605663484,
+    "read_only": false,
+    "read_only_alternatives": []
+}

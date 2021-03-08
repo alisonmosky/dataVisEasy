@@ -77,8 +77,9 @@ if return.summary == TRUE
 \item{'pvals'}{pvalues}
 \item{'-log10pvals'}{-log10 of the p values (y axis of the volcano plot)}
 
-if return.ggplot.input == TRUE
-  the input dataframe used for plotting which contains the same dataframe as return.summary but with the addition of colored groups based on significance, gene names, and if a desired number of genes were supplied to highlight, those will be in a separate column.
+If return.ggplot.input is set to TRUE, will return a list with the dataframe and call to ggplot for plotting.
+\item{'input_data'}{the dataframe used for plotting which will contain the expression levels of the chosen genes (if values are squished to fit the plot the values will be similarly squished) as well as the annotations if available.}
+\item{plot_call}{the call to ggplot that generated the plot. Note that simply accessing it by $plot_call will include escape characters. The full call can be accessed by cat(plot$plot_call). Please note that many of the parameters (those in lowercase) in the call are input parameters to the original function and must be input to properly recreate the plot.}
 }
 %\references{
 %% ~put references to the literature/web site here ~

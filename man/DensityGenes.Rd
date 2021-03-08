@@ -8,9 +8,9 @@ Density Plots for a Set of Genes
 Create highly customizable density plots for a given set of genes. Includes options to color for and group by various annotations.
 }
 \usage{
-DensityGenes(data, list, color.by = "blue", exact = TRUE, is.raw.Ct = FALSE,
-  na.fix = 2, transparency = 0.5, ncols = 2, scales = "free", legend.position = "default",
-  return.ggplot.input = FALSE)
+DensityGenes(data, list, color.by = "blue", exact = TRUE, facet.annotation = FALSE,
+  is.raw.Ct = FALSE, na.fix = 2, transparency = 0.5, ncols = 2, scales = "free",
+  legend.position = "default", return.ggplot.input = FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -25,6 +25,9 @@ How the plots are colored and grouped. There are several different options that 
 }
   \item{exact}{
 whether or not to search for exact or inexact matches of 'list' in 'data'. If exact = T (default) heatmap will plot genes/variables that exactly match the list supplied. If set to FALSE, will search for inexact matches.
+}
+  \item{facet.annotation}{
+By default, when multiple genes are plotted the function will facet to separate the genes. If facet.annotation is set to "wrap" or "grid", will also separate by the annotation supplied for coloring. See \link[ggplot2]{facet_wrap} and \link[ggplot2]{facet_grid} for more information on faceting.
 }
   \item{is.raw.Ct}{
 logical. If set to TRUE, will reverse the scale of the data to indicate low values as high expression as in the case of raw Ct values from qPCR, in this case, missing values will also be set to a high value to reflect low expression level
@@ -54,7 +57,10 @@ A density plot will be generated from the input data for each gene provided. Opt
 \value{
 A ggplot object. Additional layers can be added to the returned ggplot object to further customize theme and aesthetics.
 
-If return.ggplot.input is set to TRUE, will return the dataframe used for plotting which will contain the expression levels of the chosen genes (if values are squished to fit the plot the values will be similarly squished) as well as the annotations if available.
+If return.ggplot.input is set to TRUE, will return a list with the dataframe, coloring and call to ggplot for plotting.
+\item{'input_data'}{the dataframe used for plotting which will contain the expression levels of the chosen genes (if values are squished to fit the plot the values will be similarly squished) as well as the annotations if available.}
+\item{'coloring'}{the coloring parameters used in the plot}
+\item{plot_call}{the call to ggplot that generated the plot. Note that simply accessing it by $plot_call will include escape characters. The full call can be accessed by cat(plot$plot_call). Please note that many of the parameters (those in lowercase) in the call are input parameters to the original function and must be input to properly recreate the plot.}
 }
 %\references{
 %% ~put references to the literature/web site here ~

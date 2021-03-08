@@ -1,0 +1,7 @@
+"0","state.cols <- RColorBrewer::brewer.pal(6,""Set1""); names(state.cols) <- LETTERS[1:6]"
+"0","annot_cols <- list('Connectivity'=c(""SAN-Projecting""=""blue"",""Non-SAN-Projecting""=""violet"",""No Info Available""=""grey""),"
+"0","                   'Animal'=c(""PR1534""=""#0571b0"",""PR1643""=""#ca0020"",""PR1705""=""#92c5de"",""PR1729""=""#f4a582""),"
+"0","                   ""State""=c(state.cols))"
+"0","set_annot_cols(annot_cols)"
+"0",""
+"0","myPCA(RAGP_norm, nPcs = 5,  color.by = ""Animal"") "

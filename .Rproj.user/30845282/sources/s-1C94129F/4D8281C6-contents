@@ -1,0 +1,143 @@
+---
+title: "dataVisEasy-vignette"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{dataVisEasy-vignette}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(dataVisEasy)
+```
+The datavisEasy package uses a background object called "params" that stores annotations for the data in question. Each of the functions in the package communicates with this params object to integrate the annotations wherever they may be needed. While it is not necessary to specify annotations to use the package, the object MUST be initialized which is done with the single line of code below and there are some default values which are already stored there. 
+```{r}
+initiate_params()
+```
+```{r pressure, echo=FALSE, out.width = '100%'}
+knitr::include_graphics("C://Users/aliso/Pictures/Illustrator Stuff/params_layout.png")
+
+```
+
+This package comes with a HT-qPCR dataset that serves as examples for the package functions. This dataset consists of 405 single neuron samples obtained through laser capture microdissection from the right atrial ganglionated plexus of four different Yucatan Minipigs. The data included in the package includes raw Ct data (RAGP_rawCt), normalized data (RAGP_norm), and the annotations that go with the samples and that are used throughout the visualization process (RAGP_annots). 
+```{r results='hide'}
+data("RAGP_annots")
+head(RAGP_annots)
+
+```
+```{r echo=FALSE}
+knitr::kable(head(RAGP_annots))
+```
+```{r results='hide'}
+data("RAGP_norm")
+RAGP_norm[1:5,1:5]
+```
+```{r echo=FALSE}
+knitr::kable(RAGP_norm[1:5,1:5])
+```
+
+Right off the bat, we can do some initial visualizations such as PCA
+```{r fig.show='hold', out.width="47%"}
+myPCA(RAGP_norm)
+myPCA(RAGP_norm, nPcs = 5, PCs.to.plot = c("PC1","PC3"))
+```
+
+While this is helpful, it would be much more helpful to color these samples for our annotations. In order for the functions to incorporate these annotations, we must save the annotations to the params list object. We can set the annotations in the params list object using the function set.annotations. The annotations are now stored in params$annotations. Of note, rownames MUST be present in the annotations data frame and they MUST match the sample/column names in the data.
+
+```{r results='hide'}
+set_annotations(RAGP_annots)
+head(params$annotations)
+
+```
+```{r echo=FALSE}
+knitr::kable(head(params$annotations))
+```
+
+Now we can color these PCAs for any of our annotations by only giving the name of the annotation, the function will do the rest!
+```{r fig.width=6, fig.height=6, out.width="47%", fig.show='hold'}
+myPCA(RAGP_norm, nPcs = 5,  color.by = "Animal") 
+myPCA(RAGP_norm, PCs.to.plot = c("PC1","PC3"), color.by = "Connectivity") 
+```
+
+
+If we wish to specify what colors we want these to show up as, instead of accepting the default colors, we can link an annotation to specific colors by setting up the annot_cols parameter in the params list object. Here we will set the colors for Transcriptional State, Connectivity, and Animal. Now when we remake the PCAs, it will show our colors.
+```{r fig.width=6, fig.height=6, out.width="47%", fig.show='hold'}
+state.cols <- RColorBrewer::brewer.pal(6,"Set1"); names(state.cols) <- LETTERS[1:6]
+annot_cols <- list('Connectivity'=c("SAN-Projecting"="blue","Non-SAN-Projecting"="violet","No Info Available"="grey"),
+                   'Animal'=c("PR1534"="#0571b0","PR1643"="#ca0020","PR1705"="#92c5de","PR1729"="#f4a582"),
+                   "State"=c(state.cols))
+set_annot_cols(annot_cols)
+
+myPCA(RAGP_norm, nPcs = 5,  color.by = "Animal") 
+myPCA(RAGP_norm, PCs.to.plot = c("PC1","PC3"), color.by = "Connectivity") + 
+  theme(legend.position = "bottom", legend.direction = "vertical")
+
+```
+
+
+
+
+
+
+
+
+
+
+# Heatmaps
+
+The params list object already has the default scale for heatmaps set to -1 to 1. It is, however, useful to check how well our data fits into these limits and we can change as we see fit. The assessScale function will assess the percent of the data below, within, and above the range stored at params$scale.range
+
+```{r}
+assessScale(RAGP_norm)
+
+```
+
+If we want to change the scale, we can use the function set_scale.range to change it and then reassess how well our data fits. 
+
+```{r}
+
+set_scale.range(c(-2,2))
+assessScale(RAGP_norm)
+set_scale.range(c(-1,1))
+```
+
+We can now visualize our data as a heatmap
+```{r, fig.width = 5, fig.height = 5, fig.align='center'}
+myHeatmap(RAGP_norm)
+```
+
+This function also accepts a list of genes for which the heatmap should be shown
+```{r, fig.width=5,fig.height=5, fig.align='center'}
+myHeatmap(RAGP_norm, list =c("Sst","Npy","Th","Dbh","Gal","Chat","Ache","Pnmt",
+                             "Scn1a","Cacna1a","Cacna1c"))
+```
+
+We can also find inexact matches (for example a peptide and its receptors, or a class of channels) by setting the 'exact' argument equal to FALSE
+```{r fig.show='hold', fig.width = 4, fig.height = 4, out.width="47%"}
+myHeatmap(RAGP_norm, list = c("Sst","Npy","Gal"), exact = F)
+myHeatmap(RAGP_norm, list = c("Kcn","Cacn","Scn"), exact = F, main = "Ion Channels")
+```
+
+The function set_annot_samps() will store which annotations should be displayed as tracks along the heatmaps. While all of these annotations may be important, we may not want all of them to be shown on our heatmaps.To specify which annotations should be shown and what order they should be shown in, we can input a character vector of the annotations we want shown. The first annotation listed will be placed closest to the heatmap. 
+
+```{r, fig.width=8, fig.height=6, out.height="47%", out.width="47%", fig.show="hold"}
+set_annot_samps()
+myHeatmap(RAGP_norm, main = "All Annotations")
+set_annot_samps(c("Connectivity","Animal","State"))
+myHeatmap(RAGP_norm, main = "Some Annotations")
+
+```
+
+We can also use myHeatmapByAnnotation to separate the samples by any annotation (regardless of whether or not it is shown in the tracks on the heatmap)
+```{r fig.width=8, fig.height=6, out.height= "47%", out.width= "47%", fig.show='hold'}
+myHeatmapByAnnotation(RAGP_norm, groupings = "State", main = "Separated by State")
+myHeatmapByAnnotation(RAGP_norm, groupings = "Sex", main = "Separated by Sex")
+```
+

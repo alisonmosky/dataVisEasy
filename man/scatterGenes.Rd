@@ -77,7 +77,10 @@ A scatter plot will be generated from the input data for the two genes provided.
 \value{
 A ggplot object. Additional layers can be added to the returned ggplot object to further customize theme and aesthetics.
 
-If return.ggplot.input is set to TRUE, will return the dataframe used for plotting which will contain the expression levels of the chosen genes (if values are squished to fit the plot the values will be similarly squished) as well as the annotations if available.
+If return.ggplot.input is set to TRUE, will return a list with the dataframe, coloring and call to ggplot for plotting.
+\item{'input_data'}{the dataframe used for plotting which will contain the expression levels of the chosen genes (if values are squished to fit the plot the values will be similarly squished) as well as the annotations if available.}
+\item{'coloring'}{the coloring parameters used in the plot}
+\item{plot_call}{the call to ggplot that generated the plot. Note that simply accessing it by $plot_call will include escape characters. The full call can be accessed by cat(plot$plot_call). Please note that many of the parameters (those in lowercase) in the call are input parameters to the original function and must be input to properly recreate the plot.}
 }
 %\references{
 %% ~put references to the literature/web site here ~
