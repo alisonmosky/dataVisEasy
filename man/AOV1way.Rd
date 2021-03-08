@@ -58,6 +58,8 @@ The function itself determines significant and non-significant genes based on th
 provided. However, the AOV.Results provdied in the output supply the F value and p value,
 additional information can also be retrieved by setting additional report = TRUE, user can
 use any of this information for custom filtering of results.
+
+For cases where there are no non-missing arguments for one or more of the groups in the supplied categories, a warning will be generated indicating which genes or observations this is true for. If there is only one group with no non-missing arguments, that gene or observation will be removed from the analysis (and will be indicated with a warning). Please pay attention to these warnings as they may affect how the results should be interpretted.
 }
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~

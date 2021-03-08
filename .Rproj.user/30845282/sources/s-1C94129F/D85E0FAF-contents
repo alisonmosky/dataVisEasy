@@ -2,6 +2,8 @@
 
 #' @importFrom graphics hist
 #' @importFrom stats TukeyHSD aov as.dist cor cor.test cutree density dist hclust mad median t.test
+#' @importFrom reshape2 melt
+#' @importFrom dplyr summarise_all summarise_at group_by bind_rows
 
 #' @export
 AOV1way <- function(
@@ -24,6 +26,32 @@ AOV1way <- function(
 
   groupings <- droplevels(as.factor(temp.annotations[,category]))
 
+
+  ##remove rows where there are no observations for one category
+
+
+  dat.check <- t(data.to.aov); dat.check <- reshape2::melt(dat.check); dat.check$groupings <- groupings
+  present <- dplyr::summarise_all(dplyr::group_by(dat.check,Var2, groupings), list(present=function(x)(sum(!is.na(x)))))
+  incomplete <- unique(as.character(present$Var2[which(present$value_present == 0)]))
+
+
+  present.incomplete <- present[which(present$Var2 %in% incomplete),] %>% group_by(Var2)
+  levels.present <- present.incomplete %>% dplyr::summarise_at("value_present",function(x)(sum(x != 0)))
+  take.out <- unique(as.character(levels.present$Var2[which(levels.present$value_present <= 1)]))
+
+  if (length(take.out != 0)) {
+    data.to.aov <- data.to.aov[-which(rownames(data.to.aov) %in% take.out),]
+    warning(paste(paste(take.out, collapse = ", "),"do not have two or more groups with no non-missing arguments and have been removed from the AOV analysis "))
+
+  }
+
+  incomplete.keep <- incomplete[incomplete %notin% take.out]
+  if (length(incomplete.keep) != 0 ) {
+    warning(paste(paste(incomplete.keep, collapse = ", "), "have at least one group with no non-missing arguments"))
+  }
+
+
+
   aov.all <- apply(data.to.aov, 1, function(x)(summary(aov(x~groupings))))
 
   aov.results <- data.frame(FVal=unlist(lapply(aov.all,function(x)((x[[1]]$`F value`[1])))),
@@ -37,9 +65,8 @@ AOV1way <- function(
 
   tukey.all <-  apply(sig.set,1,function(x)(TukeyHSD(aov(x~groupings))))
 
-  tukey.pvals <- data.frame(Reduce(rbind, lapply(tukey.all,function(x)(x$groupings[,4]))), row.names = names(tukey.all)); colnames(tukey.pvals) <- gsub("\\.","-", colnames(tukey.pvals))
-  tukey.diffs <- data.frame(Reduce(rbind, lapply(tukey.all,function(x)(x$groupings[,1]))), row.names = names(tukey.all)); colnames(tukey.diffs) <- gsub("\\.","-", colnames(tukey.diffs))
-
+  tukey.pvals <- data.frame(Reduce(dplyr::bind_rows, lapply(tukey.all,function(x)(x$groupings[,4]))), row.names = names(tukey.all)); colnames(tukey.pvals) <- gsub("\\.","-", colnames(tukey.pvals))
+  tukey.diffs <- data.frame(Reduce(dplyr::bind_rows, lapply(tukey.all,function(x)(x$groupings[,1]))), row.names = names(tukey.all)); colnames(tukey.diffs) <- gsub("\\.","-", colnames(tukey.diffs))
 
 
   if (toupper(additional.report) == "ALL") {
@@ -81,6 +108,9 @@ AOV1way <- function(
 }
 
 
+
+#' @importFrom tibble rownames_to_column column_to_rownames
+#' @importFrom plyr join_all
 #' @export
 AOV2way <- function(
   data.to.aov,
@@ -104,12 +134,52 @@ AOV2way <- function(
   groupings1 <- droplevels(as.factor(temp.annotations[,category1]))
   groupings2 <- droplevels(as.factor(temp.annotations[,category2]))
 
+
+  ##remove rows where there are no observations for either category
+
+
+  dat.check <- t(data.to.aov); dat.check <- melt(dat.check); dat.check$grouping1 <- groupings1; dat.check$grouping2 <- groupings2
+  present1 <- dplyr::summarise_all(dplyr::group_by(dat.check,Var2, grouping1), list(present=function(x)(sum(!is.na(x)))))
+  present2 <- dplyr::summarise_all(dplyr::group_by(dat.check,Var2, grouping2), list(present=function(x)(sum(!is.na(x)))))
+
+  incomplete1 <- unique(as.character(present1$Var2[which(present1$value_present == 0)]))
+  present.incomplete1 <- present1[which(present1$Var2 %in% incomplete1),] %>% group_by(Var2)
+  levels.present1 <- present.incomplete1 %>% dplyr::summarise_at("value_present",function(x)(sum(x != 0)))
+  take.out1 <- unique(as.character(levels.present1$Var2[which(levels.present1$value_present <= 1)]))
+
+  incomplete2 <- unique(as.character(present2$Var2[which(present2$value_present == 0)]))
+  present.incomplete2 <- present2[which(present2$Var2 %in% incomplete2),] %>% group_by(Var2)
+  levels.present2 <- present.incomplete2 %>% dplyr::summarise_at("value_present",function(x)(sum(x != 0)))
+  take.out2 <- unique(as.character(levels.present2$Var2[which(levels.present2$value_present <= 1)]))
+
+  if (length(unique(c(take.out1,take.out2)) != 0)) {
+    data.to.aov <- data.to.aov[-which(rownames(data.to.aov) %in% unique(c(take.out1,take.out2))),]
+    warning(paste(paste(unique(c(take.out1,take.out2)), collapse = ", "),"do not have two or more groups with no non-missing arguments and have been removed from the AOV analysis "))
+
+  }
+
+  incomplete.keep <- unique(c(incomplete1,incomplete2))[unique(c(incomplete1,incomplete2)) %notin% unique(c(take.out1,take.out2))]
+  if (length(incomplete.keep) != 0 ) {
+    warning(paste(paste(incomplete.keep, collapse = ", "), "have at least one group with no non-missing arguments"))
+  }
+
+
+  ###check if all effects are estimable
+  aov.check <- aov(data.to.aov[1,]~groupings1 + groupings2 + groupings1:groupings2)
+  if (aov.check$rank < length(aov.check$coefficients)) {
+    stop('Some effects not estimable. This is likely due to overlap in the two categories provided. Consider using AOV1way with one of the categories provided instead')
+  }
+
   aov.all <- apply(data.to.aov, 1, function(x)(summary(aov(x~groupings1 + groupings2 + groupings1:groupings2))))
 
 
   aov.results <- t(data.frame((lapply(aov.all, function(x)(unlist(x[[1]]))))))[,c(13:15,17:19)];
+
+
   colnames(aov.results) <- c(paste0("FVal-",category1),paste0("FVal-",category2),paste0("FVal-",category1,":",category2),
                              paste0("pVal-",category1),paste0("pVal-",category2),paste0("pVal-",category1,":",category2))
+
+
 
   category1.sig <- rownames(aov.results)[which(aov.results[,4] <= pthreshold)]
   category2.sig <- rownames(aov.results)[which(aov.results[,5] <= pthreshold)]
@@ -121,13 +191,14 @@ AOV2way <- function(
 
   tukey.all <- apply(data.to.aov, 1, function(x)(TukeyHSD(aov(x~groupings1 + groupings2 + groupings1:groupings2))))
 
-  tukey.pvals1 <- data.frame(Reduce(rbind, lapply(tukey.all[which(names(tukey.all) %in% category1.sig)],function(x)(x$groupings1[,4]))), row.names = names(tukey.all)[which(names(tukey.all) %in% category1.sig)]); colnames(tukey.pvals1) <- rownames(tukey.all[[1]]$groupings1) # gsub("\\.","-", colnames(tukey.pvals1))
-  tukey.pvals2 <- data.frame(Reduce(rbind, lapply(tukey.all[which(names(tukey.all) %in% category2.sig)],function(x)(x$groupings2[,4]))), row.names = names(tukey.all)[which(names(tukey.all) %in% category2.sig)]); colnames(tukey.pvals2) <- rownames(tukey.all[[1]]$groupings2) #  gsub("\\.","-", colnames(tukey.pvals2))
-  tukey.pvals3 <- data.frame(Reduce(rbind, lapply(tukey.all[which(names(tukey.all) %in% interaction.sig)],function(x)(x$`groupings1:groupings2`[,4]))), row.names = names(tukey.all)[which(names(tukey.all) %in% interaction.sig)]); colnames(tukey.pvals3) <-  rownames(tukey.all[[1]]$`groupings1:groupings2`) # gsub("\\.","-", colnames(tukey.pvals3))
+  tukey.pvals1 <- data.frame(lapply(lapply(lapply(tukey.all[which(names(tukey.all) %in% category1.sig)],function(x)(x$groupings1[,4, drop = FALSE])), as.data.frame ), tibble::rownames_to_column) %>% plyr::join_all(by = "rowname") %>% tibble::column_to_rownames("rowname") %>%  t(), row.names = names(tukey.all)[which(names(tukey.all) %in% category1.sig)]); colnames(tukey.pvals1) <- rownames(tukey.all[[1]]$groupings1) # gsub("\\.","-", colnames(tukey.pvals1))
+  tukey.pvals2 <- data.frame(lapply(lapply(lapply(tukey.all[which(names(tukey.all) %in% category2.sig)],function(x)(x$groupings2[,4, drop = FALSE])), as.data.frame ), tibble::rownames_to_column) %>% plyr::join_all(by = "rowname") %>% tibble::column_to_rownames("rowname") %>%  t(), row.names = names(tukey.all)[which(names(tukey.all) %in% category2.sig)]); colnames(tukey.pvals2) <- rownames(tukey.all[[1]]$groupings2) # gsub("\\.","-", colnames(tukey.pvals1))
+  tukey.pvals3 <- data.frame(lapply(lapply(lapply(tukey.all[which(names(tukey.all) %in% interaction.sig)],function(x)(x$`groupings1:groupings2`[,4, drop = FALSE])), as.data.frame ), tibble::rownames_to_column) %>% plyr::join_all(by = "rowname") %>% tibble::column_to_rownames("rowname") %>%  t(), row.names = names(tukey.all)[which(names(tukey.all) %in% interaction.sig)]); colnames(tukey.pvals3) <- rownames(tukey.all[[1]]$`groupings1:groupings2`) # gsub("\\.","-", colnames(tukey.pvals1))
 
-  tukey.diffs1 <- data.frame(Reduce(rbind, lapply(tukey.all[which(names(tukey.all) %in% category1.sig)],function(x)(x$groupings1[,1]))), row.names = names(tukey.all)[which(names(tukey.all) %in% category1.sig)]); colnames(tukey.diffs1) <- rownames(tukey.all[[1]]$groupings1) # gsub("\\.","-", colnames(tukey.diffs1))
-  tukey.diffs2 <- data.frame(Reduce(rbind, lapply(tukey.all[which(names(tukey.all) %in% category2.sig)],function(x)(x$groupings2[,1]))), row.names = names(tukey.all)[which(names(tukey.all) %in% category2.sig)]); colnames(tukey.diffs2) <- rownames(tukey.all[[1]]$groupings2) #  gsub("\\.","-", colnames(tukey.diffs2))
-  tukey.diffs3 <- data.frame(Reduce(rbind, lapply(tukey.all[which(names(tukey.all) %in% interaction.sig)],function(x)(x$`groupings1:groupings2`[,1]))), row.names = names(tukey.all)[which(names(tukey.all) %in% interaction.sig)]); colnames(tukey.diffs3) <-  rownames(tukey.all[[1]]$`groupings1:groupings2`) # gsub("\\.","-", colnames(tukey.diffs3))
+  tukey.diffs1 <- data.frame(lapply(lapply(lapply(tukey.all[which(names(tukey.all) %in% category1.sig)],function(x)(x$groupings1[,1, drop = FALSE])), as.data.frame ), tibble::rownames_to_column) %>% plyr::join_all(by = "rowname") %>% tibble::column_to_rownames("rowname") %>%  t(), row.names = names(tukey.all)[which(names(tukey.all) %in% category1.sig)]); colnames(tukey.diffs1) <- rownames(tukey.all[[1]]$groupings1) # gsub("\\.","-", colnames(tukey.diffs1))
+  tukey.diffs2 <- data.frame(lapply(lapply(lapply(tukey.all[which(names(tukey.all) %in% category2.sig)],function(x)(x$groupings2[,1, drop = FALSE])), as.data.frame ), tibble::rownames_to_column) %>% plyr::join_all(by = "rowname") %>% tibble::column_to_rownames("rowname") %>%  t(), row.names = names(tukey.all)[which(names(tukey.all) %in% category2.sig)]); colnames(tukey.diffs2) <- rownames(tukey.all[[1]]$groupings2) # gsub("\\.","-", colnames(tukey.diffs1))
+  tukey.diffs3 <- data.frame(lapply(lapply(lapply(tukey.all[which(names(tukey.all) %in% interaction.sig)],function(x)(x$`groupings1:groupings2`[,1, drop = FALSE])), as.data.frame ), tibble::rownames_to_column) %>% plyr::join_all(by = "rowname") %>% tibble::column_to_rownames("rowname") %>%  t(), row.names = names(tukey.all)[which(names(tukey.all) %in% interaction.sig)]); colnames(tukey.diffs3) <- rownames(tukey.all[[1]]$`groupings1:groupings2`) # gsub("\\.","-", colnames(tukey.diffs1))
+
 
   if (toupper(additional.report) == "ALL") {
     return(list('AOV.output' = aov.all,
@@ -146,7 +217,6 @@ AOV2way <- function(
                 'Interaction_Tukey.diffs' = tukey.diffs3
     ))
   }
-
 
   if (toupper(additional.report) == "AOV") {
     return(list('AOV.output' = aov.all,
@@ -205,7 +275,7 @@ myPCA <- function(
   data,
   to.pca = "samples",
   nPcs= 3,
-  color.by = "blue", ##vetor same length or in annotations, annot_cols
+  color.by = "blue", ##vector same length or in annotations, annot_cols
   custom.color.vec = FALSE,
   PCs.to.plot = c("PC1","PC2"),
   legend.position = "right",
