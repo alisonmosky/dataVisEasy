@@ -301,6 +301,8 @@ myPCA <- function(
     pca.scrs <- pcaMethods::scores(pca)
     pca.ldgs <- pcaMethods::loadings(pca)
 
+    pca.vars <- round(pca@R2 * 100, digits = 2); names(pca.vars) <- paste0("PC",1:nPcs)
+
 
 
     if (color.by %in% rownames(data) | sum(custom.color.vec != FALSE) > 0) {
@@ -311,9 +313,9 @@ myPCA <- function(
       } else{ cols <- custom.color.vec}
 
       p <- ggplot(pca.data, aes(x=eval(parse(text = PCs.to.plot[1])),y=eval(parse(text = PCs.to.plot[2])),fill=cols, Samples = Samples))+ geom_point(pch=21,color="black",size=point.size, alpha = transparency)  +
-        scale_fill_identity() +labs(x=paste(PCs.to.plot[1]), y= paste(PCs.to.plot[2])) + ggtitle(main) +
-        theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
-                           axis.text = element_text(size=25),axis.title = element_text(size=30), legend.position = legend.position)
+        scale_fill_identity() +labs(x=paste0(PCs.to.plot[1], " (", pca.vars[PCs.to.plot[1]],"%)"), y= paste0(PCs.to.plot[2], " (", pca.vars[PCs.to.plot[2]],"%)")) + ggtitle(main) +
+        theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=35),
+                           axis.text = element_text(size=20),axis.title = element_text(size=25), legend.position = legend.position)
 
     }else{
 
@@ -340,9 +342,9 @@ myPCA <- function(
 
 
       p <- ggplot(pca.data, aes(x=eval(parse(text = PCs.to.plot[1])),y=eval(parse(text = PCs.to.plot[2])),fill=cols, Samples = Samples))+ geom_point(pch=21,color="black",size=point.size, alpha = transparency)  +
-        scale_fill_manual(values=colors) +labs(x=paste(PCs.to.plot[1]), y= paste(PCs.to.plot[2]), fill=color.by) + ggtitle(main) +
-        theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
-                           axis.text = element_text(size=25),axis.title = element_text(size=30), legend.position = legend.position)
+        scale_fill_manual(values=colors) +labs(x=paste0(PCs.to.plot[1], " (", pca.vars[PCs.to.plot[1]],"%)"), y= paste0(PCs.to.plot[2], " (", pca.vars[PCs.to.plot[2]],"%)"), fill=color.by) + ggtitle(main) +
+        theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=35),
+                           axis.text = element_text(size=20),axis.title = element_text(size=25), legend.position = legend.position)
     }
   }
 
@@ -354,16 +356,16 @@ myPCA <- function(
     pca.scrs <- pcaMethods::scores(pca)
     pca.ldgs <- pcaMethods::loadings(pca)
 
-
+    pca.vars <- round(pca@R2 * 100, digits = 2); names(pca.vars) <- paste0("PC",1:nPcs)
 
     if (sum(custom.color.vec != FALSE) > 0) {
       pca.data <- data.frame(pca.scrs, Genes = rownames(data))
       cols <- custom.color.vec
 
       p <- ggplot(pca.data, aes(x=eval(parse(text = PCs.to.plot[1])),y=eval(parse(text = PCs.to.plot[2])),fill=cols, Genes = Genes))+ geom_point(pch=21,color="black",size=point.size, alpha = transparency)  +
-        scale_fill_identity() +labs(x=paste(PCs.to.plot[1]), y= paste(PCs.to.plot[2])) + ggtitle(main) +
-        theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
-                           axis.text = element_text(size=25),axis.title = element_text(size=30), legend.position = legend.position)
+        scale_fill_identity() +labs(x=paste0(PCs.to.plot[1], " (", pca.vars[PCs.to.plot[1]],"%)"), y= paste0(PCs.to.plot[2], " (", pca.vars[PCs.to.plot[2]],"%)")) + ggtitle(main) +
+        theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=35),
+                           axis.text = element_text(size=20),axis.title = element_text(size=25), legend.position = legend.position)
 
     }else{
 
@@ -389,9 +391,9 @@ myPCA <- function(
 
 
       p <- ggplot(pca.data, aes(x=eval(parse(text = PCs.to.plot[1])),y=eval(parse(text = PCs.to.plot[2])),fill=cols, Genes = Genes))+ geom_point(pch=21,color="black",size=point.size, alpha = transparency)  +
-        scale_fill_manual(values=colors) +labs(x=paste(PCs.to.plot[1]), y= paste(PCs.to.plot[2]), fill=color.by) + ggtitle(main) +
-        theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
-                           axis.text = element_text(size=25),axis.title = element_text(size=30), legend.position = legend.position)
+        scale_fill_manual(values=colors) +labs(x=paste0(PCs.to.plot[1], " (", pca.vars[PCs.to.plot[1]],"%)"), y= paste0(PCs.to.plot[2], " (", pca.vars[PCs.to.plot[2]],"%)"), fill=color.by) + ggtitle(main) +
+        theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=35),
+                           axis.text = element_text(size=20),axis.title = element_text(size=25), legend.position = legend.position)
     }
   }
   if (return.loadings == TRUE) {return(pca.ldgs)}
@@ -601,16 +603,11 @@ correlateGenes <- function(  ##broad gene correlations
 
   if(is.null(limits)==FALSE){
 
-    below <- limits[1]
-    above <- limits[2]
+    melt.data <- melt(cor.dat); colnames(melt.data) <- c("Gene1","Gene2","Correlation")
 
+    picked.cors <- melt.data %>% dplyr::filter(!is.na(Correlation)) %>% dplyr::filter(Correlation < limits[1] | Correlation > limits[2] )
 
-    picked.cors <- which((cor.dat > above & cor.dat < .99)| cor.dat < below ,arr.ind = T)
-
-    cor.genes <- as.matrix(apply(picked.cors,2,function(x)(colnames(t(data))[x])))
-    genes.and.cors <- as.data.frame(cbind(cor.genes, Correlation=cor.dat[picked.cors]))
-    colnames(genes.and.cors) <- c("Gene1","Gene2","Correlation")
-    return(genes.and.cors)
+    return(picked.cors)
   }
 }
 

@@ -44,6 +44,13 @@ scatterGenes <- function(
 
   temp.annotations <- params$annotations
 
+  if (sum(!is.na(temp.annotations)) != 0) {
+    if (sum(colnames(data) %notin% rownames(temp.annotations)) != 0 ) {
+      stop('colnames of input data do not match rownames of annotations, cannot link annotations to data')
+    }
+    temp.annotations <- temp.annotations[match(colnames(data), rownames(temp.annotations)),, drop = FALSE]
+  }
+
   dat.to.plot <- data.frame(Gene1= dat1, Gene2= dat2); dat.to.plot <- cbind(dat.to.plot, temp.annotations)
 
   if (color.by %in% rownames(data) | sum(custom.color.vec != FALSE) > 0) {
@@ -215,9 +222,10 @@ beeswarmGenes <- function( ##can save as ggplot object and add layers afterwards
     ##make dat.to.plot with identiy based colors
     if (sum(custom.group.vec != FALSE) != 0) {
       if (legend.position == "default") { legend.position <- "none"}
-      dat.to.plot <- data.frame(t(dat)); dat.to.plot <- cbind(dat.to.plot, temp.annotations); dat.to.plot$cols <- cols; dat.to.plot$Custom <- custom.group.vec
+      dat.to.plot <- data.frame(t(dat)); dat.to.plot <- cbind(dat.to.plot, temp.annotations)
+      dat.to.plot$cols <- colors; dat.to.plot$Custom <- custom.group.vec
 
-      dat.to.plot <- reshape2::melt(dat.to.plot, id.vars = c(colnames(temp.annotations),"cols", "Custom"))
+      dat.to.plot <- reshape2::melt(dat.to.plot, id.vars = c(colnames(temp.annotations),"colors", "Custom"))
       if (sum(!is.na(temp.annotations)) == 0) {
         dat.to.plot <- dat.to.plot[-which(dat.to.plot$variable == "temp.annotations"),]
       }
@@ -226,9 +234,10 @@ beeswarmGenes <- function( ##can save as ggplot object and add layers afterwards
 
       if (sum(squishy != FALSE) != 0) { dat.to.plot$value <- scales::squish(dat.to.plot$value, squishy)}  ##if we want to squish
     }else{
-      dat.to.plot <- data.frame(t(dat)); dat.to.plot <- cbind(dat.to.plot, temp.annotations); dat.to.plot$cols <- cols
+      dat.to.plot <- data.frame(t(dat)); dat.to.plot <- cbind(dat.to.plot, temp.annotations)
+      dat.to.plot$colors <- colors
 
-      dat.to.plot <- reshape2::melt(dat.to.plot, id.vars = c(colnames(temp.annotations),"cols"))
+      dat.to.plot <- reshape2::melt(dat.to.plot, id.vars = c(colnames(temp.annotations),"colors"))
       if (sum(!is.na(temp.annotations)) == 0) {
         dat.to.plot <- dat.to.plot[-which(dat.to.plot$variable == "temp.annotations"),]
       }
@@ -697,6 +706,12 @@ DensityGenes <- function(
     }
     temp.annotations <- temp.annotations[match(colnames(dat), rownames(temp.annotations)),, drop = FALSE]
 
+    if (sum(!is.na(temp.annotations)) != 0) {
+      if (sum(colnames(dat) %notin% rownames(temp.annotations)) != 0 ) {
+        stop('colnames of input data do not match rownames of annotations, cannot link annotations to data')
+      }
+      temp.annotations <- temp.annotations[match(colnames(dat), rownames(temp.annotations)),, drop = FALSE]
+    }
 
     dat.to.plot <- data.frame(t(dat)); dat.to.plot <- cbind(dat.to.plot, temp.annotations)
 
