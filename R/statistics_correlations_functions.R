@@ -19,7 +19,8 @@ AOV1way <- function(
   }
 
   ####if data is not all samples, subset annotations appropriately
-  if (sum(colnames(data.to.aov) %notin% rownames(params$annotations)) != 0 ) {
+  #if (sum(colnames(data.to.aov) %notin% rownames(params$annotations)) != 0 ) {
+  if (any(colnames(data.to.aov) %notin% rownames(params$annotations))) {
     stop('colnames of input data do not match rownames of annotations, cannot link annotations to data and assign groupings for ANOVA')}
 
   temp.annotations <- params$annotations[match(colnames(data.to.aov), rownames(params$annotations)),]
@@ -126,7 +127,8 @@ AOV2way <- function(
   }
 
   ####if data is not all samples, subset annotations appropriately
-  if (sum(colnames(data.to.aov) %notin% rownames(params$annotations)) != 0 ) {
+  # if (sum(colnames(data.to.aov) %notin% rownames(params$annotations)) != 0 ) {
+  if (any(colnames(data.to.aov) %notin% rownames(params$annotations))) {
     stop('colnames of input data do not match rownames of annotations, cannot link annotations to data and assign groupings for ANOVA')}
 
   temp.annotations <- params$annotations[match(colnames(data.to.aov), rownames(params$annotations)),]
@@ -305,7 +307,8 @@ myPCA <- function(
 
 
 
-    if (color.by %in% rownames(data) | sum(custom.color.vec != FALSE) > 0) {
+    # if (color.by %in% rownames(data) | sum(custom.color.vec != FALSE) > 0) {
+    if (color.by %in% rownames(data) | any(custom.color.vec != FALSE)) {
       pca.data <- data.frame(pca.scrs, Samples = colnames(data))
       if (color.by %in% rownames(data)) {
         genedat<- data[which(rownames(data)==color.by),]
@@ -321,8 +324,10 @@ myPCA <- function(
 
 
       if (color.by %in% colnames(temp.annotations)) {
-        if (sum(!is.na(temp.annotations)) != 0) {
-          if (sum(colnames(data) %notin% rownames(temp.annotations)) != 0 ) {
+        # if (sum(!is.na(temp.annotations)) != 0) {
+        if (any(!is.na(temp.annotations))) {
+          # if (sum(colnames(data) %notin% rownames(temp.annotations)) != 0 ) {
+          if (any(colnames(data) %notin% rownames(temp.annotations))) {
             stop('colnames of input data do not match rownames of annotations, cannot link annotations to data')}
 
           temp.annotations <- temp.annotations[match(colnames(data), rownames(temp.annotations)),, drop = FALSE]
@@ -371,8 +376,10 @@ myPCA <- function(
 
 
       if (color.by %in% colnames(temp.annotations.genes)) {
-        if (sum(!is.na(temp.annotations.genes)) != 0) {
-          if (sum(rownames(data) %notin% rownames(temp.annotations.genes)) != 0 ) {
+        # if (sum(!is.na(temp.annotations.genes)) != 0) {
+        if (any(!is.na(temp.annotations.genes))) {
+          # if (sum(rownames(data) %notin% rownames(temp.annotations.genes)) != 0 ) {
+          if (any(rownames(data) %notin% rownames(temp.annotations.genes))) {
             stop('rownames of input data do not match rownames of annotations, cannot link annotations to data')}
 
           temp.annotations.genes <- temp.annotations.genes[match(rownames(data), rownames(temp.annotations.genes)),, drop = FALSE]
@@ -438,8 +445,10 @@ PTM <- function(  #pavlidis template matching, correlation to a chosen template
       }
 
       if (match.template %in% colnames(temp.annotations)) {
-        if (sum(!is.na(temp.annotations)) != 0) {
-          if (sum(colnames(data) %notin% rownames(temp.annotations)) != 0 ) {
+        # if (sum(!is.na(temp.annotations)) != 0) {
+        if (any(!is.na(temp.annotations))) {
+          # if (sum(colnames(data) %notin% rownames(temp.annotations)) != 0 ) {
+          if (any(colnames(data) %notin% rownames(temp.annotations))) {
             stop('colnames of input data do not match rownames of annotations, cannot link annotations to data')
           }
           temp.annotations <- temp.annotations[match(colnames(data), rownames(temp.annotations)),, drop = FALSE]}
@@ -478,8 +487,10 @@ PTM <- function(  #pavlidis template matching, correlation to a chosen template
 
       if (match.template %in% colnames(temp.annotations.genes)) {
 
-        if (sum(!is.na(temp.annotations.genes)) != 0) {
-          if (sum(rownames(data) %notin% rownames(temp.annotations.genes)) != 0 ) {
+        # if (sum(!is.na(temp.annotations.genes)) != 0) {
+        if (any(!is.na(temp.annotations.genes))) {
+          # if (sum(rownames(data) %notin% rownames(temp.annotations.genes)) != 0 ) {
+          if (any(rownames(data) %notin% rownames(temp.annotations.genes))) {
             stop('rownames of input data do not match rownames of annotations, cannot link annotations to data')
           }
           temp.annotations.genes <- temp.annotations.genes[match(rownames(data), rownames(temp.annotations.genes)),, drop = FALSE]}
@@ -631,10 +642,12 @@ reportGenes <- function(  ##returns report summary of range of expression
   ##subset for list
   if (exact == TRUE) {
     list <- list
-    if (sum(list %in% rownames(data)) == 0 ) {stop('exact matches for list not found in rownames data')}
+    # if (sum(list %in% rownames(data)) == 0 ) {stop('exact matches for list not found in rownames data')}
+    if (all(list %notin% rownames(data))) {stop('exact matches for list not found in rownames data')}
   }else{
     list <- rownames(data)[grep(paste(list, collapse = "|"),rownames(data))]
-    if (sum(list %in% rownames(data)) == 0 ) {stop('inexact matches for list not found in rownames data')}
+    # if (sum(list %in% rownames(data)) == 0 ) {stop('inexact matches for list not found in rownames data')}
+    if (all(list %notin% rownames(data))) {stop('inexact matches for list not found in rownames data')}
   }
 
   report <- matrix(nrow=length(list),ncol=6)

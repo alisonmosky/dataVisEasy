@@ -31,29 +31,23 @@ scatterGenes <- function(
     warning('input data converted to matrix')
   }
 
-  if (length(custom.x) == 1 & custom.x[1] == FALSE) {
+
+  if (all(custom.x == FALSE)) {
     if (gene1 %notin% rownames(data)) {stop('gene1 not found in rownames data')}
     dat1<-data[which(rownames(data) %in% gene1),]; if (is.raw.Ct==F & na.fix!=F) {dat1[which(is.na(dat1))] <- (min(dat1, na.rm=T)-na.fix)};if (is.raw.Ct==T & na.fix!=F) {dat1[which(is.na(dat1))]<- (max(dat1, na.rm=T)+na.fix)}
   }else{dat1 <- custom.x; gene1 <- "Custom X"   }
 
-  if (length(custom.y) == 1 & custom.y[1] == FALSE) {
+
+  if (all(custom.y == FALSE)) {
     if (gene2 %notin% rownames(data)) {stop('gene2 not found in rownames data')}
     dat2<-data[which(rownames(data) %in% gene2),]; if (is.raw.Ct==F & na.fix!=F) {dat2[which(is.na(dat2))] <- (min(dat2, na.rm=T)-na.fix)};if (is.raw.Ct==T & na.fix!=F) {dat2[which(is.na(dat2))]<- (max(dat2, na.rm=T)+na.fix)}
   }else{dat2 <- custom.y; gene2 <- "Custom Y"}
 
 
-  temp.annotations <- params$annotations
+  dat.to.plot <- data.frame(Gene1= dat1, Gene2= dat2)
 
-  if (sum(!is.na(temp.annotations)) != 0) {
-    if (sum(colnames(data) %notin% rownames(temp.annotations)) != 0 ) {
-      stop('colnames of input data do not match rownames of annotations, cannot link annotations to data')
-    }
-    temp.annotations <- temp.annotations[match(colnames(data), rownames(temp.annotations)),, drop = FALSE]
-  }
 
-  dat.to.plot <- data.frame(Gene1= dat1, Gene2= dat2); dat.to.plot <- cbind(dat.to.plot, temp.annotations)
-
-  if (color.by %in% rownames(data) | sum(custom.color.vec != FALSE) > 0) {
+  if (color.by %in% rownames(data) | any(custom.color.vec != FALSE)) {
     if (legend.position == "default") { legend.position <- "none"}
     if (color.by %in% rownames(data)) {
       genedat<- data[which(rownames(data)==color.by),]
@@ -86,12 +80,20 @@ scatterGenes <- function(
 
   } else{
 
-    if (color.by %in% colnames(temp.annotations)) {
-      if (legend.position == "default") { legend.position <- "right"}
-      if (sum(colnames(data) %notin% rownames(temp.annotations)) != 0 ) {
-        stop('colnames of input data do not match rownames of annotations, cannot link annotations to data')
+    if (color.by %in% colnames(params$annotations)) {
+      temp.annotations <- params$annotations
+
+
+      if (any(!is.na(temp.annotations))) {
+        if (any(colnames(data) %notin% rownames(temp.annotations))) {
+          stop('colnames of input data do not match rownames of annotations, cannot link annotations to data')
+        }
+        temp.annotations <- temp.annotations[match(colnames(data), rownames(temp.annotations)),, drop = FALSE]
       }
-      temp.annotations <- temp.annotations[match(colnames(data), rownames(temp.annotations)),, drop = FALSE]
+
+      dat.to.plot <- cbind(dat.to.plot, temp.annotations)
+
+      if (legend.position == "default") { legend.position <- "right"}
 
       if (color.by %in% names(params$annot_cols)) {
         colors <- params$annot_cols[[which(names(params$annot_cols) == color.by)]]
@@ -195,23 +197,14 @@ beeswarmGenes <- function( ##can save as ggplot object and add layers afterwards
   if (is.raw.Ct==F & na.fix!=F) {dat[which(is.na(dat))] <- (min(dat, na.rm=T)-na.fix)};if (is.raw.Ct==T & na.fix!=F) {dat[which(is.na(dat))]<- (max(dat, na.rm=T)+na.fix)}}
 
 
-  ####if data is not all samples, subset annotations appropriately
-  temp.annotations <- params$annotations
-  #temp.annotations <- temp.annotations[match(colnames(data), rownames(temp.annotations)),, drop = FALSE]
 
-  if (sum(!is.na(temp.annotations)) != 0) {
-    if (sum(colnames(dat) %notin% rownames(temp.annotations)) != 0 ) {
-      stop('colnames of input data do not match rownames of annotations, cannot link annotations to data')
-    }
-    temp.annotations <- temp.annotations[match(colnames(dat), rownames(temp.annotations)),, drop = FALSE]
-  }
-
-  if (is.null(groupby.x) == TRUE & (color.by %in% colnames(temp.annotations)) == FALSE) { groupby.x <- FALSE}  ##if groupby.x is null and color.by is in annot_samps, will group by that annotation as well, if no override to group and no annotation to color, wont group at all, if custom group vector supplied, will get corrected downstream
+  if (is.null(groupby.x) == TRUE & (color.by %in% colnames(params$annotations)) == FALSE) { groupby.x <- FALSE}  ##if groupby.x is null and color.by is in annot_samps, will group by that annotation as well, if no override to group and no annotation to color, wont group at all, if custom group vector supplied, will get corrected downstream
 
 
   ####if coloring by gene or custom color vector, identity based
 
-  if (color.by %in% rownames(data) | sum(custom.color.vec != FALSE) > 0) {   ##if coloring by gene or by custom
+
+  if (color.by %in% rownames(data) | any(custom.color.vec != FALSE)) {   ##if coloring by gene or by custom
     if (color.by %in% rownames(data)) {
       genedat<- data[which(rownames(data)==color.by),]
       if (is.raw.Ct ==FALSE) {colors <- myColorRamp5(params$expression_gradient.colors,genedat, percent.mad = percent.mad)}
@@ -220,35 +213,51 @@ beeswarmGenes <- function( ##can save as ggplot object and add layers afterwards
     coloring <- list(color.by = color.by, colors = colors)
 
     ##make dat.to.plot with identiy based colors
-    if (sum(custom.group.vec != FALSE) != 0) {
+    if (any(custom.group.vec != FALSE)) {
       if (legend.position == "default") { legend.position <- "none"}
-      dat.to.plot <- data.frame(t(dat)); dat.to.plot <- cbind(dat.to.plot, temp.annotations)
-      dat.to.plot$cols <- colors; dat.to.plot$Custom <- custom.group.vec
+      dat.to.plot <- data.frame(t(dat))
+      dat.to.plot$colors <- colors; dat.to.plot$Custom <- custom.group.vec
 
-      dat.to.plot <- reshape2::melt(dat.to.plot, id.vars = c(colnames(temp.annotations),"colors", "Custom"))
-      if (sum(!is.na(temp.annotations)) == 0) {
-        dat.to.plot <- dat.to.plot[-which(dat.to.plot$variable == "temp.annotations"),]
-      }
+
+      dat.to.plot <- reshape2::melt(dat.to.plot, id.vars = c("colors", "Custom"))
+
 
       groupby.x <- "Custom"
 
-      if (sum(squishy != FALSE) != 0) { dat.to.plot$value <- scales::squish(dat.to.plot$value, squishy)}  ##if we want to squish
+      if (any(squishy != FALSE)) { dat.to.plot$value <- scales::squish(dat.to.plot$value, squishy)}  ##if we want to squish
     }else{
-      dat.to.plot <- data.frame(t(dat)); dat.to.plot <- cbind(dat.to.plot, temp.annotations)
+      dat.to.plot <- data.frame(t(dat))#; dat.to.plot <- cbind(dat.to.plot, temp.annotations)
       dat.to.plot$colors <- colors
 
-      dat.to.plot <- reshape2::melt(dat.to.plot, id.vars = c(colnames(temp.annotations),"colors"))
-      if (sum(!is.na(temp.annotations)) == 0) {
-        dat.to.plot <- dat.to.plot[-which(dat.to.plot$variable == "temp.annotations"),]
-      }
+      dat.to.plot <- reshape2::melt(dat.to.plot, id.vars = c("colors"))
 
-      if (sum(squishy != FALSE) != 0) { dat.to.plot$value <- scales::squish(dat.to.plot$value, squishy)}   ##if we want to squish
+      if (any(squishy != FALSE)) { dat.to.plot$value <- scales::squish(dat.to.plot$value, squishy)}   ##if we want to squish
     }  ##set dat.to.plot with identity based color vector and identity based group vector if supplied
 
 
     ####
     if ((is.null(groupby.x) == FALSE)) {  ##groupby has either been set to false by user or by previous tested condition (same as color, taken care of above)
       if (groupby.x != FALSE) {  ##set group to specification
+        if (groupby.x %in% colnames(params$annotations)) {
+          ####if data is not all samples, subset annotations appropriately
+          temp.annotations <- params$annotations
+
+          if (any(!is.na(temp.annotations))) {
+            if (any(colnames(dat) %notin% rownames(temp.annotations))) {
+              stop('colnames of input data do not match rownames of annotations, cannot link annotations to data')
+            }
+            temp.annotations <- temp.annotations[match(colnames(dat), rownames(temp.annotations)),, drop = FALSE]
+          }
+
+          dat.to.plot <- data.frame(t(dat)); dat.to.plot <- cbind(dat.to.plot, temp.annotations)
+          dat.to.plot$colors <- colors
+          dat.to.plot <- reshape2::melt(dat.to.plot, id.vars = c(colnames(temp.annotations),"colors"))
+
+          if (any(squishy != FALSE)) { dat.to.plot$value <- scales::squish(dat.to.plot$value, squishy)}   ##if we want to squish
+
+        }
+
+
         if (facet.wrap == FALSE) {
           p <- ggplot(dat.to.plot, aes(x=variable,y=value,fill=colors, group=eval(parse(text=groupby.x))))+ ggbeeswarm::geom_quasirandom(pch=21,color="black", dodge.width = dodge.width, size=point.size, alpha = transparency) +
             scale_fill_identity() +
@@ -323,30 +332,24 @@ beeswarmGenes <- function( ##can save as ggplot object and add layers afterwards
 
     ####if color.by is by an annotation, not identity based colors
 
-    ###set dat.to.plot
-    if (sum(custom.group.vec != FALSE) != 0) {
-      dat.to.plot <- data.frame(t(dat)); dat.to.plot <- cbind(dat.to.plot, temp.annotations); dat.to.plot$Custom <- custom.group.vec
 
-      dat.to.plot <- reshape2::melt(dat.to.plot, id.vars = c(colnames(temp.annotations),"Custom"))
-      if (sum(!is.na(temp.annotations)) == 0) {
-        dat.to.plot <- dat.to.plot[-which(dat.to.plot$variable == "temp.annotations"),]
+    if (any(custom.group.vec != FALSE)) {
+      groupby.x <- "Custom"}
+
+    if (color.by %in% colnames(params$annotations)) {
+
+      ####if data is not all samples, subset annotations appropriately
+      temp.annotations <- params$annotations
+
+      if (any(!is.na(temp.annotations))) {
+        if (any(colnames(dat) %notin% rownames(temp.annotations))) {
+          stop('colnames of input data do not match rownames of annotations, cannot link annotations to data')
+        }
+        temp.annotations <- temp.annotations[match(colnames(dat), rownames(temp.annotations)),, drop = FALSE]
       }
 
-      groupby.x <- "Custom"
-
-      if (sum(squishy != FALSE) != 0) { dat.to.plot$value <- scales::squish(dat.to.plot$value, squishy)}   ##if we want to squish
-    }else{
       dat.to.plot <- data.frame(t(dat)); dat.to.plot <- cbind(dat.to.plot, temp.annotations)
 
-      dat.to.plot <- reshape2::melt(dat.to.plot, id.vars = colnames(temp.annotations))
-      if (sum(!is.na(temp.annotations)) == 0) {
-        dat.to.plot <- dat.to.plot[-which(dat.to.plot$variable == "temp.annotations"),]
-      }
-
-      if (sum(squishy != FALSE) !=0 ){ dat.to.plot$value <- scales::squish(dat.to.plot$value, squishy)}   ##if we want to squish
-    }
-
-    if (color.by %in% colnames(temp.annotations)) {
       if (legend.position == "default") { legend.position <- "right"}
       if (color.by %in% names(params$annot_cols)) {
         colors <- params$annot_cols[[which(names(params$annot_cols) == color.by)]]
@@ -359,6 +362,8 @@ beeswarmGenes <- function( ##can save as ggplot object and add layers afterwards
 
       ##group by same annotations as coloring
       if ( (is.null(groupby.x) == TRUE) & (color.by %in% colnames(temp.annotations))) {
+        dat.to.plot <- reshape2::melt(dat.to.plot, id.vars = c(colnames(temp.annotations)))
+        if (any(squishy != FALSE)) { dat.to.plot$value <- scales::squish(dat.to.plot$value, squishy)}   ##if we want to squish
 
         if (facet.wrap == FALSE) {
 
@@ -412,6 +417,16 @@ beeswarmGenes <- function( ##can save as ggplot object and add layers afterwards
       if ((is.null(groupby.x) == FALSE)) {
         if (groupby.x != FALSE) {  ##group by specified grouping
 
+          if (any(custom.group.vec != FALSE)) {
+            dat.to.plot$Custom <- custom.group.vec
+            dat.to.plot <- reshape2::melt(dat.to.plot, id.vars = c(colnames(temp.annotations),"Custom"))
+          }else{
+            dat.to.plot <- reshape2::melt(dat.to.plot, id.vars = c(colnames(temp.annotations)))
+          }
+
+          if (any(squishy != FALSE)) { dat.to.plot$value <- scales::squish(dat.to.plot$value, squishy)}   ##if we want to squish
+
+
           if (facet.wrap == FALSE) {
 
             p <- ggplot(dat.to.plot, aes(x=variable,y=value,fill=eval(parse(text=color.by)), group=eval(parse(text=groupby.x))))+ ggbeeswarm::geom_quasirandom(pch=21,color="black", dodge.width = dodge.width, size=point.size, alpha = transparency) +
@@ -460,6 +475,11 @@ beeswarmGenes <- function( ##can save as ggplot object and add layers afterwards
           }
 
         }else{  ##set to false, no grouping and no faceting
+          dat.to.plot <- data.frame(t(dat))
+          dat.to.plot <- cbind(dat.to.plot, temp.annotations)
+          dat.to.plot <- reshape2::melt(dat.to.plot, id.vars = c(colnames(temp.annotations)))
+
+          if (any(squishy != FALSE)) { dat.to.plot$value <- scales::squish(dat.to.plot$value, squishy)}
 
           p <- ggplot(dat.to.plot, aes(x=variable,y=value,fill=eval(parse(text=color.by))))+ ggbeeswarm::geom_quasirandom(pch=21,color="black", size=point.size, alpha = transparency) +
             scale_fill_manual(values=colors) + labs(fill=color.by) +
@@ -488,7 +508,29 @@ beeswarmGenes <- function( ##can save as ggplot object and add layers afterwards
     } else{ coloring = list(color.by = color.by)
 
     if ((is.null(groupby.x) == FALSE)) {
+      dat.to.plot <- data.frame(t(dat))
       if (groupby.x != FALSE) {  ##group by specified grouping
+
+        if (groupby.x %in% colnames(params$annotations)) {
+          ####if data is not all samples, subset annotations appropriately
+          temp.annotations <- params$annotations
+
+          if (any(!is.na(temp.annotations))) {
+            if (any(colnames(dat) %notin% rownames(temp.annotations))) {
+              stop('colnames of input data do not match rownames of annotations, cannot link annotations to data')
+            }
+            temp.annotations <- temp.annotations[match(colnames(dat), rownames(temp.annotations)),, drop = FALSE]
+          }
+          dat.to.plot <- cbind(dat.to.plot, temp.annotations)
+          dat.to.plot <- reshape2::melt(dat.to.plot, id.vars = c(colnames(temp.annotations)))
+        }else{
+
+          dat.to.plot$Custom <- custom.group.vec
+
+          dat.to.plot <- reshape2::melt(dat.to.plot, id.vars = c("Custom"))
+        }
+
+        if (any(squishy != FALSE)) { dat.to.plot$value <- scales::squish(dat.to.plot$value, squishy)}   ##if we want to squish
 
         if (facet.wrap == FALSE) {
 
@@ -535,6 +577,9 @@ beeswarmGenes <- function( ##can save as ggplot object and add layers afterwards
         }
 
       }else{  ##set to false, no grouping and no faceting
+        suppressMessages( dat.to.plot <- reshape2::melt(dat.to.plot) )
+        if (any(squishy != FALSE)) { dat.to.plot$value <- scales::squish(dat.to.plot$value, squishy)}   ##if we want to squish
+
 
         p <- ggplot(dat.to.plot, aes(x=variable,y=value))+ ggbeeswarm::geom_quasirandom(pch=21,color="black", fill = color.by, size=point.size, alpha = transparency) +
           theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
@@ -601,7 +646,8 @@ volcano <- function(
 
   if (groups %in% colnames(temp.annotations)) {
 
-    if (sum(colnames(data) %notin% rownames(temp.annotations)) != 0 ) {
+    # if (sum(colnames(data) %notin% rownames(temp.annotations)) != 0 ) {
+    if (any(colnames(data) %notin% rownames(temp.annotations))) {
       stop('colnames of input data do not match rownames of annotations, cannot link annotations to data')
     }
     temp.annotations <- temp.annotations[match(colnames(data), rownames(temp.annotations)),, drop = FALSE]
@@ -696,22 +742,18 @@ DensityGenes <- function(
   if (is.raw.Ct==F & na.fix!=F) {dat[which(is.na(dat))] <- (min(dat, na.rm=T)-na.fix)};if (is.raw.Ct==T & na.fix!=F) {dat[which(is.na(dat))]<- (max(dat, na.rm=T)+na.fix)}}
 
 
-  temp.annotations <- params$annotations
 
-  if (color.by %in% colnames(temp.annotations)) {
+
+  if (color.by %in% colnames(params$annotations)) {
+    temp.annotations <- params$annotations
+
     if (legend.position == "default") { legend.position <- "right"}
 
-    if (sum(colnames(dat) %notin% rownames(temp.annotations)) != 0 ) {
+    if (any(colnames(dat) %notin% rownames(temp.annotations))) {
       stop('colnames of input data do not match rownames of annotations, cannot link annotations to data')
     }
     temp.annotations <- temp.annotations[match(colnames(dat), rownames(temp.annotations)),, drop = FALSE]
 
-    if (sum(!is.na(temp.annotations)) != 0) {
-      if (sum(colnames(dat) %notin% rownames(temp.annotations)) != 0 ) {
-        stop('colnames of input data do not match rownames of annotations, cannot link annotations to data')
-      }
-      temp.annotations <- temp.annotations[match(colnames(dat), rownames(temp.annotations)),, drop = FALSE]
-    }
 
     dat.to.plot <- data.frame(t(dat)); dat.to.plot <- cbind(dat.to.plot, temp.annotations)
 
@@ -757,12 +799,9 @@ DensityGenes <- function(
     }
   } else{ coloring <- list(color.by = color.by)
 
-  dat.to.plot <- data.frame(t(dat)); dat.to.plot <- cbind(dat.to.plot, temp.annotations)
+  dat.to.plot <- data.frame(t(dat))
 
-  dat.to.plot <- reshape2::melt(dat.to.plot, id.vars = colnames(temp.annotations))
-  if (sum(!is.na(temp.annotations)) == 0) {
-    dat.to.plot <- dat.to.plot[-which(dat.to.plot$variable == "temp.annotations"),]
-  }
+  dat.to.plot <- suppressMessages( reshape2::melt(dat.to.plot) )
 
   p <- ggplot(dat.to.plot, aes(x=value))+ geom_density(alpha = transparency, fill = color.by) + facet_wrap(~variable, ncol=ncols, scales=scales) +
     theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
