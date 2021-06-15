@@ -11,14 +11,15 @@ Creates a heatmap of supplied expression data with options to subset for specifi
 myHeatmapByAnnotation(data, list = NULL, exact = TRUE, groupings, groupings.gaps = NULL,
   groupings.genes = FALSE, groupings.genes.gaps = NULL, method = "pearson",
   linkage = "complete", NA.handling = "pairwise.complete.obs", clust.rows = TRUE,
-  clust.cols = TRUE, row.groups = NA, col.groups = NA, gaps.row = TRUE,
-  gaps.row.spec = NULL, gaps.col = TRUE, gaps.col.spec = NULL, gap.width = 1, main = NULL,
-  order.by.gene = NULL, order.by.sample = NULL, fontsize.row = 10, fontsize.col = 10,
-  show.rownames = T, show.colnames = F, treeheight.row = 20, treeheight.col = 20,
-  cell.width = NA, cell.height = NA, hide.plot = FALSE, na.fix = FALSE, na.offset = 2,
-  is.raw.Ct = FALSE, show.legend = TRUE, show.annotations = TRUE,
-  drop.annot.levels = TRUE,  annotation.names.row = TRUE, annotation.names.col = TRUE,
-  border.color = NA, na.color = "grey90")
+  clust.cols = TRUE, scale.rows = FALSE, row.groups = NA, col.groups = NA,
+  gaps.row = TRUE, gaps.row.spec = NULL, gaps.col = TRUE, gaps.col.spec = NULL,
+  gap.width = 1, main = NULL, order.by.gene = NULL, order.by.sample = NULL,
+  fontsize.row = 10, fontsize.col = 10, show.rownames = T, show.colnames = F,
+  treeheight.row = 20, treeheight.col = 20, cell.width = NA, cell.height = NA,
+  hide.plot = FALSE, na.fix = FALSE, na.offset = 2, is.raw.Ct = FALSE,
+  show.legend = TRUE, show.annotations = TRUE, drop.annot.levels = TRUE,
+  annotation.names.row = TRUE, annotation.names.col = TRUE,border.color = NA,
+  na.color = "grey90")
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -57,6 +58,9 @@ should rows be clustered, default = TRUE. When TRUE, rows will be clustered with
 }
   \item{clust.cols}{
 should columns be clustered, default = TRUE. When TRUE, columns will be clustered within each annotation
+}
+  \item{scale.rows}{
+whether or not the rows should be scaled. Default is not to scale rows with options to median center, "median", or zscore, "zscore". Regardless of method used, the range of the heatmap will still be linked to the range indicated in the params list object.
 }
   \item{row.groups}{
 numeric to be passed to cutree(). Will split the dendrogram into the number of groups indicated. Only usable if groupings.genes is not provided

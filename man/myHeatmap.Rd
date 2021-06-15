@@ -9,14 +9,15 @@ Creates a heatmap of supplied expression data with options to subset for specifi
 }
 \usage{
 myHeatmap(data, list = NULL, exact = TRUE, method = "pearson", linkage = "complete",
-  NA.handling = "pairwise.complete.obs", clust.rows = T, clust.cols = T, row.groups = NA,
-  col.groups = NA, gaps.row = NULL, gaps.col = NULL, gap.width = 1, main = NULL,
-  order.by.gene = NULL, order.by.sample = NULL, cell.width = NA, cell.height = NA,
-  fontsize.row = 10, fontsize.col = 10, show.rownames = T, show.colnames = F,
-  treeheight.row = 20, treeheight.col = 20, hide.plot = FALSE, na.fix = FALSE,
-  na.offset = 2, show.legend = TRUE, show.annotations = TRUE, is.raw.Ct = FALSE,
-  drop.annot.levels = TRUE, annotation.names.row = TRUE, annotation.names.col = TRUE,
-  border.color = NA, na.color = "grey90")
+  NA.handling = "pairwise.complete.obs", clust.rows = TRUE, clust.cols = TRUE,
+  scale.rows = FALSE, row.groups = NA, col.groups = NA, gaps.row = NULL, gaps.col = NULL,
+  gap.width = 1, main = NULL, order.by.gene = NULL, order.by.sample = NULL,
+  cell.width = NA, cell.height = NA, fontsize.row = 10, fontsize.col = 10,
+  show.rownames = TRUE, show.colnames = FALSE, treeheight.row = 20, treeheight.col = 20,
+  hide.plot = FALSE, na.fix = FALSE, na.offset = 2, show.legend = TRUE,
+  show.annotations = TRUE, is.raw.Ct = FALSE, drop.annot.levels = TRUE,
+  annotation.names.row = TRUE, annotation.names.col = TRUE, border.color = NA,
+  na.color = "grey90")
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -43,6 +44,9 @@ should rows be clustered, default = TRUE
 }
   \item{clust.cols}{
 should columns be clustered, default = TRUE
+}
+  \item{scale.rows}{
+whether or not the rows should be scaled. Default is not to scale rows with options to median center, "median", or zscore, "zscore". Regardless of method used, the range of the heatmap will still be linked to the range indicated in the params list object.
 }
   \item{row.groups}{
 numeric to be passed to cutree(). Will split the dendrogram into the number of groups indicated

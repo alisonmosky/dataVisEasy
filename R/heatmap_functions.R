@@ -3,6 +3,7 @@
 #' @import pheatmap
 #' @importFrom scales squish
 #' @importFrom tibble column_to_rownames rownames_to_column remove_rownames
+#' @importFrom stats sd
 #' @export
 myHeatmap <- function(  ##basic heatmap, can subset for gene list
   data,  ##this will be a matrix of values, with genes in the rows and samples in the columns
@@ -11,8 +12,9 @@ myHeatmap <- function(  ##basic heatmap, can subset for gene list
   method = "pearson",   ##clustering and correlating method, default of pearson, can be switched to spearman
   linkage = "complete",   ##linkage method, defulat complete linkage, can be changed
   NA.handling = "pairwise.complete.obs",   ##use for correlations, can be overwritten
-  clust.rows = T, ##default for clustering rows, can be overwritten if error
-  clust.cols = T, ##same as clust.cols but for cols
+  clust.rows = TRUE, ##default for clustering rows, can be overwritten if error
+  clust.cols = TRUE, ##same as clust.cols but for cols
+  scale.rows = FALSE, ## option to zscore or median center rows
   row.groups = NA, ##number of groups to break the rows into based on dendrogram, can be overwritten
   col.groups = NA, ##same as col.groups but for cols, can be overwritten
   gaps.row = NULL, ##list of where to cut the rows if they're not clustered
@@ -25,8 +27,8 @@ myHeatmap <- function(  ##basic heatmap, can subset for gene list
   cell.height = NA,
   fontsize.row = 10,
   fontsize.col = 10,
-  show.rownames=T,
-  show.colnames=F,
+  show.rownames=TRUE,
+  show.colnames=FALSE,
   treeheight.row=20,
   treeheight.col=20,
   hide.plot=FALSE,
@@ -47,9 +49,21 @@ myHeatmap <- function(  ##basic heatmap, can subset for gene list
     warning('input data converted to matrix')
   }
 
-  if (is.null(main)==TRUE){
-    main <- paste("Genes of Interest:",paste(list, collapse = ","))
-    main <- paste(main,"\n Method:",method," Linkage:",linkage)}
+
+  if (scale.rows != FALSE) {
+    if (scale.rows %notin% c("median","zscore")) {stop('accetable methods for row scaling are "median" and "zscore"')
+    }else{
+      if (scale.rows == "zscore") {
+        m <- apply(data, 1, mean, na.rm = T)
+        s <- apply(data, 1, sd, na.rm = T)
+        data <- ((data - m) / s)
+      }
+      if (scale.rows == "median") {
+        data <- t(apply(data,1,function(x)(x-median(x, na.rm = T))))
+      }
+     }
+  }
+
 
   if (is.null(list) == TRUE) {list <- rownames(data)}
 
@@ -84,17 +98,17 @@ myHeatmap <- function(  ##basic heatmap, can subset for gene list
   if (is.null(order.by.gene)==FALSE){
     if(is.raw.Ct==FALSE){subset <- subset[,order(data[which(rownames(data) %in% order.by.gene),],na.last = F)]}
     if(is.raw.Ct==TRUE){subset <- subset[,order(data[which(rownames(data) %in% order.by.gene),],na.last = T)]}
-    clust.cols <- F
+    clust.cols <- FALSE
   }
 
   if (is.null(order.by.sample)==FALSE){
     if(is.raw.Ct==FALSE){subset <- subset[order(subset[,which(colnames(subset) %in% order.by.sample)],na.last = F),]}
     if(is.raw.Ct==TRUE){subset <- subset[order(subset[,which(colnames(subset) %in% order.by.sample)],na.last = T),]}
-    clust.rows <- F
+    clust.rows <- FALSE
   }
 
-  if(clust.rows==T){heightrow <- treeheight.row}
-  if(clust.cols==T){heightcol <- treeheight.col}
+  if(clust.rows==TRUE){heightrow <- treeheight.row}
+  if(clust.cols==TRUE){heightcol <- treeheight.col}
 
   subset1 <- subset
   subset <- scales::squish(subset,params$scale.range)
@@ -176,22 +190,25 @@ myHeatmap <- function(  ##basic heatmap, can subset for gene list
 
 
 
-  if (clust.cols == T) {
-    tryclustcols <- try(hclust(clust.samps, linkage), silent = T)
+  if (clust.cols == TRUE) {
+    tryclustcols <- try(hclust(clust.samps, linkage), silent = TRUE)
     if (class(tryclustcols) == "try-error") {stop('cannot cluster columns, if too many NAs present, set na.fix = T to treat NA values as low expression instead of missing, otherwise set clust.cols = F or specify order.by.gene')}
   }else{
     if (is.null(gaps.col) == FALSE) {gaps.col <- sort(rep(gaps.col, gap.width))
     }
   }
 
-  if (clust.rows == T) {
-    tryclustrows <- try(hclust(clust.genes, linkage), silent = T)
+  if (clust.rows == TRUE) {
+    tryclustrows <- try(hclust(clust.genes, linkage), silent = TRUE)
     if (class(tryclustrows) == "try-error") {stop('cannot cluster rows, if too many NAs present, set na.fix = T to treat NA values as low expression instead of missing, otherwise set clust.rows = F or specify order.by.sample')}
   }else{
     if (is.null(gaps.row) == FALSE) {gaps.row <- sort(rep(gaps.row, gap.width))
     }
   }
 
+  if (is.null(main)==TRUE){
+    main <- paste("Genes of Interest:",paste(list, collapse = ","))
+    main <- paste(main,"\n Method:",method," Linkage:",linkage)}
 
 
   pheatmap(subset,col=my_cols, breaks=breaks, border_color = border.color, na_col = na.color, clustering_method=linkage,annotation_col=temp.annot_samps, annotation_colors = temp.annot_cols,
@@ -221,6 +238,7 @@ myHeatmapByAnnotation <- function(
   NA.handling = "pairwise.complete.obs",   ##use for correlations, can be overwritten
   clust.rows = TRUE, ##default for clustering rows, can be overwritten if error
   clust.cols = TRUE, ##same as clust.cols but for cols
+  scale.rows = FALSE, ## option to zscore or median center rows
   row.groups = NA, ##number of groups to break the rows into based on dendrogram, can be overwritten
   col.groups = NA, ##same as col.groups but for cols, can be overwritten
   gaps.row = TRUE, ##list of where to cut the rows if they're not clustered
@@ -257,9 +275,21 @@ myHeatmapByAnnotation <- function(
     warning('input data converted to matrix')
   }
 
-  if (is.null(main)==TRUE){
-    main <- paste("Genes of Interest:",paste(list, collapse = ","))
-    main <- paste(main,"\n Method:",method," Linkage:",linkage)}
+
+  if (scale.rows != FALSE) {
+    if (scale.rows %notin% c("median","zscore")) {stop('accetable methods for row scaling are "median" and "zscore"')
+    }else{
+      if (scale.rows == "zscore") {
+        m <- apply(data, 1, mean, na.rm = T)
+        s <- apply(data, 1, sd, na.rm = T)
+        data <- ((data - m) / s)
+      }
+      if (scale.rows == "median") {
+        data <- t(apply(data,1,function(x)(x-median(x, na.rm = T))))
+      }
+    }
+  }
+
 
   if (is.null(list) == TRUE) {list <- rownames(data)}
 
@@ -702,6 +732,9 @@ myHeatmapByAnnotation <- function(
     if (class(tryclustrows) == "try-error") {stop('cannot cluster rows, if too many NAs present, set na.fix = T to treat NA values as low expression instead of missing, otherwise set clust.rows = F or specify order.by.sample')}
   }
 
+  if (is.null(main)==TRUE){
+    main <- paste("Genes of Interest:",paste(list, collapse = ","))
+    main <- paste(main,"\n Method:",method," Linkage:",linkage)}
 
   pheatmap(data.subset,col=my_cols, breaks=breaks, border_color = border.color, na_col = na.color, clustering_method=linkage,annotation_col=temp.annot_samps, annotation_colors = temp.annot_cols,
            clustering_distance_rows = clust.genes, clustering_distance_cols = clust.samps, main=main,

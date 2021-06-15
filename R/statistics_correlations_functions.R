@@ -175,7 +175,7 @@ AOV2way <- function(
   aov.all <- apply(data.to.aov, 1, function(x)(summary(aov(x~groupings1 + groupings2 + groupings1:groupings2))))
 
 
-  aov.results <- t(data.frame((lapply(aov.all, function(x)(unlist(x[[1]]))))))[,c(13:15,17:19)];
+  aov.results <- t(data.frame((lapply(aov.all, function(x)(unlist(x[[1]]))))))[,c(13:15,17:19)];rownames(aov.results) <- names(aov.all)
 
 
   colnames(aov.results) <- c(paste0("FVal-",category1),paste0("FVal-",category2),paste0("FVal-",category1,":",category2),
