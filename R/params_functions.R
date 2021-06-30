@@ -30,7 +30,7 @@ set_scale.range <- function(range){
 
 
 #' @export
-set_scale.colors <- function(colors){#unlockBinding("params", env = as.environment("package:dataVisEasy"));
+set_scale.colors <- function(colors){
   params$scale.colors <<- colors}
 
 
@@ -42,8 +42,6 @@ set_n.colors.range <- function(n){params$n.colors.range <<- n}
 
 #' @export
 set_annotations <- function(annotations){
-  # params$annotations <<- annotations
-  # if (sum(is.na(annotations) != 0)) {
   if (any(is.na(annotations))) {
     if ( (length(annotations) == 1) & (is.null(nrow(annotations)) == TRUE) ) {
       params$annotations <<- NA
@@ -69,7 +67,6 @@ update_annotations <- function(   ###should make an option to full join if stuff
 ){
   temp.annotations <- params$annotations
 
-  # if (sum(annotation %in% colnames(temp.annotations)) > 0) {   ##if being updated, removes prior instance and will be added back in below
   if (any(annotation %in% colnames(temp.annotations))) {   ##if being updated, removes prior instance and will be added back in below
     temp.annotations <- temp.annotations[,-which(colnames(temp.annotations) %in% annotation)]}
 
@@ -97,10 +94,8 @@ update_annotations <- function(   ###should make an option to full join if stuff
     suppressMessages(temp.annotations <- dplyr::full_join(temp.annotations, new.cols) %>% tibble::column_to_rownames("RowNames"))
   }
 
-  # if (sum(is.na(temp.annotations)) != 0) {
   if (any(is.na(temp.annotations))) {
     for (i in 1:ncol(temp.annotations)) {
-      # if (sum(is.na(temp.annotations[,i])) != 0 ) {
       if (any(is.na(temp.annotations[,i]))) {
         if (class(temp.annotations[,i]) == "factor") {
           levs <- levels(temp.annotations[,i])
@@ -127,7 +122,6 @@ update_annotations <- function(   ###should make an option to full join if stuff
 set_annot_samps <- function(annotations= NULL){
   if (is.null(annotations) == TRUE) { params$annot_samps <<- params$annotations
   }else{
-    # if (sum(!is.na(annotations)) == 0)  { params$annot_samps <<- NA
     if (all(is.na(annotations)))  { params$annot_samps <<- NA
     }else{
       if (sum(annotations %in% colnames(params$annotations)) != length(annotations)) {
@@ -144,8 +138,6 @@ set_annot_samps <- function(annotations= NULL){
 #' @export
 set_annotations.genes <- function(annotations.genes){
 
-  # params$annotations.genes <<- annotations.genes
-  # if (sum(is.na(annotations.genes) != 0)) {
   if (any(is.na(annotations.genes))) {
     if ( (length(annotations.genes) == 1) & (is.null(nrow(annotations.genes)) == TRUE) ) {
       params$annotations.genes <<- NA
@@ -172,7 +164,6 @@ update_annotations.genes <- function(   ###should make an option to full join if
 ){
   temp.annotations.genes <- params$annotations.genes
 
-  # if (sum(annotation %in% colnames(temp.annotations.genes)) > 0) {   ##if being updated, removes prior instance and will be added back in below
   if (any(annotation %in% colnames(temp.annotations.genes))) {   ##if being updated, removes prior instance and will be added back in below
     temp.annotations.genes <- temp.annotations.genes[,-which(colnames(temp.annotations.genes) %in% annotation)]}
 
@@ -200,10 +191,9 @@ update_annotations.genes <- function(   ###should make an option to full join if
     suppressMessages(temp.annotations.genes <- dplyr::full_join(temp.annotations.genes, new.cols) %>% tibble::column_to_rownames("RowNames"))
   }
 
-  # if (sum(is.na(temp.annotations.genes)) != 0) {
+
   if (any(is.na(temp.annotations.genes))) {
     for (i in 1:ncol(temp.annotations.genes)) {
-      # if (sum(is.na(temp.annotations.genes[,i])) != 0 ) {
       if (any(is.na(temp.annotations.genes[,i]))) {
         if (class(temp.annotations.genes[,i]) == "factor") {
           levs <- levels(temp.annotations.genes[,i])
@@ -217,9 +207,6 @@ update_annotations.genes <- function(   ###should make an option to full join if
         }
       }
     }
-
-    # temp.annotations.genes[is.na(temp.annotations.genes)] <- "No_Annot"
-    # warning('NAs present in updated annotations, converted to "No_Annot" for functionality purposes')
   }
 
   params$annotations.genes <<- temp.annotations.genes
@@ -233,7 +220,6 @@ update_annotations.genes <- function(   ###should make an option to full join if
 set_annot_genes <- function(annotations = NULL){
   if (is.null(annotations) == TRUE) { params$annot_genes <<- params$annotations.genes
   }else{
-    # if ( sum(!is.na(annotations)) == 0 ) { (params$annot_genes <<- NA)
     if (all(is.na(annotations))) { (params$annot_genes <<- NA)
     }else{
       if (sum(annotations %in% colnames(params$annotations.genes)) != length(annotations)) {
@@ -253,7 +239,6 @@ set_annot_genes <- function(annotations = NULL){
 #' @export
 set_annot_cols <- function(annot_cols){
   params$annot_cols <<- annot_cols
-  # if (  sum(!is.na(annot_cols)) == 0) { params$annot_cols <<- NA}
   if (all(is.na(annot_cols))) { params$annot_cols <<- NA}
 }
 
@@ -270,7 +255,6 @@ update_annot_cols <- function(  ##right now must be one at a time
   if (annotation %in% names(temp.annot_cols)) {   ##if being updated, removes prior instance and will be added back in below
     temp.annot_cols <- temp.annot_cols[-which(names(temp.annot_cols) %in% annotation)]}
 
-  # if (sum(is.na(values.list)) == 0) {
   if (all(!is.na(values.list))) {
     temp.annot_cols$V1 <- values.list
     names(temp.annot_cols)[names(temp.annot_cols)=="V1"] <- annotation

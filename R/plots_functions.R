@@ -305,7 +305,7 @@ beeswarmGenes <- function( ##can save as ggplot object and add layers afterwards
       }else{ ##no groupings, and no facet
 
         p <- ggplot(dat.to.plot, aes(x=variable,y=value,fill=colors))+ ggbeeswarm::geom_quasirandom(pch=21,color="black", size=point.size) +
-          scale_fill_identity() + #ggtitle(paste(list)) +
+          scale_fill_identity() +
           theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
                              strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = legend.position,
                              axis.title.y = element_text(size=20), axis.title.x=element_blank(), axis.text.x = element_text(size=axis.text.x.size))
@@ -646,7 +646,6 @@ volcano <- function(
 
   if (groups %in% colnames(temp.annotations)) {
 
-    # if (sum(colnames(data) %notin% rownames(temp.annotations)) != 0 ) {
     if (any(colnames(data) %notin% rownames(temp.annotations))) {
       stop('colnames of input data do not match rownames of annotations, cannot link annotations to data')
     }
@@ -693,13 +692,13 @@ volcano <- function(
     mat <- cbind(mat, My.Genes)
   }
 
-  p <- ggplot(mat,aes(x=LFC, y=-log10(pvals), col=Color, Gene = Gene)) + geom_point(size=point.size, alpha = transparency) +
+  p <- ggplot(mat,aes(x=LFC, y=-log10(pvals), col=Color)) + geom_point(size=point.size, alpha = transparency) +
     theme(panel.grid = element_blank(), panel.background = element_rect(fill="white"), panel.border = element_rect(color = "black", fill=NA), strip.background = element_blank(),
           strip.text = element_text(size=25), axis.text.x = element_text(size=15), axis.text.y = element_text(size=15), axis.title = element_text(size=20), plot.title = element_text(size=15, hjust = 0.5), legend.position = legend.position) +
     xlab("Log2 Fold Change") + ylab("-log10(Pvalue)") + scale_color_manual(name = paste(paste0("FC.cut = ", FC.cut), paste0("Pval.cut = ", pval.cut), sep="\n"), values=c("Downregulated"=downreg.color,"Upregulated"=upreg.color,"No Sig"=nosig.color)) +
     ggtitle(paste("-log10(pvalue) vs. log2(Fold Change) for",levels[2],"over",levels[1]))
 
-  call <- 'ggplot(input_data,aes(x=LFC, y=-log10(pvals), col=Color, Gene = Gene)) + geom_point(size=point.size, alpha = transparency) +
+  call <- 'ggplot(input_data,aes(x=LFC, y=-log10(pvals), col=Color)) + geom_point(size=point.size, alpha = transparency) +
     theme(panel.grid = element_blank(), panel.background = element_rect(fill="white"), panel.border = element_rect(color = "black", fill=NA), strip.background = element_blank(),
           strip.text = element_text(size=25), axis.text.x = element_text(size=15), axis.text.y = element_text(size=15), axis.title = element_text(size=20), plot.title = element_text(size=15, hjust = 0.5), legend.position = legend.position) +
     xlab("Log2 Fold Change") + ylab("-log10(Pvalue)") + scale_color_manual(name = paste(paste0("FC.cut = ", FC.cut), paste0("Pval.cut = ", pval.cut), sep="\n"), values=c("Downregulated"=downreg.color,"Upregulated"=upreg.color,"No Sig"=nosig.color)) +

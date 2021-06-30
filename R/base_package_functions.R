@@ -58,7 +58,6 @@ subsetSamples <- function(  ##subset samples out of matrix based on metadata gro
 
   if (group %in% colnames(temp.annotations)) {
 
-    # if (sum(colnames(data) %notin% rownames(temp.annotations)) != 0 ) {
     if (any(colnames(data) %notin% rownames(temp.annotations))) {
       stop('colnames of input data do not match rownames of annotations, cannot link annotations to data')
     }

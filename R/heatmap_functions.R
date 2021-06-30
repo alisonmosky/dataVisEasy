@@ -129,12 +129,10 @@ myHeatmap <- function(  ##basic heatmap, can subset for gene list
     }
   }
 
-  # if (sum( rownames(params$annot_samps) %in% colnames(subset)) != 0 ) {
   if (any( rownames(params$annot_samps) %in% colnames(subset))) {
     temp.annot_samps <- params$annot_samps
   }else{ temp.annot_samps <- NA}
 
-  # if (sum( rownames(params$annot_genes) %in% rownames(subset)) != 0 ) {
   if (any( rownames(params$annot_genes) %in% rownames(subset))) {
     temp.annot_genes <- params$annot_genes
   }else{ temp.annot_genes <- NA}
@@ -142,7 +140,6 @@ myHeatmap <- function(  ##basic heatmap, can subset for gene list
   temp.annot_cols <- params$annot_cols
 
   if (drop.annot.levels == TRUE) {
-    # if (sum(!is.na(temp.annot_samps)) != 0) {
     if (any(!is.na(temp.annot_samps))) {
       temp.annot_samps[] <- lapply(temp.annot_samps, as.factor)
       #subset annot_samps and genes for subset so that annotations will be dropped in heatmap
@@ -163,7 +160,6 @@ myHeatmap <- function(  ##basic heatmap, can subset for gene list
     }
 
 
-    # if (sum(!is.na(temp.annot_genes)) != 0) {
     if (any(!is.na(temp.annot_genes))) {
       temp.annot_genes[] <- lapply(temp.annot_genes, as.factor)
       #subset annot_samps and genes for subset so that annotations will be dropped in heatmap
@@ -175,12 +171,10 @@ myHeatmap <- function(  ##basic heatmap, can subset for gene list
       if (length(spec.cols) != 0) {
         for (annot.i in 1:length(spec.cols)) {
           annot <- spec.cols[annot.i]
-          #if (length(which(names(temp.annot_cols)==annot)) != 0) {
           temp.annot_cols[[which(names(temp.annot_cols)==annot)]] <- temp.annot_cols[[which(names(temp.annot_cols)==annot)]][which(   names(temp.annot_cols[[which(names(temp.annot_cols)==annot)]])   %in%   levels(temp.annot_genes[,which(colnames(temp.annot_genes)==annot)])  )]
           if ( sum( levels(temp.annot_genes[,annot]) %in% names(temp.annot_cols[[which(names(temp.annot_cols)==annot)]])  ) != length(levels(temp.annot_genes[,annot]))) {
             temp.annot_cols[[which(names(temp.annot_cols)==annot)]][c(levels(temp.annot_genes[,annot])[levels(temp.annot_genes[,annot]) %notin% names(temp.annot_cols[[which(names(temp.annot_cols)==annot)]])])] <- "white"
           }
-          #}
         }
       }
     }
@@ -297,27 +291,22 @@ myHeatmapByAnnotation <- function(
   if (exact == TRUE) {
     data.subset <- as.matrix(data[which(rownames(data) %in% list),]);colnames(data.subset) <- colnames(data)
     if (length(data.subset) == 0 ) {stop('exact matches for list not found in rownames data')}
-    #if (groupings.genes[which(!is.na(groupings.genes))[1]] != FALSE) {groupings.genes <- droplevels(groupings.genes[which(rownames(data) %in% list)])}
 
   }else{
     data.subset <- as.matrix(data[grep(paste(list, collapse = "|"),rownames(data)),]); colnames(data.subset) <- colnames(data)
     if (length(data.subset) == 0 ) {stop('exact matches for list not found in rownames data')}
-    #if (groupings.genes[which(!is.na(groupings.genes))[1]] != FALSE ) {groupings.genes <- droplevels(groupings.genes[grep(paste(list, collapse = "|"), rownames(data))]) }
+
   }
 
 
   ####new code to order annotations if not in order or if extra etc####
-  # if (sum(!is.na(params$annotations)) != 0) {
   if (any(!is.na(params$annotations))) {
-    # if (sum(colnames(data.subset) %notin% rownames(params$annotations)) != 0 ) {
     if (any(colnames(data.subset) %notin% rownames(params$annotations))) {
       warning('colnames of input data do not match rownames of annotations, cannot link annotations to data')
     }
     temp.annotations <- params$annotations[match(colnames(data.subset), rownames(params$annotations)),, drop = FALSE]
   }
-  # if (sum(!is.na(params$annotations.genes)) != 0) {
   if (any(!is.na(params$annotations.genes))) {
-    # if (sum(rownames(data.subset) %notin% rownames(params$annotations.genes)) != 0 ) {
     if (any(rownames(data.subset) %notin% rownames(params$annotations.genes))) {
       warning('rownames of input data do not match rownames of annotations.genes, cannot link annotations to data')
     }
@@ -330,13 +319,11 @@ myHeatmapByAnnotation <- function(
   }
 
   if (class(groupings) =="character"){
-    # if ( sum(groupings %notin% colnames(temp.annotations)) != 0) {
     if ( any(groupings %notin% colnames(temp.annotations))) {
       stop('supplied character vector for groupings not found in sample annotations')}
     factorgroupings <- makefactorgroup(temp.annotations, groupings, specify.gaps = groupings.gaps, return.gaps = TRUE)
     groupings <- factorgroupings$factor.group
     gaps.groupings <- c(factorgroupings$gaps)
-    # if (sum(is.na(groupings) != 0 )) {
     if (any(is.na(groupings))) {
       levs <- levels(groupings)
       groupings <- as.character(groupings); groupings[is.na(groupings)] <- "No_Annot"
@@ -345,7 +332,6 @@ myHeatmapByAnnotation <- function(
     if (class(groupings) == "data.frame") {
       ##order groupings by order of subset
       groupings <- droplevels(groupings[match(colnames(data.subset), rownames(groupings)),1]) %>% as.factor()
-      # if (sum(is.na(groupings) != 0 )) {
       if (any(is.na(groupings))) {
         levs <- levels(groupings)
         groupings <- as.character(groupings); groupings[is.na(groupings)] <- "No_Annot"
@@ -354,7 +340,6 @@ myHeatmapByAnnotation <- function(
     if (class(groupings) == "factor"){
       if (is.null(names(groupings))==FALSE) {
         groupings <- droplevels(groupings[match(colnames(data.subset), names(groupings))]) %>% as.factor()
-        # if (sum(is.na(groupings) != 0 )) {
         if (any(is.na(groupings))) {
           levs <- levels(groupings)
           groupings <- as.character(groupings); groupings[is.na(groupings)] <- "No_Annot"
@@ -370,13 +355,11 @@ myHeatmapByAnnotation <- function(
 
 
   if (class(groupings.genes) =="character") {
-    # if (sum(groupings.genes %notin% colnames(temp.annotations.genes)) != 0) {
     if (any(groupings.genes %notin% colnames(temp.annotations.genes))) {
       stop('supplied character vector for groupings.genes not found in gene annotations')}
     factorgroupings.genes <- makefactorgroup(temp.annotations.genes, groupings.genes, specify.gaps = groupings.genes.gaps, return.gaps = TRUE)
     groupings.genes <- factorgroupings.genes$factor.group
     gaps.groupings.genes <- c(factorgroupings.genes$gaps)
-    # if (sum(is.na(groupings.genes) != 0 )) {
     if (any(is.na(groupings.genes))) {
       levs <- levels(groupings.genes)
       groupings.genes <- as.character(groupings.genes); groupings.genes[is.na(groupings.genes)] <- "No_Annot"
@@ -385,7 +368,6 @@ myHeatmapByAnnotation <- function(
     if (class(groupings.genes) == "data.frame") {
       ##order groupings by order of subset
       groupings.genes <- droplevels(groupings.genes[match(rownames(data.subset), rownames(groupings.genes)),1]) %>% as.factor()
-      # if (sum(is.na(groupings.genes) != 0 )) {
       if (any(is.na(groupings.genes))) {
         levs <- levels(groupings.genes)
         groupings.genes <- as.character(groupings.genes); groupings.genes[is.na(groupings.genes)] <- "No_Annot"
@@ -394,7 +376,6 @@ myHeatmapByAnnotation <- function(
     if (class(groupings.genes) == "factor"){
       if (is.null(names(groupings.genes))==FALSE) {
         groupings.genes <- droplevels(groupings.genes[match(rownames(data.subset), names(groupings.genes))]) %>% as.factor()
-        # if (sum(is.na(groupings.genes) != 0 )) {
         if (any(is.na(groupings.genes))) {
           levs <- levels(groupings.genes)
           groupings.genes <- as.character(groupings.genes); groupings.genes[is.na(groupings.genes)] <- "No_Annot"
@@ -429,7 +410,6 @@ myHeatmapByAnnotation <- function(
   ###groupings
 
 
-  # if (sum(groupings != FALSE, na.rm=T) != 0) {
   if (any(groupings != FALSE, na.rm=T)) {
 
     ind.col=0     ##needed if not connected to annotations
@@ -492,7 +472,6 @@ myHeatmapByAnnotation <- function(
 
     if (is.null(order.by.gene)==TRUE){combined <- combined[,samp.order]} #this is setting it, the order is determined in the loop, kind of redundant but dont feel like changing now
 
-    # if (sum(groupings.genes == FALSE, na.rm = T) != 0) {  ##if not going on to group genes, see if should be ordered by sample, set clustering of genes
     if (any(groupings.genes == FALSE, na.rm = T)) {  ##if not going on to group genes, see if should be ordered by sample, set clustering of genes
       if (is.null(order.by.sample)==FALSE){
         if(is.raw.Ct==FALSE){combined <- combined[order(combined[,which(colnames(combined) %in% order.by.sample)],na.last = F),]}
@@ -529,8 +508,6 @@ myHeatmapByAnnotation <- function(
 
 
 
-
-  # if (sum(groupings.genes != FALSE, na.rm=T) != 0) {
   if (any(groupings.genes != FALSE, na.rm=T)) {
 
     ind.row=0      ###needed if not pointing to annotations
@@ -597,7 +574,6 @@ myHeatmapByAnnotation <- function(
 
     if (is.null(order.by.sample)==TRUE){combined <- combined[gene.order,]} #this is setting it, the order is determined in the loop, kind of redundant but dont feel like changing now
 
-    # if (sum(groupings == FALSE, na.rm=T) !=0) {  ##if not grouped by samples, see if should be ordered by gene, set clustering of samples
     if (any(groupings == FALSE, na.rm=T)) {  ##if not grouped by samples, see if should be ordered by gene, set clustering of samples
       if (is.null(order.by.gene)==FALSE){
         if(is.raw.Ct==FALSE){combined <- combined[,order(combined[which(rownames(combined) %in% order.by.gene),],na.last = F)]}
@@ -662,12 +638,11 @@ myHeatmapByAnnotation <- function(
   }
 
 
-  # if (sum( rownames(params$annot_samps) %in% colnames(data.subset)) != 0 ) {
   if (any( rownames(params$annot_samps) %in% colnames(data.subset))) {
     temp.annot_samps <- params$annot_samps
   }else{ temp.annot_samps <- NA}
 
-  # if (sum( rownames(params$annot_genes) %in% rownames(data.subset)) != 0 ) {
+
   if (any( rownames(params$annot_genes) %in% rownames(data.subset))) {
     temp.annot_genes <- params$annot_genes
   }else{ temp.annot_genes <- NA}
@@ -675,7 +650,6 @@ myHeatmapByAnnotation <- function(
   temp.annot_cols <- params$annot_cols
 
   if (drop.annot.levels == TRUE) {
-    # if (sum(!is.na(temp.annot_samps)) != 0) {
     if (any(!is.na(temp.annot_samps))) {
       temp.annot_samps[] <- lapply(temp.annot_samps, as.factor)
       #subset annot_samps and genes for subset so that annotations will be dropped in heatmap
@@ -696,7 +670,6 @@ myHeatmapByAnnotation <- function(
     }
 
 
-    # if (sum(!is.na(temp.annot_genes)) != 0) {
     if (any(!is.na(temp.annot_genes))) {
       temp.annot_genes[] <- lapply(temp.annot_genes, as.factor)
       #subset annot_samps and genes for subset so that annotations will be dropped in heatmap
@@ -708,12 +681,10 @@ myHeatmapByAnnotation <- function(
       if (length(spec.cols) != 0) {
         for (annot.i in 1:length(spec.cols)) {
           annot <- colnames(temp.annot_genes)[annot.i]
-          #if (length(which(names(temp.annot_cols)==annot)) != 0) {
             temp.annot_cols[[which(names(temp.annot_cols)==annot)]] <- temp.annot_cols[[which(names(temp.annot_cols)==annot)]][which(   names(temp.annot_cols[[which(names(temp.annot_cols)==annot)]])   %in%   levels(temp.annot_genes[,which(colnames(temp.annot_genes)==annot)])  )]
             if ( sum( levels(temp.annot_genes[,annot]) %in% names(temp.annot_cols[[which(names(temp.annot_cols)==annot)]])  ) != length(levels(temp.annot_genes[,annot]))) {
               temp.annot_cols[[which(names(temp.annot_cols)==annot)]][c(levels(temp.annot_genes[,annot])[levels(temp.annot_genes[,annot]) %notin% names(temp.annot_cols[[which(names(temp.annot_cols)==annot)]])])] <- "white"
             }
-          #}
         }
       }
     }
