@@ -624,7 +624,6 @@ correlateGenesAcross <- function(  ##broad gene correlations
 
   main=paste("Gene Correlations")
   cor.dat <- cor(t(data1),t(data2),use=NA.handling,method=method)
-  cor.dat[!upper.tri(cor.dat)] <- NA
   if(is.null(limits)==TRUE){
     hist(cor.dat,breaks=nbreaks, main=main)
   }

@@ -84,17 +84,6 @@ myHeatmap <- function(  ##basic heatmap, can subset for gene list
   }
 
 
-  if (method %in% c("spearman","pearson", "kendall")) {
-    clust.genes<-(as.dist(1-cor(t(subset),method=method,use=NA.handling)));
-    clust.samps<-(as.dist(1-cor(subset,method=method,use=NA.handling)))
-  }
-
-  if (method %in% c("euclidean","maximum","manhattan","canberra","binary","minkowski")){
-    clust.genes <- dist(subset,method=method)
-    clust.samps <- dist(t(subset), method=method)
-  }
-
-
   if (is.null(order.by.gene)==FALSE){
     if(is.raw.Ct==FALSE){subset <- subset[,order(data[which(rownames(data) %in% order.by.gene),],na.last = F)]}
     if(is.raw.Ct==TRUE){subset <- subset[,order(data[which(rownames(data) %in% order.by.gene),],na.last = T)]}
@@ -110,10 +99,7 @@ myHeatmap <- function(  ##basic heatmap, can subset for gene list
   if(clust.rows==TRUE){heightrow <- treeheight.row}
   if(clust.cols==TRUE){heightcol <- treeheight.col}
 
-  subset1 <- subset
-  subset <- scales::squish(subset,params$scale.range)
-  breaks <- seq(params$scale.range[1], params$scale.range[2],length.out=params$n.colors.range)
-  my_cols=colorRampPalette(params$scale.colors)(n=params$n.colors.range-1)
+
   if(is.raw.Ct==TRUE){my_cols <- rev(my_cols)}
 
   if(na.fix==TRUE){
@@ -143,8 +129,8 @@ myHeatmap <- function(  ##basic heatmap, can subset for gene list
     if (any(!is.na(temp.annot_samps))) {
       temp.annot_samps[] <- lapply(temp.annot_samps, as.factor)
       #subset annot_samps and genes for subset so that annotations will be dropped in heatmap
-      temp.annot_samps <- temp.annot_samps %>% tibble::rownames_to_column("Sample")
-      temp.annot_samps <- droplevels(temp.annot_samps[which(temp.annot_samps$Sample %in% colnames(subset)),]) %>% as.data.frame() %>% tibble::remove_rownames() %>% tibble::column_to_rownames(var="Sample")
+      temp.annot_samps <- temp.annot_samps %>% tibble::rownames_to_column("rowN")
+      temp.annot_samps <- droplevels(temp.annot_samps[which(temp.annot_samps$rowN %in% colnames(subset)),]) %>% as.data.frame() %>% tibble::remove_rownames() %>% tibble::column_to_rownames(var="rowN")
 
       spec.cols <- colnames(temp.annot_samps)[colnames(temp.annot_samps) %in% names(temp.annot_cols)]
 
@@ -163,8 +149,8 @@ myHeatmap <- function(  ##basic heatmap, can subset for gene list
     if (any(!is.na(temp.annot_genes))) {
       temp.annot_genes[] <- lapply(temp.annot_genes, as.factor)
       #subset annot_samps and genes for subset so that annotations will be dropped in heatmap
-      temp.annot_genes <- temp.annot_genes %>% tibble::rownames_to_column("Gene")
-      temp.annot_genes <- droplevels(temp.annot_genes[which(temp.annot_genes$Gene %in% rownames(subset)),]) %>% as.data.frame() %>% tibble::remove_rownames() %>% tibble::column_to_rownames(var="Gene")
+      temp.annot_genes <- temp.annot_genes %>% tibble::rownames_to_column("rowN")
+      temp.annot_genes <- droplevels(temp.annot_genes[which(temp.annot_genes$rowN %in% rownames(subset)),]) %>% as.data.frame() %>% tibble::remove_rownames() %>% tibble::column_to_rownames(var="rowN")
 
       spec.cols <- colnames(temp.annot_genes)[colnames(temp.annot_genes) %in% names(temp.annot_cols)]
 
@@ -185,6 +171,13 @@ myHeatmap <- function(  ##basic heatmap, can subset for gene list
 
 
   if (clust.cols == TRUE) {
+    if (method %in% c("spearman","pearson", "kendall")) {
+      clust.samps<-(as.dist(1-cor(subset,method=method,use=NA.handling)))
+    }
+    if (method %in% c("euclidean","maximum","manhattan","canberra","binary","minkowski")){
+      clust.samps <- dist(t(subset), method=method)
+    }
+
     tryclustcols <- try(hclust(clust.samps, linkage), silent = TRUE)
     if (class(tryclustcols) == "try-error") {stop('cannot cluster columns, if too many NAs present, set na.fix = T to treat NA values as low expression instead of missing, otherwise set clust.cols = F or specify order.by.gene')}
   }else{
@@ -193,12 +186,24 @@ myHeatmap <- function(  ##basic heatmap, can subset for gene list
   }
 
   if (clust.rows == TRUE) {
+    if (method %in% c("spearman","pearson", "kendall")) {
+      clust.genes<-(as.dist(1-cor(t(subset),method=method,use=NA.handling)))
+    }
+    if (method %in% c("euclidean","maximum","manhattan","canberra","binary","minkowski")){
+      clust.genes <- dist(subset,method=method)
+    }
+
     tryclustrows <- try(hclust(clust.genes, linkage), silent = TRUE)
     if (class(tryclustrows) == "try-error") {stop('cannot cluster rows, if too many NAs present, set na.fix = T to treat NA values as low expression instead of missing, otherwise set clust.rows = F or specify order.by.sample')}
   }else{
     if (is.null(gaps.row) == FALSE) {gaps.row <- sort(rep(gaps.row, gap.width))
     }
   }
+
+  subset1 <- subset
+  subset <- scales::squish(subset,params$scale.range)
+  breaks <- seq(params$scale.range[1], params$scale.range[2],length.out=params$n.colors.range)
+  my_cols=colorRampPalette(params$scale.colors)(n=params$n.colors.range-1)
 
   if (is.null(main)==TRUE){
     main <- paste("Genes of Interest:",paste(list, collapse = ","))
@@ -653,8 +658,8 @@ myHeatmapByAnnotation <- function(
     if (any(!is.na(temp.annot_samps))) {
       temp.annot_samps[] <- lapply(temp.annot_samps, as.factor)
       #subset annot_samps and genes for subset so that annotations will be dropped in heatmap
-      temp.annot_samps <- temp.annot_samps %>% tibble::rownames_to_column("Sample")
-      temp.annot_samps <- droplevels(temp.annot_samps[which(temp.annot_samps$Sample %in% colnames(data.subset)),]) %>% as.data.frame() %>% tibble::remove_rownames() %>% tibble::column_to_rownames(var="Sample")
+      temp.annot_samps <- temp.annot_samps %>% tibble::rownames_to_column("rowN")
+      temp.annot_samps <- droplevels(temp.annot_samps[which(temp.annot_samps$rowN %in% colnames(data.subset)),]) %>% as.data.frame() %>% tibble::remove_rownames() %>% tibble::column_to_rownames(var="rowN")
 
       spec.cols <- colnames(temp.annot_samps)[colnames(temp.annot_samps) %in% names(temp.annot_cols)]
 
@@ -673,8 +678,8 @@ myHeatmapByAnnotation <- function(
     if (any(!is.na(temp.annot_genes))) {
       temp.annot_genes[] <- lapply(temp.annot_genes, as.factor)
       #subset annot_samps and genes for subset so that annotations will be dropped in heatmap
-      temp.annot_genes <- temp.annot_genes %>% tibble::rownames_to_column("Gene")
-      temp.annot_genes <- droplevels(temp.annot_genes[which(temp.annot_genes$Gene %in% rownames(data.subset)),]) %>% as.data.frame() %>% tibble::remove_rownames() %>% tibble::column_to_rownames(var="Gene")
+      temp.annot_genes <- temp.annot_genes %>% tibble::rownames_to_column("rowN")
+      temp.annot_genes <- droplevels(temp.annot_genes[which(temp.annot_genes$rowN %in% rownames(data.subset)),]) %>% as.data.frame() %>% tibble::remove_rownames() %>% tibble::column_to_rownames(var="rowN")
 
       spec.cols <- colnames(temp.annot_genes)[colnames(temp.annot_genes) %in% names(temp.annot_cols)]
 
