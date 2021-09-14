@@ -102,19 +102,6 @@ myHeatmap <- function(  ##basic heatmap, can subset for gene list
 
   if(is.raw.Ct==TRUE){my_cols <- rev(my_cols)}
 
-  if(na.fix==TRUE){
-    if(is.raw.Ct==TRUE){
-      subset[which(subset1==max(subset1))] <- params$scale.range[2]+0.04
-      breaks <- c(breaks, params$scale.range[2]+0.01, params$scale.range[2]+0.05)
-      my_cols <- c(my_cols,params$scale.colors[1],na.color)      ##may need an option to set na_col
-    }
-    if(is.raw.Ct==FALSE){
-      subset[which(subset1==min(subset1))] <- params$scale.range[1]-0.04
-      breaks <- c(params$scale.range[1]-0.05,params$scale.range[1]-0.01,breaks)
-      my_cols <- c(na.color,params$scale.colors[1],my_cols)
-    }
-  }
-
   if (any( rownames(params$annot_samps) %in% colnames(subset))) {
     temp.annot_samps <- params$annot_samps
   }else{ temp.annot_samps <- NA}
@@ -204,6 +191,19 @@ myHeatmap <- function(  ##basic heatmap, can subset for gene list
   subset <- scales::squish(subset,params$scale.range)
   breaks <- seq(params$scale.range[1], params$scale.range[2],length.out=params$n.colors.range)
   my_cols=colorRampPalette(params$scale.colors)(n=params$n.colors.range-1)
+
+  if(na.fix==TRUE){
+    if(is.raw.Ct==TRUE){
+      subset[which(subset1==max(subset1))] <- params$scale.range[2]+0.04
+      breaks <- c(breaks, params$scale.range[2]+0.01, params$scale.range[2]+0.05)
+      my_cols <- c(my_cols,params$scale.colors[1],na.color)      ##may need an option to set na_col
+    }
+    if(is.raw.Ct==FALSE){
+      subset[which(subset1==min(subset1))] <- params$scale.range[1]-0.04
+      breaks <- c(params$scale.range[1]-0.05,params$scale.range[1]-0.01,breaks)
+      my_cols <- c(na.color,params$scale.colors[1],my_cols)
+    }
+  }
 
   if (is.null(main)==TRUE){
     main <- paste("Genes of Interest:",paste(list, collapse = ","))
