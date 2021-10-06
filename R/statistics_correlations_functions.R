@@ -277,6 +277,7 @@ myPCA <- function(
   nPcs= 3,
   color.by = "blue", ##vector same length or in annotations, annot_cols
   custom.color.vec = FALSE,
+  shape.by = NA,
   PCs.to.plot = c("PC1","PC2"),
   legend.position = "right",
   main = NULL,
@@ -286,7 +287,6 @@ myPCA <- function(
   return.ggplot.input = FALSE,
   return.loadings = FALSE
 ){
-
   if (("matrix" %in% class(data)) != TRUE ) {
     data <- as.matrix(data)
     warning('input data converted to matrix')
@@ -304,47 +304,81 @@ myPCA <- function(
     pca.vars <- round(pca@R2 * 100, digits = 2); names(pca.vars) <- paste0("PC",1:nPcs)
 
 
+    ###if color.by or shape is in temp.annotations
+    if (shape.by %in% colnames(temp.annotations) | color.by %in% colnames(temp.annotations)) {
+      if (any(!is.na(temp.annotations))) {
+        if (any(colnames(data) %notin% rownames(temp.annotations))) {
+          stop('colnames of input data do not match rownames of annotations, cannot link annotations to data')}
 
-    if (color.by %in% rownames(data) | any(custom.color.vec != FALSE)) {
-      pca.data <- data.frame(pca.scrs, Samples = colnames(data))
-      if (color.by %in% rownames(data)) {
-        genedat<- data[which(rownames(data)==color.by),]
-        cols <- myColorRamp5(params$expression_gradient.colors,genedat, percent.mad = percent.mad)
-      } else{ cols <- custom.color.vec}
-
-      p <- ggplot(pca.data, aes(x=eval(parse(text = PCs.to.plot[1])),y=eval(parse(text = PCs.to.plot[2])),fill=cols, Samples = Samples))+ geom_point(pch=21,color="black",size=point.size, alpha = transparency)  +
-        scale_fill_identity() +labs(x=paste0(PCs.to.plot[1], " (", pca.vars[PCs.to.plot[1]],"%)"), y= paste0(PCs.to.plot[2], " (", pca.vars[PCs.to.plot[2]],"%)")) + ggtitle(main) +
-        theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=35),
-                           axis.text = element_text(size=20),axis.title = element_text(size=25), legend.position = legend.position)
-
-    }else{
+        temp.annotations <- temp.annotations[match(colnames(data), rownames(temp.annotations)),, drop = FALSE]
+        pca.data <- data.frame(pca.scrs,temp.annotations,Samples = colnames(data))
+      }
+    } else{ pca.data <- data.frame(pca.scrs, Samples = colnames(data))}
 
 
-      if (color.by %in% colnames(temp.annotations)) {
-        if (any(!is.na(temp.annotations))) {
-          if (any(colnames(data) %notin% rownames(temp.annotations))) {
-            stop('colnames of input data do not match rownames of annotations, cannot link annotations to data')}
 
-          temp.annotations <- temp.annotations[match(colnames(data), rownames(temp.annotations)),, drop = FALSE]
-          pca.data <- data.frame(pca.scrs,temp.annotations,Samples = colnames(data))
-        }
+    ###colorings
 
-        if (color.by %in% names(params$annot_cols)) {
-          cols <- as.factor(pca.data[,which(colnames(pca.data) == color.by)])
-          colors <- params$annot_cols[[which(names(params$annot_cols) == color.by)]]
-        }else{
-          cols <- as.factor(pca.data[,which(colnames(pca.data) == color.by)])
-          colors <- scales::hue_pal()(length(levels(cols)))
-        }
-
-      } else{ cols <- color.by; colors <- color.by; pca.data <- data.frame(pca.scrs, Samples = colnames(data)); legend.position = "none"}
+    if (color.by %in% rownames(data)) {
+      genedat<- data[which(rownames(data)==color.by),]
+      cols <- myColorRamp5(params$expression_gradient.colors,genedat, percent.mad = percent.mad)
+    } else if (any(custom.color.vec != FALSE)) {cols <- custom.color.vec
+    } else if (color.by %in% colnames(temp.annotations)) {
+      if (color.by %in% names(params$annot_cols)) {
+        cols <- as.factor(pca.data[,which(colnames(pca.data) == color.by)])
+        colors <- params$annot_cols[[which(names(params$annot_cols) == color.by)]]
+      }else{
+        cols <- as.factor(pca.data[,which(colnames(pca.data) == color.by)])
+        colors <- scales::hue_pal()(length(levels(cols)))
+      }
+    } else {cols <- color.by; colors <- color.by}
 
 
-      p <- ggplot(pca.data, aes(x=eval(parse(text = PCs.to.plot[1])),y=eval(parse(text = PCs.to.plot[2])),fill=cols, Samples = Samples))+ geom_point(pch=21,color="black",size=point.size, alpha = transparency)  +
-        scale_fill_manual(values=colors) +labs(x=paste0(PCs.to.plot[1], " (", pca.vars[PCs.to.plot[1]],"%)"), y= paste0(PCs.to.plot[2], " (", pca.vars[PCs.to.plot[2]],"%)"), fill=color.by) + ggtitle(main) +
-        theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=35),
-                           axis.text = element_text(size=20),axis.title = element_text(size=25), legend.position = legend.position)
+    if (shape.by %in% colnames(temp.annotations)) {
+      shapes <- as.factor(pca.data[,which(colnames(pca.data) == shape.by)])
     }
+
+
+    if (shape.by %notin% colnames(temp.annotations) & color.by %notin% colnames(temp.annotations)) {legend.position = "none"}
+
+    if (all(is.na(shape.by)) == TRUE) {
+      if (color.by %in% rownames(data) | any(custom.color.vec != FALSE)) {
+        p <- ggplot(pca.data, aes(x=eval(parse(text = PCs.to.plot[1])),y=eval(parse(text = PCs.to.plot[2])),fill=cols, Samples = Samples))+ geom_point(pch=21,color="black",size=point.size, alpha = transparency)  +
+          scale_fill_identity()
+
+        call <- 'ggplot(input_data, aes(x = PCs.to.plot[1], y = PCs.to.plot[2], fill=cols, Samples = Samples))+ geom_point(pch=21,color="black",size=point.size, alpha = transparency)  +
+          scale_fill_identity()'
+
+      }else {
+        p <- ggplot(pca.data, aes(x=eval(parse(text = PCs.to.plot[1])),y=eval(parse(text = PCs.to.plot[2])),fill=cols, Samples = Samples))+ geom_point(pch=21,color="black",size=point.size, alpha = transparency)  +
+          scale_fill_manual(values=colors) + labs(fill=color.by)
+
+        call <- 'ggplot(input_data, aes(x = PCs.to.plot[1], y = PCs.to.plot[2], fill=cols, Samples = Samples))+ geom_point(pch=21,color="black",size=point.size, alpha = transparency)  +
+          scale_fill_manual(values=colors) + labs(fill=color.by)'
+      }
+    }else{
+      if (color.by %in% rownames(data) | any(custom.color.vec != FALSE)) {
+        p <- ggplot(pca.data, aes(x=eval(parse(text = PCs.to.plot[1])),y=eval(parse(text = PCs.to.plot[2])),fill=cols, shape = shapes, Samples = Samples))+ geom_point(size=point.size, alpha = transparency)  +
+          scale_fill_identity() + labs(shape = shape.by) + scale_shape_manual(values = c((1:length(levels(shapes)))+20))
+
+        call <- 'ggplot(input_data, aes(x = PCs.to.plot[1], y = PCs.to.plot[2], fill=cols, shape = shapes, Samples = Samples))+ geom_point(size=point.size, alpha = transparency)  +
+          scale_fill_identity() + labs(shape = shape.by) + scale_shape_manual(values = c((1:length(levels(shapes)))+20))'
+      }else {
+        p <- ggplot(pca.data, aes(x=eval(parse(text = PCs.to.plot[1])),y=eval(parse(text = PCs.to.plot[2])),fill=cols, shape = shapes, Samples = Samples))+ geom_point(size=point.size, alpha = transparency)  +
+          scale_fill_manual(values=colors) + labs(fill=color.by, shape = shape.by) + scale_shape_manual(values = c((1:length(levels(shapes)))+20)) + guides(fill = guide_legend(override.aes=list(shape=21)))
+
+        call <- 'ggplot(input_data, aes(x = PCs.to.plot[1], y = PCs.to.plot[2], fill=cols, shape = shapes, Samples = Samples))+ geom_point(size=point.size, alpha = transparency)  +
+          scale_fill_manual(values=colors) + labs(fill=color.by, shape = shape.by) + scale_shape_manual(values = c((1:length(levels(shapes)))+20)) + guides(fill = guide_legend(override.aes=list(shape=21)))'
+      }
+    }
+
+    p <- p + labs(x=paste0(PCs.to.plot[1], " (", pca.vars[PCs.to.plot[1]],"%)"), y= paste0(PCs.to.plot[2], " (", pca.vars[PCs.to.plot[2]],"%)")) +
+      ggtitle(main) + theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=35),
+                                         axis.text = element_text(size=20),axis.title = element_text(size=25), legend.position = legend.position)
+
+    call <- paste(call, '+ labs(x=paste0(PCs.to.plot[1], " (", PCA_variability[PCs.to.plot[1]],"%)"), y= paste0(PCs.to.plot[2], " (", PCA_variability[PCs.to.plot[2]],"%)")) +
+      ggtitle(main) + theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=35),
+                                         axis.text = element_text(size=20),axis.title = element_text(size=25), legend.position = legend.position)')
   }
 
   if (to.pca == "genes") {
@@ -357,48 +391,85 @@ myPCA <- function(
 
     pca.vars <- round(pca@R2 * 100, digits = 2); names(pca.vars) <- paste0("PC",1:nPcs)
 
-    if (sum(custom.color.vec != FALSE) > 0) {
-      pca.data <- data.frame(pca.scrs, Genes = rownames(data))
-      cols <- custom.color.vec
 
-      p <- ggplot(pca.data, aes(x=eval(parse(text = PCs.to.plot[1])),y=eval(parse(text = PCs.to.plot[2])),fill=cols, Genes = Genes))+ geom_point(pch=21,color="black",size=point.size, alpha = transparency)  +
-        scale_fill_identity() +labs(x=paste0(PCs.to.plot[1], " (", pca.vars[PCs.to.plot[1]],"%)"), y= paste0(PCs.to.plot[2], " (", pca.vars[PCs.to.plot[2]],"%)")) + ggtitle(main) +
-        theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=35),
-                           axis.text = element_text(size=20),axis.title = element_text(size=25), legend.position = legend.position)
+    ###if color.by or shape is in temp.annotations
+    if (shape.by %in% colnames(temp.annotations.genes) | color.by %in% colnames(temp.annotations.genes)) {
+      if (any(!is.na(temp.annotations.genes))) {
+        if (any(rownames(data) %notin% rownames(temp.annotations.genes))) {
+          stop('rownames of input data do not match rownames of annotations, cannot link annotations to data')}
 
-    }else{
-
-
-      if (color.by %in% colnames(temp.annotations.genes)) {
-        if (any(!is.na(temp.annotations.genes))) {
-          if (any(rownames(data) %notin% rownames(temp.annotations.genes))) {
-            stop('rownames of input data do not match rownames of annotations, cannot link annotations to data')}
-
-          temp.annotations.genes <- temp.annotations.genes[match(rownames(data), rownames(temp.annotations.genes)),, drop = FALSE]
-          pca.data <- data.frame(pca.scrs,temp.annotations.genes, Genes = rownames(data))
-        }
-        if (color.by %in% names(params$annot_cols)) {
-          cols <- as.factor(pca.data[,which(colnames(pca.data) == color.by)])
-          colors <- params$annot_cols[[which(names(params$annot_cols) == color.by)]]
-        }else{
-          cols <- as.factor(pca.data[,which(colnames(pca.data) == color.by)])
-          colors <- scales::hue_pal()(length(levels(cols)))
-        }
-
-      } else{ cols <- color.by; colors <- color.by; pca.data <- data.frame(pca.scrs, Genes = rownames(data)); legend.position = "none"}
+        temp.annotations.genes <- temp.annotations.genes[match(rownames(data), rownames(temp.annotations.genes)),, drop = FALSE]
+        pca.data <- data.frame(pca.scrs,temp.annotations.genes, Genes = rownames(data))
+      }
+    } else{ pca.data <- data.frame(pca.scrs, Genes = rownames(data))}
 
 
-      p <- ggplot(pca.data, aes(x=eval(parse(text = PCs.to.plot[1])),y=eval(parse(text = PCs.to.plot[2])),fill=cols, Genes = Genes))+ geom_point(pch=21,color="black",size=point.size, alpha = transparency)  +
-        scale_fill_manual(values=colors) +labs(x=paste0(PCs.to.plot[1], " (", pca.vars[PCs.to.plot[1]],"%)"), y= paste0(PCs.to.plot[2], " (", pca.vars[PCs.to.plot[2]],"%)"), fill=color.by) + ggtitle(main) +
-        theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=35),
-                           axis.text = element_text(size=20),axis.title = element_text(size=25), legend.position = legend.position)
+
+    ###colorings
+
+    if (any(custom.color.vec != FALSE)) {cols <- custom.color.vec
+    } else if (color.by %in% colnames(temp.annotations.genes)) {
+      if (color.by %in% names(params$annot_cols)) {
+        cols <- as.factor(pca.data[,which(colnames(pca.data) == color.by)])
+        colors <- params$annot_cols[[which(names(params$annot_cols) == color.by)]]
+      }else{
+        cols <- as.factor(pca.data[,which(colnames(pca.data) == color.by)])
+        colors <- scales::hue_pal()(length(levels(cols)))
+      }
+    } else {cols <- color.by; colors <- color.by}
+
+
+    if (shape.by %in% colnames(temp.annotations.genes)) {
+      shapes <- as.factor(pca.data[,which(colnames(pca.data) == shape.by)])
     }
+
+
+    if (shape.by %notin% colnames(temp.annotations.genes) & color.by %notin% colnames(temp.annotations.genes)) {legend.position = "none"}
+
+    if (all(is.na(shape.by)) == TRUE) {
+      if (any(custom.color.vec != FALSE)) {
+        p <- ggplot(pca.data, aes(x=eval(parse(text = PCs.to.plot[1])),y=eval(parse(text = PCs.to.plot[2])),fill=cols, Genes = Genes))+ geom_point(pch=21,color="black",size=point.size, alpha = transparency)  +
+          scale_fill_identity()
+
+        call <- 'ggplot(input_data, aes(x = PCs.to.plot[1],y = PCs.to.plot[2], fill=cols, Genes = Genes))+ geom_point(pch=21,color="black",size=point.size, alpha = transparency)  +
+          scale_fill_identity()'
+      }else {
+        p <- ggplot(pca.data, aes(x=eval(parse(text = PCs.to.plot[1])),y=eval(parse(text = PCs.to.plot[2])),fill=cols, Genes = Genes))+ geom_point(pch=21,color="black",size=point.size, alpha = transparency)  +
+          scale_fill_manual(values=colors) + labs(fill=color.by)
+        call <- 'ggplot(input_data, aes(x = PCs.to.plot[1], y = PCs.to.plot[2], fill=cols, Genes = Genes))+ geom_point(pch=21,color="black",size=point.size, alpha = transparency)  +
+          scale_fill_manual(values=colors) + labs(fill=color.by)'
+      }
+    }else{
+      if (color.by %in% rownames(data) | any(custom.color.vec != FALSE)) {
+        p <- ggplot(pca.data, aes(x=eval(parse(text = PCs.to.plot[1])),y=eval(parse(text = PCs.to.plot[2])),fill=cols, shape = shapes, Genes = Genes))+ geom_point(size=point.size, alpha = transparency)  +
+          scale_fill_identity() + labs(shape = shape.by) + scale_shape_manual(values = c((1:length(levels(shapes)))+20))
+
+        call <- 'ggplot(input_data, aes(x = PCs.to.plot[1], y = PCs.to.plot[2], fill=cols, shape = shapes, Genes = Genes))+ geom_point(size=point.size, alpha = transparency)  +
+          scale_fill_identity() + labs(shape = shape.by) + scale_shape_manual(values = c((1:length(levels(shapes)))+20))'
+      }else {
+        p <- ggplot(pca.data, aes(x=eval(parse(text = PCs.to.plot[1])),y=eval(parse(text = PCs.to.plot[2])),fill=cols, shape = shapes, Genes = Genes))+ geom_point(size=point.size, alpha = transparency)  +
+          scale_fill_manual(values=colors) + labs(fill=color.by, shape = shape.by) + scale_shape_manual(values = c((1:length(levels(shapes)))+20)) + guides(fill = guide_legend(override.aes=list(shape=21)))
+
+        call <- 'ggplot(input_data, aes(x = PCs.to.plot[1],y = PCs.to.plot[2], fill=cols, shape = shapes, Genes = Genes))+ geom_point(size=point.size, alpha = transparency)  +
+          scale_fill_manual(values=colors) + labs(fill=color.by, shape = shape.by) + scale_shape_manual(values = c((1:length(levels(shapes)))+20)) + guides(fill = guide_legend(override.aes=list(shape=21)))'
+      }
+    }
+
+    p <- p + labs(x=paste0(PCs.to.plot[1], " (", pca.vars[PCs.to.plot[1]],"%)"), y= paste0(PCs.to.plot[2], " (", pca.vars[PCs.to.plot[2]],"%)")) +
+      ggtitle(main) + theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=35),
+                                         axis.text = element_text(size=20),axis.title = element_text(size=25), legend.position = legend.position)
+
+    call <- paste(call, '+ labs(x=paste0(PCs.to.plot[1], " (", PCA_variability[PCs.to.plot[1]],"%)"), y= paste0(PCs.to.plot[2], " (", PCA_variability[PCs.to.plot[2]],"%)")) +
+      ggtitle(main) + theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=35),
+                                         axis.text = element_text(size=20),axis.title = element_text(size=25), legend.position = legend.position)')
+
   }
+
+
   if (return.loadings == TRUE) {return(pca.ldgs)}
-  if (return.ggplot.input == TRUE) {return(pca.data)}
+  if (return.ggplot.input == TRUE) {return(list(input_data=pca.data, coloring = list(colors = colors, cols = cols), PCA_variability = pca.vars, plot_call = call))}
   return(p)
 }
-
 
 
 

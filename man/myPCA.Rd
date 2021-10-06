@@ -9,8 +9,8 @@ A simple function that performs a PCA of the supplied data for either the genes/
 }
 \usage{
 myPCA(data, to.pca = "samples", nPcs = 3, color.by = "blue", custom.color.vec = FALSE,
-  PCs.to.plot = c("PC1", "PC2"), legend.position = "right", main = NULL,point.size = 5,
-  transparency = 1, percent.mad = 0.5, return.ggplot.input = FALSE,
+  shape.by = NA, PCs.to.plot = c("PC1", "PC2"), legend.position = "right", main = NULL,
+  point.size = 5,transparency = 1, percent.mad = 0.5, return.ggplot.input = FALSE,
   return.loadings = FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
@@ -29,6 +29,9 @@ how the points in the PCA should be colored. Can set to a color value which will
 }
   \item{custom.color.vec}{
 custom color vector the same length as the number of columns (for to.pca = "samples") or the number of rows (for to.pca = "genes"). Order of custom color vector should be in the same order corresponding to the data.
+}
+ \item{shape.by}{
+Option to change the shape of the points in the PCA. Accepts a string pointing to a column name of the annotations (for samples) or annotations.genes (for genes) stored in the params list object. Allows for up to five different shapes to used. User may override default shapes, see \link[ggplot2]{scale_shape_manual}. Keep in mind that the points are set to 'fill' and may cause problems depending on custom shapes desired. Please set return.ggplot.input to TRUE to allow for further customizations.
 }
   \item{PCs.to.plot}{
 character vector of length 2 indicating which PCs should be displayed in the plot. Default is c("PC1","PC2"). Can specify any 2 PCs from 1:nPcs.
@@ -49,7 +52,7 @@ transparency or alpha value of the points
 if coloring points by expression level. Passed to \link[dataVisEasy]{myColorRamp5} to determine how the data is binned
 }
   \item{return.ggplot.input}{
-logical. If true, will return the input dataframe to the ggplot object. Useful if more customization is required.
+logical. If true, will return the input dataframe to the ggplot object as well as the code to reproduce. Useful if more customization is required.
 }
   \item{return.loadings}{
 logical. If true, will return the loadings from the pca.
@@ -60,6 +63,15 @@ logical. If true, will return the loadings from the pca.
 %}
 \value{
 A ggplot object. The input data frame to the ggplot object contains the scores, the sample/gene names, and annotations/gene annotations if an annotation is specified. This input object can be accessed by setting return.ggplot.input to TRUE. The inclusion of the gene and sample names allows the user to add the text of gene or sample names to the plot (see examples, these are specifically designed to be added outside the function itself for proper positioning). Additional layers can be added to the returned ggplot object to further customize theme and aesthetics.
+
+A ggplot object. Additional layers can be added to the returned ggplot object to further customize theme and aesthetics.
+
+If return.ggplot.input is set to TRUE, will return a list with the dataframe, coloring and call to ggplot for plotting.
+\item{'input_data'}{the dataframe used for plotting which will contain the scores for each PC as well as the annotations if provided in addition to the Sample/Gene names (which can be added to the plot with geom_label or geom_plot  with aes(label =Genes/Samples) if desired )}
+\item{'coloring'}{the coloring parameters used in the plot the plot call will refer to items in this object and may need to be saved separately}
+\item{'PCA_variability'}{details the percent variability in each PC, plot_call will refer to this for axis titles}
+\item{plot_call}{the call to ggplot that generated the plot. Note that simply accessing it by $plot_call will include escape characters. The full call can be accessed by cat(plot$plot_call). Please note that many of the parameters (those in lowercase) in the call are input parameters to the original function and must be input to properly recreate the plot.}
+
 
 If return.loadings is set to TRUE, will return a matrix of the loadings from the PCA.
 }

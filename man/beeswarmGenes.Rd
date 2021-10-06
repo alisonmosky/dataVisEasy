@@ -76,7 +76,7 @@ if coloring points by expression level. Passed to \link[dataVisEasy]{myColorRamp
   the dodge.width of the grouped points, see \link[ggbeeswarm]{geom_beeswarm}
 }
   \item{return.ggplot.input}{
-logical. If true, will return the input dataframe to the ggplot object. Useful if more customization is required.
+logical. If true, will return the input dataframe to the ggplot object as well as the code to reproduce. Useful if more customization is required.
 }
 }
 \details{
@@ -87,7 +87,7 @@ A ggplot object. Additional layers can be added to the returned ggplot object to
 
 If return.ggplot.input is set to TRUE, will return a list with the dataframe, coloring and call to ggplot for plotting.
 \item{'input_data'}{the dataframe used for plotting which will contain the expression levels of the chosen genes (if values are squished to fit the plot the values will be similarly squished) as well as the annotations if available.}
-\item{'coloring'}{the coloring parameters used in the plot}
+\item{'coloring'}{the coloring parameters used in the plot the plot call will refer to items in this object and may need to be saved separately}
 \item{plot_call}{the call to ggplot that generated the plot. Note that simply accessing it by $plot_call will include escape characters. The full call can be accessed by cat(plot$plot_call). Please note that many of the parameters (those in lowercase) in the call are input parameters to the original function and must be input to properly recreate the plot.}
 
 
