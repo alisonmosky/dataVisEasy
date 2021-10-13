@@ -1,7 +1,7 @@
 Package: dataVisEasy
 Type: Package
 Title: datavisEasy: Data visualizations Using Annotations Made Easy
-Version: 0.2.2
+Version: 0.2.3
 Author: Alison Moss
 Maintainer: Alison Moss <alisonmoss3@gmail.com>
 Description: A user friendly package to aid in visualization of transcriptomic (or proteomic or any other type of expression) datasets. By setting up annotations to the data, the user can seamlessly run a variety of analysis and data visualziations that integrate annotations in an intuitive way.Functions in this package are linked to a list object that stores parameters and annotations common to the dataset being analyzed and is utilized across most functions within the dataVisEasy pacakge. 

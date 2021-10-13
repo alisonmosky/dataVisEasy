@@ -35,7 +35,7 @@ AOV1way <- function(
   incomplete <- unique(as.character(present$Var2[which(present$value_present == 0)]))
 
 
-  present.incomplete <- present[which(present$Var2 %in% incomplete),] %>% group_by(Var2)
+  present.incomplete <- present[which(present$Var2 %in% incomplete),] %>% dplyr::group_by(Var2)
   levels.present <- present.incomplete %>% dplyr::summarise_at("value_present",function(x)(sum(x != 0)))
   take.out <- unique(as.character(levels.present$Var2[which(levels.present$value_present <= 1)]))
 
@@ -63,10 +63,18 @@ AOV1way <- function(
 
   sig.set <- data.to.aov[which(rownames(data.to.aov) %in% sig.genes),]
 
-  tukey.all <-  apply(sig.set,1,function(x)(TukeyHSD(aov(x~groupings))))
+  if (length(levels(groupings)) <= 2) {
+    tukey.all <- NA
+    tukey.pvals <- NA
+    tukey.diffs <- NA
+  }else{
+    tukey.all <-  apply(sig.set,1,function(x)(TukeyHSD(aov(x~groupings))))
 
-  tukey.pvals <- data.frame(Reduce(dplyr::bind_rows, lapply(tukey.all,function(x)(x$groupings[,4]))), row.names = names(tukey.all)); colnames(tukey.pvals) <- gsub("\\.","-", colnames(tukey.pvals))
-  tukey.diffs <- data.frame(Reduce(dplyr::bind_rows, lapply(tukey.all,function(x)(x$groupings[,1]))), row.names = names(tukey.all)); colnames(tukey.diffs) <- gsub("\\.","-", colnames(tukey.diffs))
+    tukey.pvals <- data.frame(Reduce(dplyr::bind_rows, lapply(tukey.all,function(x)(x$groupings[,4]))), row.names = names(tukey.all)); colnames(tukey.pvals) <- gsub("\\.","-", colnames(tukey.pvals))
+    tukey.diffs <- data.frame(Reduce(dplyr::bind_rows, lapply(tukey.all,function(x)(x$groupings[,1]))), row.names = names(tukey.all)); colnames(tukey.diffs) <- gsub("\\.","-", colnames(tukey.diffs))
+
+  }
+
 
 
   if (toupper(additional.report) == "ALL") {
@@ -143,12 +151,12 @@ AOV2way <- function(
   present2 <- dplyr::summarise_all(dplyr::group_by(dat.check,Var2, grouping2), list(present=function(x)(sum(!is.na(x)))))
 
   incomplete1 <- unique(as.character(present1$Var2[which(present1$value_present == 0)]))
-  present.incomplete1 <- present1[which(present1$Var2 %in% incomplete1),] %>% group_by(Var2)
+  present.incomplete1 <- present1[which(present1$Var2 %in% incomplete1),] %>% dplyr::group_by(Var2)
   levels.present1 <- present.incomplete1 %>% dplyr::summarise_at("value_present",function(x)(sum(x != 0)))
   take.out1 <- unique(as.character(levels.present1$Var2[which(levels.present1$value_present <= 1)]))
 
   incomplete2 <- unique(as.character(present2$Var2[which(present2$value_present == 0)]))
-  present.incomplete2 <- present2[which(present2$Var2 %in% incomplete2),] %>% group_by(Var2)
+  present.incomplete2 <- present2[which(present2$Var2 %in% incomplete2),] %>% dplyr::group_by(Var2)
   levels.present2 <- present.incomplete2 %>% dplyr::summarise_at("value_present",function(x)(sum(x != 0)))
   take.out2 <- unique(as.character(levels.present2$Var2[which(levels.present2$value_present <= 1)]))
 
@@ -305,6 +313,9 @@ myPCA <- function(
 
 
     ###if color.by or shape is in temp.annotations
+    if (!is.na(shape.by) & all(is.na(temp.annotations))) {
+      stop('annotations must be set to specify mapping by shape')}
+
     if (shape.by %in% colnames(temp.annotations) | color.by %in% colnames(temp.annotations)) {
       if (any(!is.na(temp.annotations))) {
         if (any(colnames(data) %notin% rownames(temp.annotations))) {
@@ -393,6 +404,9 @@ myPCA <- function(
 
 
     ###if color.by or shape is in temp.annotations
+    if (!is.na(shape.by) & all(is.na(temp.annotations.genes))) {
+      stop('annotations.genes must be set to specify mapping by shape')}
+
     if (shape.by %in% colnames(temp.annotations.genes) | color.by %in% colnames(temp.annotations.genes)) {
       if (any(!is.na(temp.annotations.genes))) {
         if (any(rownames(data) %notin% rownames(temp.annotations.genes))) {
