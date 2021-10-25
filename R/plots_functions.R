@@ -3,6 +3,7 @@
 #' @importFrom scales hue_pal squish
 #' @importFrom reshape2 melt
 #' @importFrom ggbeeswarm geom_quasirandom
+#' @importFrom forcats fct_relevel
 #' @import ggplot2
 #' @export
 scatterGenes <- function(
@@ -55,7 +56,6 @@ scatterGenes <- function(
     } else{ colors <- custom.color.vec}
     coloring <- list(color.by = color.by, colors = colors)
 
-    if (((xlimits==FALSE) && (ylimits==FALSE)) == TRUE) {
       if (sum(squish1 != FALSE) != 0) {dat.to.plot$Gene1 <-  scales::squish(dat.to.plot$Gene1,squish1)}
       if (sum(squish2 != FALSE) != 0) {dat.to.plot$Gene2 <-  scales::squish(dat.to.plot$Gene2,squish2)}
 
@@ -71,11 +71,12 @@ scatterGenes <- function(
                            axis.text = element_text(size=25),axis.title = element_text(size=30),
                            legend.position = legend.position)'
 
+    if ((any(xlimits==FALSE) && any(ylimits==FALSE)) == TRUE) {
       if (is.raw.Ct==T) {p <- p + scale_x_reverse() + scale_y_reverse()
       call <- paste(call, '+ scale_x_reverse() + scale_y_reverse()')}
     }
 
-    if ((xlimits || ylimits) == TRUE) {p <- p + xlim(c(xlimits)) + ylim(c(ylimits))
+    if ((any(xlimits==FALSE) && any(ylimits==FALSE)) == FALSE) {p <- p + xlim(c(xlimits)) + ylim(c(ylimits))
     call <- paste(call, '+ xlim(c(xlimits)) + ylim(c(ylimits))')}
 
   } else{
@@ -103,21 +104,21 @@ scatterGenes <- function(
         coloring <- list(color.by = color.by,  colors = colors)
       }
 
-      if (((xlimits==FALSE) && (ylimits==FALSE)) == TRUE) {
-        if (sum(squish1 != FALSE) != 0) {dat.to.plot$Gene1 <-  scales::squish(dat.to.plot$Gene1,squish1)}
-        if (sum(squish2 != FALSE) != 0) {dat.to.plot$Gene2 <-  scales::squish(dat.to.plot$Gene2,squish2)}
+      if (sum(squish1 != FALSE) != 0) {dat.to.plot$Gene1 <-  scales::squish(dat.to.plot$Gene1,squish1)}
+      if (sum(squish2 != FALSE) != 0) {dat.to.plot$Gene2 <-  scales::squish(dat.to.plot$Gene2,squish2)}
 
-        p <- ggplot(dat.to.plot, aes(x=Gene1,y=Gene2,fill=eval(parse(text = color.by))))+ geom_point(pch=21,color="black",size=point.size, alpha = transparency)  +
-          scale_fill_manual(values=colors) +labs(x=paste(gene1), y= paste(gene2)) +ggtitle(paste(gene2, "vs.",gene1)) + labs(fill=color.by) +
-          theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
-                             axis.text = element_text(size=25),axis.title = element_text(size=30), legend.position = legend.position)
+      p <- ggplot(dat.to.plot, aes(x=Gene1,y=Gene2,fill=eval(parse(text = color.by))))+ geom_point(pch=21,color="black",size=point.size, alpha = transparency)  +
+        scale_fill_manual(values=colors) +labs(x=paste(gene1), y= paste(gene2)) +ggtitle(paste(gene2, "vs.",gene1)) + labs(fill=color.by) +
+        theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
+                           axis.text = element_text(size=25),axis.title = element_text(size=30), legend.position = legend.position)
 
 
-        call <- 'ggplot(input_data, aes(x=Gene1,y=Gene2,fill=color.by))+ geom_point(pch=21,color="black",size=point.size, alpha = transparency)  +
+      call <- 'ggplot(input_data, aes(x=Gene1,y=Gene2,fill=color.by))+ geom_point(pch=21,color="black",size=point.size, alpha = transparency)  +
         scale_fill_manual(values=colors) +labs(x=paste(gene1), y= paste(gene2)) +ggtitle(paste(gene2, "vs.",gene1)) + labs(fill=color.by) +
         theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
                            axis.text = element_text(size=25),axis.title = element_text(size=30), legend.position = legend.position)'
 
+      if (((xlimits==FALSE) && (ylimits==FALSE)) == TRUE) {
         if (is.raw.Ct==T) {p <- p + scale_x_reverse() + scale_y_reverse()
         call <- paste(call, '+ scale_x_reverse() + scale_y_reverse()')}
       }
@@ -129,26 +130,27 @@ scatterGenes <- function(
       coloring <- list(color.by = color.by)
 
 
-      if (((xlimits==FALSE) && (ylimits==FALSE)) == TRUE) {
-        if (sum(squish1 != FALSE) != 0) {dat.to.plot$Gene1 <-  scales::squish(dat.to.plot$Gene1,squish1)}
-        if (sum(squish2 != FALSE) != 0) {dat.to.plot$Gene2 <-  scales::squish(dat.to.plot$Gene2,squish2)}
 
-        p <- ggplot(dat.to.plot, aes(x=Gene1,y=Gene2))+ geom_point(pch=21,color="black",fill = color.by, size=point.size, alpha = transparency)  +
-          scale_fill_manual(values=colors) +labs(x=paste(gene1), y= paste(gene2)) +ggtitle(paste(gene2, "vs.",gene1)) + labs(fill=color.by) +
-          theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
-                             axis.text = element_text(size=25),axis.title = element_text(size=30), legend.position = legend.position)
+      if (sum(squish1 != FALSE) != 0) {dat.to.plot$Gene1 <-  scales::squish(dat.to.plot$Gene1,squish1)}
+      if (sum(squish2 != FALSE) != 0) {dat.to.plot$Gene2 <-  scales::squish(dat.to.plot$Gene2,squish2)}
+
+      p <- ggplot(dat.to.plot, aes(x=Gene1,y=Gene2))+ geom_point(pch=21,color="black",fill = color.by, size=point.size, alpha = transparency)  +
+        scale_fill_manual(values=colors) +labs(x=paste(gene1), y= paste(gene2)) +ggtitle(paste(gene2, "vs.",gene1)) + labs(fill=color.by) +
+        theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
+                           axis.text = element_text(size=25),axis.title = element_text(size=30), legend.position = legend.position)
 
 
-        call <- 'ggplot(dat.to.plot, aes(x=Gene1,y=Gene2))+ geom_point(pch=21,color="black",fill = color.by, size=point.size, alpha = transparency)  +
+      call <- 'ggplot(dat.to.plot, aes(x=Gene1,y=Gene2))+ geom_point(pch=21,color="black",fill = color.by, size=point.size, alpha = transparency)  +
         scale_fill_manual(values=colors) +labs(x=paste(gene1), y= paste(gene2)) +ggtitle(paste(gene2, "vs.",gene1)) + labs(fill=color.by) +
         theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
                            axis.text = element_text(size=25),axis.title = element_text(size=30), legend.position = legend.position)'
 
+      if ((any(xlimits==FALSE) && any(ylimits==FALSE)) == TRUE) {
         if (is.raw.Ct==T) {p <- p + scale_x_reverse() + scale_y_reverse()
         call <- paste(call, '+ scale_x_reverse() + scale_y_reverse()')}
       }
 
-      if ((xlimits || ylimits) == TRUE) {p <- p + xlim(c(xlimits)) + ylim(c(ylimits))
+      if ((any(xlimits==FALSE) && any(ylimits==FALSE)) == FALSE) {p <- p + xlim(c(xlimits)) + ylim(c(ylimits))
       call <- paste(call, '+ xlim(c(xlimits)) + ylim(c(ylimits))')}
     }
   }

@@ -68,7 +68,7 @@ update_annotations <- function(   ###should make an option to full join if stuff
   temp.annotations <- params$annotations
 
   if (any(annotation %in% colnames(temp.annotations))) {   ##if being updated, removes prior instance and will be added back in below
-    temp.annotations <- temp.annotations[,-which(colnames(temp.annotations) %in% annotation)]}
+    temp.annotations <- temp.annotations[,-which(colnames(temp.annotations) %in% annotation), drop = FALSE]}
 
 
   if (is.null(dim(values)) == TRUE) {  ##vector or factor, not matrix or dataframe
@@ -165,7 +165,7 @@ update_annotations.genes <- function(   ###should make an option to full join if
   temp.annotations.genes <- params$annotations.genes
 
   if (any(annotation %in% colnames(temp.annotations.genes))) {   ##if being updated, removes prior instance and will be added back in below
-    temp.annotations.genes <- temp.annotations.genes[,-which(colnames(temp.annotations.genes) %in% annotation)]}
+    temp.annotations.genes <- temp.annotations.genes[,-which(colnames(temp.annotations.genes) %in% annotation), drop = FALSE]}
 
 
   if (is.null(dim(values)) == TRUE) {  ##vector or factor, not matrix or dataframe

@@ -5,10 +5,11 @@
 Subset Samples/observations from a data matrix
 }
 \description{
-Quick function to subset Samples/observations from a data matrix based on an annotation or characteristic
+Quick function to subset samples/observations from a data matrix based on an annotation or characteristic. Can also pull out samples/observations by name with the option to order the rows by expression of a given sample.
 }
 \usage{
-subsetSamples(data, group, take.out)
+subsetSamples(data, group, take.out, list, order.by = NULL, exact = F,
+subset.by = "annotation")
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -20,6 +21,18 @@ character string pointing to a column name in the annotations stored in params. 
 }
   \item{take.out}{
 level or levels of the group vector supplied indicating the samples to be extracted
+}
+  \item{list}{
+character vector of samples/observations to be pulled out of the data matrix for viewing
+}
+  \item{order.by}{
+optional string equal to one of the colnames of the supplied data frame. Rows of output data matrix will be ordered according to the supplied sample from lowest to highest expression value.
+}
+  \item{exact}{
+whether or not to search for exact or inexact matches of 'list' in 'data'. If exact = T (default) output will contain samples/observations that exactly match the list supplied. If set to FALSE, will search for inexact matches.
+}
+  \item{subset.by}{
+whether to subset by an annotation stored in params$annotations ("annotation", default) or by the a list of names to search for in column names ("name")
 }
 }
 %\details{

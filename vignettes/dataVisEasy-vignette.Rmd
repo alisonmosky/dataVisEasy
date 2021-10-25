@@ -43,6 +43,28 @@ RAGP_norm[1:5,1:5]
 knitr::kable(RAGP_norm[1:5,1:5])
 ```
 
+One of the first things we may want to do with a new dataset is check the range of expression of some of our data. The function 'reportGenes' allows you to choose a list of genes (or variables in the rows) and see the percent of missing and non-missing data (NA values) and see the range of expression with respect to the median value. 
+
+```{r results='hide'}
+reportGenes(RAGP_norm,list = c("NeuN","Th","Chat","Npy","Sst","Adra1d"))
+```
+```{r echo = FALSE}
+knitr::kable(reportGenes(RAGP_norm,list = c("NeuN","Th","Chat","Npy","Sst","Adra1d"))) %>% 
+  kableExtra::kable_styling(bootstrap_options = "condensed", font_size = 11)
+```
+
+The default is to set the upper and lower threshold to be a value of '2' above and below the median. If we set the 'ranges' argument to 'mad' and specify the weight we can adjust what is considered high or low expression. A weight of means that a value will be considered high expression if it is more than 1.5*mad above the median.   
+```{r results='hide'}
+reportGenes(RAGP_norm,list = c("NeuN","Th","Chat","Npy","Sst","Adra1d"), ranges = "mad", weight = 1.5)
+```
+```{r echo = FALSE}
+knitr::kable(reportGenes(RAGP_norm,list = c("NeuN","Th","Chat","Npy","Sst","Adra1d"), ranges = "mad", weight = 1.5)) %>%
+  kableExtra::kable_styling(bootstrap_options = "condensed", font_size = 11)
+```
+
+
+Now that we've checked that our data looks alright, we can get off to making some plots! 
+
 Right off the bat, we can do some initial visualizations such as PCA
 ```{r fig.show='hold', out.width="47%"}
 myPCA(RAGP_norm)
@@ -81,11 +103,11 @@ myPCA(RAGP_norm, PCs.to.plot = c("PC1","PC3"), color.by = "Connectivity") +
 
 ```
 
+If other information or customizations are needed, there are other options within the function to achieve these goals. To extract the loadings, set "return.loadings = TRUE", if the scores themselves or other customizations are needed, the ggplot input can be extracted by setting "return.ggplot.input = TRUE". More information about customizations for plots can be found below.
 
-
-
-
-
+```{r echo=FALSE}
+#trial <- apply(t(loadings),1,function(x)(names(x[order(x, decreasing = TRUE)])[1:ngenes]))
+```
 
 
 
@@ -109,12 +131,12 @@ set_scale.range(c(-1,1))
 ```
 
 We can now visualize our data as a heatmap
-```{r, fig.width = 5, fig.height = 5, fig.align='center'}
+```{r, fig.width = 5, fig.height = 4, fig.align='center'}
 myHeatmap(RAGP_norm)
 ```
 
 This function also accepts a list of genes for which the heatmap should be shown
-```{r, fig.width=5,fig.height=5, fig.align='center'}
+```{r, fig.width=5,fig.height=4, fig.align='center'}
 myHeatmap(RAGP_norm, list =c("Sst","Npy","Th","Dbh","Gal","Chat","Ache","Pnmt",
                              "Scn1a","Cacna1a","Cacna1c"))
 ```
@@ -124,6 +146,10 @@ We can also find inexact matches (for example a peptide and its receptors, or a 
 myHeatmap(RAGP_norm, list = c("Sst","Npy","Gal"), exact = F)
 myHeatmap(RAGP_norm, list = c("Kcn","Cacn","Scn"), exact = F, main = "Ion Channels")
 ```
+
+
+
+## Setting up Annotation Tracks
 
 The function set_annot_samps() will store which annotations should be displayed as tracks along the heatmaps. While all of these annotations may be important, we may not want all of them to be shown on our heatmaps.To specify which annotations should be shown and what order they should be shown in, we can input a character vector of the annotations we want shown. The first annotation listed will be placed closest to the heatmap. 
 
@@ -140,4 +166,449 @@ We can also use myHeatmapByAnnotation to separate the samples by any annotation 
 myHeatmapByAnnotation(RAGP_norm, groupings = "State", main = "Separated by State")
 myHeatmapByAnnotation(RAGP_norm, groupings = "Sex", main = "Separated by Sex")
 ```
+
+This function also allows for samples to be ordered by more than one and up to three annotations. The default is to put a single space in between each annotated group, but this can be overwritten using the groupings.gaps argument, which takes the same number of inputs as the number of annotations supplied to the groupings argument and indicates how many spaces should be placed between each annotation. 
+
+```{r fig.width=8, fig.height=6, out.height= "47%", out.width= "47%", fig.show='hold'}
+myHeatmapByAnnotation(RAGP_norm, groupings = c("Connectivity","State"), main = "Separated by Connectivity then State")
+
+myHeatmapByAnnotation(RAGP_norm, groupings = c("Connectivity","State"), groupings.gaps = c(0,3), main = "Separated by Connectivity then State")
+```
+If the annotations are not sorted in the desired order, releveling the factor of the annotations and resetting the annotations will put them in the proper order. 
+
+```{r fig.width=7,fig.height=4.5, fig.align='center'}
+RAGP_annots$Connectivity <- forcats::fct_relevel(as.factor(RAGP_annots$Connectivity), c("SAN-Projecting", "Non-SAN-Projecting", "No Info Available"))
+set_annotations(RAGP_annots)
+
+myHeatmapByAnnotation(RAGP_norm, groupings = c("Connectivity","State"), groupings.gaps = c(0,3), main = "Separated by Connectivity then State")
+
+```
+
+We can visualize how clusters are split using the row.groups argument 
+```{r fig.width=8, fig.height=6, out.height= "47%", out.width= "47%", fig.show='hold'}
+myHeatmapByAnnotation(RAGP_norm, groupings = c("Connectivity","State"), groupings.gaps = c(0,3), row.groups = 3,  main = "Split into 3 Gene Clusters")
+
+myHeatmapByAnnotation(RAGP_norm, groupings = c("Connectivity","State"), groupings.gaps = c(0,3), row.groups = 5,  main = "Split into 5 Gene Clusters")
+```
+
+
+
+## Extracting the Heatmap Matrix and Clusters
+
+What if we want to extract the expression matrix in the order presented in the heatmap or want to extract identified clusters? 
+
+Both cases require saving the heatmap and showing both the rownames and colnames
+
+Extracting the matrix requires inputting the data itself and the heatmap, by saving to a new variable the matrix can be further manipulated or exported
+```{r results='hide', fig.show='hide'}
+myheatmap <- myHeatmapByAnnotation(RAGP_norm, groupings = c("Connectivity","State"), groupings.gaps = c(0,3), row.groups = 5,  show.colnames = TRUE)
+
+mat <- ExtractMatrix(RAGP_norm, myheatmap)
+mat[1:5,1:5]
+```
+```{r echo = FALSE}
+knitr::kable(mat[1:5,1:5])
+```
+
+
+Extracting clusters requires inputting the data itself, the heatmap, whether or not clusters are being extracted from genes, samples or both, the number of clusters to extract, and an option to name the groupings being extracted. Groups will automatically be labeled A-Z from top to bottom (or left to right for samples) and will be returned as a dataframe that can be passed directly to the annotations arguments in the params list object. 
+
+With gene annotations set, the groupings.genes arguments can also be set in the myHeatmapByAnnotation function
+```{r fig.width=8, fig.height=8, out.height= "47%", out.width= "47%", fig.show='hold'}
+myheatmap <-myHeatmapByAnnotation(RAGP_norm, groupings = c("Connectivity","State"), groupings.gaps = c(0,3), row.groups = 5,  show.colnames = TRUE)
+
+clusts <- extractClusters(RAGP_norm, heatmap = myheatmap, to.extract = "genes", nclusters = 5, GeneGroup_Name = "Gene_Clusters")
+head(clusts)
+
+set_annotations.genes(clusts)
+set_annot_genes("Gene_Clusters")
+myHeatmapByAnnotation(RAGP_norm, groupings = c("Connectivity","State"), groupings.gaps = c(0,3), groupings.genes = "Gene_Clusters")
+
+```
+```{r echo = FALSE, fig.width=8, fig.height=6, out.height= "47%", out.width= "47%", fig.show='hold'}
+# myheatmap 
+# 
+# head(clusts) %>%  knitr::kable("html") %>%
+#     kableExtra::kable_styling(full_width = F, position = "right")
+
+# grid::grid.newpage()
+# gridExtra::grid.table(head(clusts), theme = theme_minimal())
+```
+
+Of note, the same method can be applied when extracting clusters from a subset and adding to pre-existing annotations. Genes not included in this subset will be designated "No_Annot" in the annotations and if colors are specified for some but not all levels the remaining will be set to white
+
+```{r fig.show='hide'}
+channels.heatmap <- myHeatmapByAnnotation(RAGP_norm, c("Kcn","Hcn","Cacn","Scn"), exact = F, groupings = "State", show.colnames = T)
+
+channel.clusts <- extractClusters(RAGP_norm, channels.heatmap, to.extract = "genes", ncluster = 2, GeneGroup_Name = "Channel_Clusters")
+
+update_annotations.genes(annotation = "Channel_Clusters", values = channel.clusts)
+set_annot_genes(c("Gene_Clusters","Channel_Clusters"))
+update_annot_cols("Channel_Clusters", values.list = c('A' = 'green', 'B' = 'darkgreen'))
+myHeatmapByAnnotation(RAGP_norm, c("Kcn","Hcn","Cacn","Scn"), exact = F, groupings = "State", groupings.genes = "Channel_Clusters")
+myHeatmapByAnnotation(RAGP_norm, groupings = "State", groupings.genes = "Channel_Clusters",  main = "Group by Channel Clusters")
+
+```
+```{r echo = FALSE, fig.width=8, fig.height=6, out.height= "47%", out.width= "47%", fig.show='hold'}
+channels.heatmap
+myHeatmapByAnnotation(RAGP_norm, c("Kcn","Hcn","Cacn","Scn"), exact = F, groupings = "State", groupings.genes = "Channel_Clusters")
+```
+```{r echo = FALSE, fig.width=7.5,fig.height=7, fig.align='center'}
+myHeatmapByAnnotation(RAGP_norm, groupings = "State", groupings.genes = "Channel_Clusters", main = "Group by Channel Clusters")
+```
+
+
+
+
+
+
+
+
+# Correlations
+
+## Finding top correlations in your data
+
+If we want to check for the top correlations in our data, we can use the *correlateGenesWithin* function to check for correlations between genes (or rows of the data). Supplying the data alone will output a histogram showing the distribution of all pairwise correlations within the data. Supplying a set of limits to the function will instead return a dataframe detailing the pairwise correlations that pass the threshold provided. For example, setting limits = c(-0.5, 0.5) will return correlations below -0.5 and above 0.5. 
+
+```{r fig.width = 7.5, fig.height = 4, fig.align = 'center', results='hold'}
+correlateGenesWithin(RAGP_norm)
+topcors <- correlateGenesWithin(RAGP_norm, limits = c(-0.7, 0.7))
+head(topcors)
+
+```
+The *correlateGenesAcross* function works similarly, although it computes the pairwise correlation between the genes or variables (rows) between both datasets. 
+
+## Finding top correlations to a gene of interest
+
+If we want to find the top correlations to a particular gene of interest, the process is very similar. Supplying the data and the gene/variable of interest will output a histogram with the range of correlations while supplying limits will instead output a heatmap of the gene of interst and all genes passing the limits supplied. 
+```{r echo = FALSE, results='hide'}
+set_annot_genes(NA)
+```
+```{r fig.width=8, fig.height=6, out.height= "47%", out.width= "47%", fig.show='hold'}
+corrs2Gene(RAGP_norm, "Chat")
+corrs2Gene(RAGP_norm, "Chat", limits = c(-0.4, 0.8))
+
+```
+Setting "show.report = TRUE" will return a vector of the correlations that passed the provided limits 
+
+
+
+
+
+
+# Scatter Plots 
+
+Supplying a dataset to the scatterGenes function allows the user to choose two gene names (that must match the rownames in the supplied matrix) to plot in a scatterplot 
+
+There are also a variety of options for how to deal with NA values, such as setting them equal to an offset of the minimum value (the default is 2) or removing them altogether
+
+```{r fig.width=8, fig.height=6, out.height= "47%", out.width= "47%", fig.show='hold'}
+scatterGenes(RAGP_norm, "Th", "Chat")
+scatterGenes(RAGP_norm, "Th", "Chat", na.fix = FALSE, color.by = "purple")
+```
+
+Other options are available to set the X and Y limits, removing any points outside the designated range, or to "squish" the values, setting any values outside the designated limits to the minimum/maximum value
+
+```{r fig.width=8, fig.height=6, out.height= "47%", out.width= "47%", fig.show='hold'}
+scatterGenes(RAGP_norm, "Th", "Chat", xlimits = c(-2,2), ylimits = c(-2,2))
+scatterGenes(RAGP_norm, "Th", "Chat", squish1 = c(-2,2), squish2 = c(-2,2))
+```
+
+As with the PCA plots, the scatter plots can be colored by any available annotation or by the expression of any gene avaialble in the provided dataset
+
+```{r fig.width=8, fig.height=6, out.height= "47%", out.width= "47%", fig.show='hold'}
+scatterGenes(RAGP_norm, "Th", "Chat", color.by = "Connectivity")
+scatterGenes(RAGP_norm, "Th", "Chat", color.by = "State")
+scatterGenes(RAGP_norm, "Th", "Chat", color.by = "Chat")
+scatterGenes(RAGP_norm, "Th", "Chat", color.by = "Npy")
+```
+As with the PCA, the output of scatterGenes is a ggplot object to which additional layers can be added or overwritten  
+
+
+\* ***tip:*** *for all plotting functions, points are plotted in the order they appear in the input matrix, if you don't like the order it which they show up and you want the points on top to be on bottom, try rearranging the matrix before plotting, ex: RAGP_norm[,c(300:405,1:299)] instead of RAGP_norm* \*  
+
+
+
+
+
+# Beeswarm plots 
+
+The function beeswarmGenes similarly takes an input data matrix and allows for beeswarm visualization of any set of genes in the matrix, both with exact or inexact matches. beewarmGenes also has the ability to control how NA values are treated as well as setting x and y limits and work similar to the scatterGenes function 
+
+```{r fig.width=8, fig.height=6, out.height= "47%", out.width= "47%", fig.show='hold'}
+beeswarmGenes(RAGP_norm, c("Th","Chat","Sst","Gal","Npy"))
+beeswarmGenes(RAGP_norm, c("Gal","Npy"), exact = "FALSE", squishy = c(-2,2), color.by = "purple")
+```
+
+Also similar to the scatterGenes function, beeswarmGenes allows coloring by any available annotation, with the default to also group values by these annotations along the X axis
+
+```{r fig.width=8, fig.height=6, out.height= "47%", out.width= "47%", fig.show='hold'}
+beeswarmGenes(RAGP_norm, c("Th","Chat","Sst","Gal","Npy"), color.by = "Connectivity")
+beeswarmGenes(RAGP_norm, c("Th","Chat","Sst","Gal","Npy"), color.by = "State")
+```
+
+The user can further control how things are grouped on the X axis if some method other than coloring is desired. Setting groupby.x = FALSE removes the separation while setting it to another annotation will separate the samples accordingly.
+
+```{r fig.width=8, fig.height=6, out.height= "47%", out.width= "47%", fig.show='hold'}
+beeswarmGenes(RAGP_norm, c("Th","Chat","Sst","Gal","Npy"), color.by = "State", groupby.x = FALSE )
+beeswarmGenes(RAGP_norm, c("Th","Chat","Sst","Gal","Npy"), color.by = "State", groupby.x = "Connectivity")
+```
+
+
+In the case of coloring and grouping by different annotations, it is not readily apparent which annotation is which in terms of the grouping along the X axis. To circumvent this issue and for clearer separations, the option to "wrap" the plots should be set to true, separating each gene into its own plot with the grouped annotations on the X axis instead, number of columns to split the plots into can also be specified. 
+
+As with other functions returning ggplot objects, layers can be added or altered to these plots. Here, we will rotate the X axis labels in the second plots for clarity 
+
+```{r fig.width=8, fig.height=8, out.height= "47%", out.width= "47%", fig.show='hold'}
+beeswarmGenes(RAGP_norm, c("Th","Chat","Sst","Gal","Npy", "Cacna1c"), color.by = "State", facet.wrap = TRUE)
+beeswarmGenes(RAGP_norm, c("Th","Chat","Sst","Gal","Npy", "Cacna1c"), color.by = "State", 
+  groupby.x = "Connectivity", facet.wrap = TRUE, ncols = 3 ) + theme(axis.text.x = element_text(angle = 45, size = 15, hjust = 1))
+```
+
+
+# Density Plots 
+
+While beeswarms are useful for seeing the range of data, sometimes density plots are more appropriate. Much of the functionality works similarly to beeswarms, except whatever is indicated as the coloring must be how the groups will be separated. 
+
+```{r fig.width=8, fig.height=8, out.height= "47%", out.width= "47%", fig.show='hold'}
+DensityGenes(RAGP_norm, c("Th","Chat","Sst","Gal","Npy", "Cacna1c"))
+DensityGenes(RAGP_norm, c("Th","Chat","Sst","Gal","Npy", "Cacna1c"), color.by = "State")
+```
+
+Similar to beeswarmGenes, the NA values will be offset from the minimum by a value of 2, this can be switched or set to FALSE to remove missing values. Additionally, the transparency and number of columns can be altered. 
+
+Another option is to facet the plots as well, which will separate the plots by annotation as below. 
+
+```{r fig.show='hide'}
+DensityGenes(RAGP_norm, c("Sst"), exact = F, color.by = "Connectivity", ncol = 3, legend.position = "none")
+DensityGenes(RAGP_norm, c("Sst"), exact = F, color.by = "Connectivity", facet.annotation = "grid", legend.position = "bottom") + theme(strip.text = element_text(size = 15))
+```
+
+```{r echo = FALSE, fig.width=7, fig.height=8, fig.align="center", fig.show='hold'}
+library(patchwork)
+p1 <- DensityGenes(RAGP_norm, c("Sst"), exact = F, color.by = "Connectivity", ncol = 3, legend.position = "none")
+p2 <- DensityGenes(RAGP_norm, c("Sst"), exact = F, color.by = "Connectivity", facet.annotation =  "grid") + theme(strip.text = element_text(size = 10), legend.position = "bottom")
+(p1 / p2 + patchwork::plot_layout(heights = c(1,4)))
+```
+
+# Volcano Plots 
+
+The volcano functions allows the user to pick two levels of any stored annotations (works with sample annotations) and visualize their comparison as a volcano plot. The following plots will all examine the "Connectivity" annotation looking only at the "Non-SAN-Projecting" and "SAN-Projecting" groups. The group "No_Info_Available" is not considered in the comparison and the same will hold true for any comparison chosen. The plot is colored based on significant genes for the given pvalue and fold change cutoffs (defualts: FC.cut = 2, Pval.cut = 0.05).  These cutoffs as well as the colors indicating up or downregulation are immediately customizable
+```{r fig.width=8, fig.height=6, out.height= "47%", out.width= "47%", fig.show='hold'}
+volcano(RAGP_norm, groups = "Connectivity", levels = c("Non-SAN-Projecting","SAN-Projecting"))
+volcano(RAGP_norm, "Connectivity", levels = c("Non-SAN-Projecting","SAN-Projecting"),
+  pval.cut = 0.1, FC.cut = 1.5,upreg.color = "yellow", downreg.color = "blue",
+  nosig.color = "grey90")
+```
+
+There is an obvious need to label either significant genes or genes of interest. While the function itself sets up the ability to label the points, adding the labels will be done outside the function so that spacing and sizings can be customized to the users needs. Already built into the function are the options to label all genes or to label just the significant genes. To understand how this works, lets take a look at the ggplot input that the function is using, we can see this by setting return.ggplot.input to TRUE. This also gives the statistics themselves. To learn more about the ggplot input please see the help file or the customization section below
+
+```{r results='hide'}
+volcano.input <- volcano(RAGP_norm, "Connectivity", levels = c("Non-SAN-Projecting","SAN-Projecting"),
+  FC.cut = 1.5, return.ggplot.input = TRUE)
+head(volcano.input$input_data)
+```
+```{r echo = FALSE}
+knitr::kable(head(volcano.input$input_data))
+```
+
+This data frame contains the column "Gene" which gives the names of all the genes, and "Sig.Genes" which is similar to the Gene column but leaves blank all genes that are not significant according to the given thresholds. These are already a part of the ggplot object that the function creates and we can add another aesthetic layer outside the function and customize the spacing and sizes if needed. 
+
+
+```{r fig.width=8, fig.height=6, out.height= "47%", out.width= "47%", fig.show='hold'}
+volcano(RAGP_norm, "Connectivity", levels = c("Non-SAN-Projecting","SAN-Projecting")) +
+  geom_text(aes(label=Gene),nudge_x = 0.1, nudge_y = -.1)
+volcano(RAGP_norm, "Connectivity", levels = c("Non-SAN-Projecting","SAN-Projecting")) +
+  geom_text(aes(label=Sig.Genes),nudge_x = -0.15, nudge_y = .3,size = 8)
+```
+
+We can also give the function a list of genes that we want to specifically highlight. This will be stored under "My.Genes" and is structured similarly to "Sig.Genes" above. 
+
+We can also add vertical and horizontal lines outside the function as well, highlighting the cutoffs we have chosen. 
+
+```{r fig.width=8, fig.height=6, out.height= "47%", out.width= "47%", fig.show='hold'}
+volcano(RAGP_norm, "Connectivity", levels = c("Non-SAN-Projecting","SAN-Projecting"),
+  show.genes = c("Th","Chat","NeuN","Gal","Sst")) + geom_text(aes(label=My.Genes),nudge_x = 0.1, nudge_y = -.1, size = 5, color = "black")
+
+##add lines
+horiz.lines <- c(0.05)
+vert.lines <- c(2,3)
+
+volcano(RAGP_norm, "Connectivity", levels = c("Non-SAN-Projecting","SAN-Projecting")) +
+  geom_hline(yintercept = c(-log10(horiz.lines))) +
+  geom_vline(xintercept = c(log2(vert.lines), -log2(vert.lines)))
+```
+
+
+# Other Helpful Functions
+
+A few other helpful tools are functions that can subset your data based on annotations. 
+
+For example, if we want to run an ANOVA to look at differences between Connectivity states, we probably want to take out "No Info Available" as it will bias the results. 
+
+To do this we can use the "subsetSamples" function which allows us to choose a group and extract only certain annotations.
+
+```{r}
+RAGP_subset <- subsetSamples(RAGP_norm, group = "Connectivity", take.out = c("SAN-Projecting", "Non-SAN-Projecting"))
+
+dim(RAGP_norm)
+dim(RAGP_subset)
+```
+
+A similar function, "subsetGenes" has the same utility but on the rows instead of the columns although in this case the user can also supply a list of genes with an option to have an exact or inexact match. 
+
+
+
+# ANOVA  
+
+The two anova functions within this package utilize the stored parameters for easy comparisons. The inputs to the function are simply the data the user wishes to interrogate (if the data is a subset of a larger data matrix, the annotations will be matched accordingly), the category to be compared against, the pvalue threshold for significance (default p < 0.05) and the option to return a larger report of the output from AOV or TukeysHSD. 
+
+* The standard output includes a list object with 5 items which can all be accessible with '$'  
+  + AOV.Results -- a dataframe giving the statistics from the ANOVA
+  + a list of the significant genes
+  + a list of the non-significant genes 
+  + a dataframe containing the adjusted pvalues after TukeyHSD for each contrast (if there are more than two contrasts)
+  + a dataframe containing the difference from TukeyHSD
+  
+
+We're now going to use our subset from above so that we can just look at the difference between SAN-Projecting and Non-SAN-Projecting cells. We'll see when we use this in the heatmap as well, the heatmap function will properly subset for the right annotations. 
+
+```{r results='hide'}
+aov.connectivity <- AOV1way(RAGP_subset, "Connectivity", pthreshold = 0.001)
+head(aov.connectivity$AOV.Results)
+```
+```{r echo = FALSE, results='hide'}
+set_annot_genes(NA)
+```
+```{r echo = FALSE}
+knitr::kable(head(aov.connectivity$AOV.Results))
+```
+```{r fig.width=7,fig.height=5, fig.align='center'}
+myHeatmapByAnnotation(RAGP_subset, aov.connectivity$Sig.Genes, groupings = "Connectivity", main = "Genes Significantly Different Across Connectivity")
+```
+
+The same concepts can be applied to AOV2way, which performs a 2 way ANOVA. The output will contain more options as it will supply the significant genes and TukeyHSD results for each category independent as well as the interaction between the two. 
+
+
+# Template Matching
+
+Another way to find differences between annotations is to use Pavlidis Template Matching (PTM). This function will allow us to find either gene or sample profiles that match a template of our choice. 
+
+For example, we can search for genes that follow a pattern for certain annotations. Lets try to find genes that are high in States A and F and low everywhere else. We can match by correlation or pvalue and choose our cutoff and correlation methods. (See help file for more details). The function will return a list of genes that pass the cutoff chosen. 
+
+```{r}
+PTM(RAGP_norm, match.template = "State", annotation.level.set.high = c("A","F"), 
+    cut.by = "pvals", cutoff = 0.001)
+```
+
+If we set "return.vals = TRUE" it will return a dataframe giving the pvalue and correlation value for each variable compared to the supplied template (regardless of whether or not it passed the cutoff)
+
+```{r results='hide'}
+temp.match <- PTM(RAGP_norm, match.template = "State", annotation.level.set.high = "A", 
+    cut.by = "pvals", cutoff = 0.001, return.vals = TRUE)
+head(temp.match)
+```
+```{r echo = F}
+knitr::kable(head(temp.match))
+```
+We can also supply a gene of interest as a template or a custom template if desired (see help file for more details)
+
+```{r}
+PTM(RAGP_norm, match.template = "Npy", 
+    cut.by = "rvals", cutoff = 0.8)  ##searched for correlations to Npy above 0.8 
+```
+The same can be performed for samples by setting "Find.Match.For = "samples".
+
+
+# Customizations 
+
+Nearly all plots produced with this package (with the exception of heatmaps and histograms) are created using ggplot and are therefore highly customizable as we've alluded to above. ggplot works in layers, enabling the user to add elements on top of a plot which also allows us to build upon, or replace, elements in plots created using dataVisEasy. 
+
+For example, many of the base function have titles and axis labels built in based on the plot itself. 
+
+However, by adding additional layers outside the function, we can overwrite many of these options or adjust whats already there: 
+
+```{r fig.width=8, fig.height=6, out.height= "47%", out.width= "47%", fig.show='hold'}
+scatterGenes(RAGP_norm, "Sst","Sstr2")
+
+scatterGenes(RAGP_norm, "Sst", "Sstr2") + #base function
+  ggtitle("This is my new title!!") + ##changing title
+  ylab("Custom label on the Y axis") + ##changing y axis label
+  theme(plot.title = element_text(size = 30, hjust = 0), ##changing size and position of title
+        plot.background = element_rect(fill = "gray"), ##add a background 
+        panel.background = element_rect(fill = "lightblue"), ##add a background to plot
+        panel.grid.major = element_line(size = 5), ##adding gridlines  
+        axis.title.x = element_text(size = 50, angle = 20, color = "blue"),##changing x axis
+        axis.title.y = element_text(size = 15)) ##changing y axis size
+         
+
+```
+Depending on the underlying data, we can also add new types of plot elements, for example adding boxplots to a beeswarm plot as below. 
+
+```{r fig.width=8, fig.height=6, out.height= "47%", out.width= "47%", fig.show='hold'}
+
+beeswarmGenes(RAGP_norm, c("Th","Chat","Sst","Gal"), color.by = "State", facet.wrap = TRUE)
+beeswarmGenes(RAGP_norm, c("Th","Chat","Sst","Gal"), color.by = "State", facet.wrap = TRUE)+
+  geom_boxplot(alpha = 0.75) ##adding a boxplot, setting transparency to 0.75
+
+```
+If you want to do further customizations or examine the data yourself, you can set "return.ggplot.input = TRUE" and assign it to a variable 
+
+* The standard output includes a list object with several items which can all be accessible with '\$', the items common to most plots are:   
+  + input_data -- this is the dataframe that is supplied directly to ggplot. This will contain the data supplied to the function but will be formatted for ggplot. Any alterations to the data (such as squishing the data) will have been made and any available annotations will already have been added to the dataframe. If you want to make your own plot with your own customizations, using this as an input is a good place to start. 
+  + plot_call -- This is the code that was used to generate the plot produced. Note that simply accessing it by 'plot_call' will include escape characters. The full call can be accessed by cat(plot\$plot_call). 
+  + coloring -- This contains the coloring parameters that are used to generate the plot, see the plot_call for how to use them
+
+If you're familiar with ggplot and want to make your own plots, the 'input_data' is a good place to start. And whether you're a beginner or a pro, checking out the 'plot_call' is a great way to get more familiar with ggplot and see how the plot itself was made. It should be noted that a lot of the parameters are inputs to the original function and must be put in manually to properly recreate the plot. 
+
+
+```{r fig.show='hide', results='hide'}
+plot <- beeswarmGenes(RAGP_norm, c("Th","Chat","Sst","Gal"), color.by = "Connectivity", return.ggplot.input = TRUE)
+head(plot$input_data)
+```
+```{r echo=FALSE}
+knitr::kable(head(plot$input_data))
+```
+```{r}
+cat(plot$plot_call)
+```
+The plot can be recreated using the above call and incorporating both the input_data and other inputs to the function: 
+
+* 'variable' and 'value' can be found in the input_data dataframe
+* 'colors' can be found in the "coloring" object from the output
+* 'color.by' can also be found in the "coloring" object, but should also have been supplied by the user, when refereed to in the main ggplot call, should be pointed to directly as it will be a column in the dataframe
+* most of the other named variables are parameters in the function itself, most of which have a set default that can be accessed by looking at the help page
+* other parameters such as the labels and sizes are internal options in the function itself 
+
+
+To recreate the original plots, we can input the following code: 
+
+```{r fig.width = 7.5, fig.height = 4.5, fig.align = 'center', results='hold'}
+ggplot(plot$input_data, aes(x = variable, y = value, fill = Connectivity, group = Connectivity)) + 
+  ggbeeswarm::geom_quasirandom(pch = 21, color = "black", dodge.width = 0.8, size = 3, alpha = 1 ) +##the pch and color make a black outline around circular points
+  scale_fill_manual(values = plot$coloring$colors) + labs(fill = plot$coloring$color.by) + ##addings specified colors 
+  theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust = 0.5, size = 40), strip.text = element_text(size = 25), 
+    strip.background.x = element_blank(), legend.position = "right", axis.title.y = element_text(size = 20), 
+    axis.title.x = element_text(), axis.text.x = element_text(size = 25)) + ylab("Normalized Expression Level")
+```
+You'll notice that many of the parameters used in that call are theme and aesthetic parameters that the package uses, a similar plot can be created using the ggplot default aesthetics as below. 
+
+Other custom alterations can be made as well, changing the shape, size of points, transparency, etc. In this case, the shape is changed such that no outline is used, therefore the parameter is 'color' as opposed to 'fill'.
+
+```{r fig.width=8, fig.height=6, out.height= "47%", out.width= "47%", fig.show='hold'}
+ggplot(plot$input_data, aes(x = variable, y = value, fill = Connectivity, group = Connectivity)) + 
+  ggbeeswarm::geom_quasirandom(pch = 21, color = "black", dodge.width = 0.8, size = 3, alpha = 1 ) +##the pch and color make a black outline around circular points
+  scale_fill_manual(values = plot$coloring$colors) + labs(fill = plot$coloring$color.by) ##addings specified colors 
+
+
+ggplot(plot$input_data, aes(x = variable, y = value, color = Connectivity, group = Connectivity)) +  
+  ggbeeswarm::geom_quasirandom(pch = 18, dodge.width = 0.5, size = 5, alpha = 0.4 ) +##the pch and color make a black outline around circular points
+  scale_color_manual(values = plot$coloring$colors) + labs(color = plot$coloring$color.by) ##addings specified colors 
+ 
+```
+
+
+More customization are possible and there much more information about specific utilities in the help files. 
+
+We hope you enjoy this package for easy data visualization!
 

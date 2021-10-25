@@ -21,29 +21,54 @@ assessScale <- function(     ###Returns percent of data above, below, and within
 
 
 #' @export
-subsetGenes <- function(   ##simply pulls list of genes out of dataset into a new matrix
-  data,  ##this will be a matrix of values, with genes in the rows and samples in the columns
-  list,   ##list of gene or genes that will be extracted from the dataset, exact matches
-  order.by = NULL, ##gene to order by
-  exact = TRUE ##if true, it'll find exact matches, if false, will use grep and find anything with the term in it
+subsetGenes <- function(  ##subset samples out of matrix based on metadata group
+  data, ##matrix of values, with genes in the rows and samples in the columns
+  group, ##group from which to subset, vector that is same length as columns
+  take.out, ##which part of the group to extract, one or more of the factors in the "group"
+  list,
+  order.by = NULL, ##sample to order by
+  exact = F,
+  subset.by = "annotation" #other option is by "name"
 ){
 
-  if(exact==TRUE){
-    subset <- data[which(rownames(data) %in% list),];
-    if (nrow(subset) == 0 ) {stop('exact matches for list not found in rownames data')}
+  if (subset.by == "annotation") {
+    temp.annotations.genes <- params$annotations.genes
+
+    if (group %in% colnames(temp.annotations.genes)) {
+
+      if (any(rownames(data) %notin% rownames(temp.annotations.genes))) {
+        stop('rownames of input data do not match rownames of annotations, cannot link annotations to data')
+      }
+      temp.annotations.genes <- temp.annotations.genes[match(rownames(data), rownames(temp.annotations.genes)),, drop = FALSE]
+
+      groupings <- as.factor(temp.annotations.genes[,group] )
+
+      if (sum(take.out %in% groupings) != length(take.out)) {stop('provided arguments to take.out not found in indicated group')}
+      subset <- data[which(groupings %in% take.out),]
+    }else{
+      if (sum(take.out %in% group) != length(take.out)) {stop('provided arguments to take.out not found in indicated group')}
+      subset <- data[which(group %in% take.out),]
+    }
   }
 
-  if (exact==FALSE){
-    subset <- data[grep(paste(list, collapse = "|"),rownames(data)),]
-    if (nrow(subset) == 0 ) {stop('inexact matches for list not found in rownames data')}
+  if (subset.by == "name") {
+    if(exact==TRUE){
+      subset <- data[which(rownames(data) %in% list),];
+      if (nrow(subset) == 0 ) {stop('exact matches for list not found in rownames of data')}
+    }
+
+    if (exact==FALSE){
+      subset <- data[grep(paste(list, collapse = "|"),rownames(data)),]
+      if (nrow(subset) == 0 ) {stop('inexact matches for list not found in rownames of data')}
+    }
+
+    if (is.null(order.by)==FALSE){
+      subset <- subset[,order(data[which(rownames(data) %in% order.by),],na.last = F)]
+    }
   }
 
-  if (is.null(order.by)==FALSE){
-    subset <- subset[,order(data[which(rownames(data) %in% order.by),],na.last = F)]
-  }
   return(subset)
 }
-
 
 
 
@@ -51,27 +76,50 @@ subsetGenes <- function(   ##simply pulls list of genes out of dataset into a ne
 subsetSamples <- function(  ##subset samples out of matrix based on metadata group
   data, ##matrix of values, with genes in the rows and samples in the columns
   group, ##group from which to subset, vector that is same length as columns
-  take.out ##which part of the group to extract, one or more of the factors in the "group"
+  take.out, ##which part of the group to extract, one or more of the factors in the "group"
+  list,
+  order.by = NULL, ##sample to order by
+  exact = F,
+  subset.by = "annotation" #other option is by "name"
 ){
 
-  temp.annotations <- params$annotations
+  if (subset.by == "annotation") {
+    temp.annotations <- params$annotations
 
-  if (group %in% colnames(temp.annotations)) {
+    if (group %in% colnames(temp.annotations)) {
 
-    if (any(colnames(data) %notin% rownames(temp.annotations))) {
-      stop('colnames of input data do not match rownames of annotations, cannot link annotations to data')
+      if (any(colnames(data) %notin% rownames(temp.annotations))) {
+        stop('colnames of input data do not match rownames of annotations, cannot link annotations to data')
+      }
+      temp.annotations <- temp.annotations[match(colnames(data), rownames(temp.annotations)),, drop = FALSE]
+
+      groupings <- as.factor(temp.annotations[,group] )
+
+      if (sum(take.out %in% groupings) != length(take.out)) {stop('provided arguments to take.out not found in indicated group')}
+      subset <- data[,which(groupings %in% take.out)]
+    }else{
+      if (sum(take.out %in% group) != length(take.out)) {stop('provided arguments to take.out not found in indicated group')}
+      subset <- data[,which(group %in% take.out)]
     }
-    temp.annotations <- temp.annotations[match(colnames(data), rownames(temp.annotations)),, drop = FALSE]
-
-    groupings <- as.factor(temp.annotations[,group] )
-
-    if (sum(take.out %in% groupings) != length(take.out)) {stop('provided arguments to take.out not found in indicated group')}
-    set <- data[,which(groupings %in% take.out)]
-  }else{
-    if (sum(take.out %in% group) != length(take.out)) {stop('provided arguments to take.out not found in indicated group')}
-    set <- data[,which(group %in% take.out)]
   }
-  return(set)
+
+  if (subset.by == "name") {
+    if(exact==TRUE){
+      subset <- data[,which(colnames(data) %in% list)];
+      if (ncol(subset) == 0 ) {stop('exact matches for list not found in colnames of data')}
+    }
+
+    if (exact==FALSE){
+      subset <- data[,grep(paste(list, collapse = "|"),colnames(data))]
+      if (ncol(subset) == 0 ) {stop('inexact matches for list not found in colnames of data')}
+    }
+
+    if (is.null(order.by)==FALSE){
+      subset <- subset[order(subset[,which(colnames(data) %in% order.by)],na.last = F),]
+    }
+  }
+
+  return(subset)
 }
 
 

@@ -87,7 +87,8 @@ head(all.clusts$Sample_Groups)
 
 ###extract clusters from a heatmap with subsetted genes, catecholaminergic/cholinergic receptors
 #subset data for receptors
-RAGP_norm.receptors <- subsetGenes(RAGP_norm, list = c("Chrm","Chrn","Adr"), exact = FALSE)
+RAGP_norm.receptors <- subsetGenes(RAGP_norm, list = c("Chrm","Chrn","Adr"),
+exact = FALSE, subset.by = "name")
 heatmap.receptors <- myHeatmap(RAGP_norm.receptors,
   main = "Catecholaminergic and Cholinergic Receptors", row.groups = 6)
 
