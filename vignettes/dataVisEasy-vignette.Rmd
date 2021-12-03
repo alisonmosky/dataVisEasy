@@ -63,7 +63,7 @@ knitr::kable(reportGenes(RAGP_norm,list = c("NeuN","Th","Chat","Npy","Sst","Adra
 ```
 
 
-Now that we've checked that our data looks alright, we can get off to making some plots! 
+### Now lets visualize our data!! 
 
 Right off the bat, we can do some initial visualizations such as PCA
 ```{r fig.show='hold', out.width="47%"}
@@ -121,7 +121,7 @@ assessScale(RAGP_norm)
 
 ```
 
-If we want to change the scale, we can use the function set_scale.range to change it and then reassess how well our data fits. 
+If we want to change the scale, we can use the function set_scale.range to change it and then reassess how well our data fits. Generally having 70-80% of our data in range of the heatmap shows a good contrast between the high and low values, so we're going to stick with (-1,1) for now.
 
 ```{r}
 
@@ -130,7 +130,7 @@ assessScale(RAGP_norm)
 set_scale.range(c(-1,1))
 ```
 
-We can now visualize our data as a heatmap
+We can now visualize our data as a heatmap. The default color scale is blue, black, yellow, but this can be changed using "set_scale.colors".
 ```{r, fig.width = 5, fig.height = 4, fig.align='center'}
 myHeatmap(RAGP_norm)
 ```
@@ -249,7 +249,7 @@ myHeatmapByAnnotation(RAGP_norm, c("Kcn","Hcn","Cacn","Scn"), exact = F, groupin
 myHeatmapByAnnotation(RAGP_norm, groupings = "State", groupings.genes = "Channel_Clusters",  main = "Group by Channel Clusters")
 
 ```
-```{r echo = FALSE, fig.width=8, fig.height=6, out.height= "47%", out.width= "47%", fig.show='hold'}
+```{r echo = FALSE, fig.width=8, fig.height=6.5, out.height= "47%", out.width= "47%", fig.show='hold'}
 channels.heatmap
 myHeatmapByAnnotation(RAGP_norm, c("Kcn","Hcn","Cacn","Scn"), exact = F, groupings = "State", groupings.genes = "Channel_Clusters")
 ```
@@ -314,7 +314,7 @@ scatterGenes(RAGP_norm, "Th", "Chat", xlimits = c(-2,2), ylimits = c(-2,2))
 scatterGenes(RAGP_norm, "Th", "Chat", squish1 = c(-2,2), squish2 = c(-2,2))
 ```
 
-As with the PCA plots, the scatter plots can be colored by any available annotation or by the expression of any gene avaialble in the provided dataset
+As with the PCA plots, the scatter plots can be colored by any available annotation or by the expression of any gene available in the provided dataset. If colored by expression of a gene, points are colored across a gradient from blue to red where blue represents low values and red represents high expression values. Missing values will be colored in black. To change these colors, please see the help file for "set_expression_gradient.colors" and for more information about how the gradient is generated please see the help file for "myColorRamp5".
 
 ```{r fig.width=8, fig.height=6, out.height= "47%", out.width= "47%", fig.show='hold'}
 scatterGenes(RAGP_norm, "Th", "Chat", color.by = "Connectivity")
@@ -393,7 +393,7 @@ p2 <- DensityGenes(RAGP_norm, c("Sst"), exact = F, color.by = "Connectivity", fa
 
 # Volcano Plots 
 
-The volcano functions allows the user to pick two levels of any stored annotations (works with sample annotations) and visualize their comparison as a volcano plot. The following plots will all examine the "Connectivity" annotation looking only at the "Non-SAN-Projecting" and "SAN-Projecting" groups. The group "No_Info_Available" is not considered in the comparison and the same will hold true for any comparison chosen. The plot is colored based on significant genes for the given pvalue and fold change cutoffs (defualts: FC.cut = 2, Pval.cut = 0.05).  These cutoffs as well as the colors indicating up or downregulation are immediately customizable
+The volcano functions allows the user to pick two levels of any stored annotations (works with sample annotations) and visualize their comparison as a volcano plot. The following plots will all examine the "Connectivity" annotation looking only at the "Non-SAN-Projecting" and "SAN-Projecting" groups. The group "No_Info_Available" is not considered in the comparison and the same will hold true for any comparison chosen. The plot is colored based on significant genes for the given pvalue and fold change cutoffs (defaults: FC.cut = 2, Pval.cut = 0.05).  These cutoffs as well as the colors indicating up or downregulation are immediately customizable
 ```{r fig.width=8, fig.height=6, out.height= "47%", out.width= "47%", fig.show='hold'}
 volcano(RAGP_norm, groups = "Connectivity", levels = c("Non-SAN-Projecting","SAN-Projecting"))
 volcano(RAGP_norm, "Connectivity", levels = c("Non-SAN-Projecting","SAN-Projecting"),
@@ -608,7 +608,7 @@ ggplot(plot$input_data, aes(x = variable, y = value, color = Connectivity, group
 ```
 
 
-More customization are possible and there much more information about specific utilities in the help files. 
+### More customizations are possible and there is much more information about specific utilities in the help files.
 
-We hope you enjoy this package for easy data visualization!
+### We hope you enjoy this package for easy data visualization!
 

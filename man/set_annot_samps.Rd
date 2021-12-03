@@ -13,7 +13,7 @@ set_annot_samps(annotations = NULL)
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{annotations}{
-a character vector including the column names in the annotations parameter (\link[dataVisEasy]{set_annotations}) that should be shown as annotations in the heatmap. If no argument is supplied, assumes that all columns in the annotations should be shown in the heatmap.
+a character vector including the column names in the annotations parameter (\link[dataVisEasy]{set_annotations}) that should be shown as annotations in the heatmap. If no argument is supplied, assumes that all columns in the annotations should be shown in the heatmap. For showing multiple annotations, the order in which the annotations are listed is the order they will appear on the heatmap from the closest to the heatmap on the bottom to those farthest on the top. To remove all annotation tracks and reset, simply set to NA.
 }
 }
 \details{

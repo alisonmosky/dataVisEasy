@@ -4,6 +4,7 @@
 #' @importFrom reshape2 melt
 #' @importFrom ggbeeswarm geom_quasirandom
 #' @importFrom forcats fct_relevel
+#' @importFrom rlang .data
 #' @import ggplot2
 #' @export
 scatterGenes <- function(
@@ -59,7 +60,7 @@ scatterGenes <- function(
       if (sum(squish1 != FALSE) != 0) {dat.to.plot$Gene1 <-  scales::squish(dat.to.plot$Gene1,squish1)}
       if (sum(squish2 != FALSE) != 0) {dat.to.plot$Gene2 <-  scales::squish(dat.to.plot$Gene2,squish2)}
 
-      p <- ggplot(dat.to.plot, aes(x=Gene1,y=Gene2,fill=colors))+ geom_point(pch=21,color="black",size=5, alpha = transparency)  +
+      p <- ggplot(dat.to.plot, aes(x=.data$Gene1,y=.data$Gene2,fill=colors))+ geom_point(pch=21,color="black",size=5, alpha = transparency)  +
         scale_fill_identity() +labs(x=paste(gene1), y= paste(gene2)) +ggtitle(paste(gene2, "vs.",gene1)) +
         theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
                            axis.text = element_text(size=25),axis.title = element_text(size=30),
@@ -107,7 +108,7 @@ scatterGenes <- function(
       if (sum(squish1 != FALSE) != 0) {dat.to.plot$Gene1 <-  scales::squish(dat.to.plot$Gene1,squish1)}
       if (sum(squish2 != FALSE) != 0) {dat.to.plot$Gene2 <-  scales::squish(dat.to.plot$Gene2,squish2)}
 
-      p <- ggplot(dat.to.plot, aes(x=Gene1,y=Gene2,fill=eval(parse(text = color.by))))+ geom_point(pch=21,color="black",size=point.size, alpha = transparency)  +
+      p <- ggplot(dat.to.plot, aes(x=.data$Gene1,y=.data$Gene2,fill=eval(parse(text = color.by))))+ geom_point(pch=21,color="black",size=point.size, alpha = transparency)  +
         scale_fill_manual(values=colors) +labs(x=paste(gene1), y= paste(gene2)) +ggtitle(paste(gene2, "vs.",gene1)) + labs(fill=color.by) +
         theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
                            axis.text = element_text(size=25),axis.title = element_text(size=30), legend.position = legend.position)
@@ -134,7 +135,7 @@ scatterGenes <- function(
       if (sum(squish1 != FALSE) != 0) {dat.to.plot$Gene1 <-  scales::squish(dat.to.plot$Gene1,squish1)}
       if (sum(squish2 != FALSE) != 0) {dat.to.plot$Gene2 <-  scales::squish(dat.to.plot$Gene2,squish2)}
 
-      p <- ggplot(dat.to.plot, aes(x=Gene1,y=Gene2))+ geom_point(pch=21,color="black",fill = color.by, size=point.size, alpha = transparency)  +
+      p <- ggplot(dat.to.plot, aes(x=.data$Gene1,y=.data$Gene2))+ geom_point(pch=21,color="black",fill = color.by, size=point.size, alpha = transparency)  +
         scale_fill_manual(values=colors) +labs(x=paste(gene1), y= paste(gene2)) +ggtitle(paste(gene2, "vs.",gene1)) + labs(fill=color.by) +
         theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
                            axis.text = element_text(size=25),axis.title = element_text(size=30), legend.position = legend.position)
@@ -261,7 +262,7 @@ beeswarmGenes <- function( ##can save as ggplot object and add layers afterwards
 
 
         if (facet.wrap == FALSE) {
-          p <- ggplot(dat.to.plot, aes(x=variable,y=value,fill=colors, group=eval(parse(text=groupby.x))))+ ggbeeswarm::geom_quasirandom(pch=21,color="black", dodge.width = dodge.width, size=point.size, alpha = transparency) +
+          p <- ggplot(dat.to.plot, aes(x=.data$variable,y=.data$value,fill=colors, group=eval(parse(text=groupby.x))))+ ggbeeswarm::geom_quasirandom(pch=21,color="black", dodge.width = dodge.width, size=point.size, alpha = transparency) +
             scale_fill_identity() +
             theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
                                strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = legend.position,
@@ -283,7 +284,7 @@ beeswarmGenes <- function( ##can save as ggplot object and add layers afterwards
         }
 
         if (facet.wrap == TRUE) {
-          p <- ggplot(dat.to.plot, aes(x=eval(parse(text=groupby.x)),y=value,fill=colors,group=eval(parse(text=groupby.x))))+ ggbeeswarm::geom_quasirandom(pch=21,color="black", dodge.width = 0.8, alpha = transparency) +
+          p <- ggplot(dat.to.plot, aes(x=eval(parse(text=groupby.x)),y=.data$value,fill=colors,group=eval(parse(text=groupby.x))))+ ggbeeswarm::geom_quasirandom(pch=21,color="black", dodge.width = 0.8, alpha = transparency) +
             scale_fill_identity() +
             theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
                                strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = legend.position,
@@ -296,17 +297,17 @@ beeswarmGenes <- function( ##can save as ggplot object and add layers afterwards
                                axis.title.y = element_text(size=20), axis.title.x=element_blank(), axis.text.x = element_text(size=axis.text.x.size))'
 
           if(is.raw.Ct==T){
-            p <- p + ylab("Raw Ct Value") + scale_y_reverse() + facet_wrap(~variable, ncol=ncols, scales = scales)
+            p <- p + ylab("Raw Ct Value") + scale_y_reverse() + facet_wrap(~.data$variable, ncol=ncols, scales = scales)
             call <- paste(call, '+ ylab("Raw Ct Value") + scale_y_reverse() + facet_wrap(~variable, ncol=ncols, scales = scales)')
           }else{
-            p <- p + ylab("Normalized Expression Level") + facet_wrap(~variable, ncol=ncols, scales = scales)
+            p <- p + ylab("Normalized Expression Level") + facet_wrap(~.data$variable, ncol=ncols, scales = scales)
             call <- paste(call, '+ ylab("Normalized Expression Level") + facet_wrap(~variable, ncol=ncols, scales = scales)')
           }
         }
 
       }else{ ##no groupings, and no facet
 
-        p <- ggplot(dat.to.plot, aes(x=variable,y=value,fill=colors))+ ggbeeswarm::geom_quasirandom(pch=21,color="black", size=point.size) +
+        p <- ggplot(dat.to.plot, aes(x=.data$variable,y=.data$value,fill=colors))+ ggbeeswarm::geom_quasirandom(pch=21,color="black", size=point.size) +
           scale_fill_identity() +
           theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
                              strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = legend.position,
@@ -369,7 +370,7 @@ beeswarmGenes <- function( ##can save as ggplot object and add layers afterwards
 
         if (facet.wrap == FALSE) {
 
-          p <- ggplot(dat.to.plot, aes(x=variable,y=value,fill=eval(parse(text=color.by)), group=eval(parse(text=color.by))))+ ggbeeswarm::geom_quasirandom(pch=21,color="black", dodge.width = dodge.width, size=point.size, alpha = transparency) +
+          p <- ggplot(dat.to.plot, aes(x=.data$variable,y=.data$value,fill=eval(parse(text=color.by)), group=eval(parse(text=color.by))))+ ggbeeswarm::geom_quasirandom(pch=21,color="black", dodge.width = dodge.width, size=point.size, alpha = transparency) +
             scale_fill_manual(values=colors) + labs(fill=color.by) +
             theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
                                strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = legend.position,
@@ -392,7 +393,7 @@ beeswarmGenes <- function( ##can save as ggplot object and add layers afterwards
 
         if (facet.wrap == TRUE) {
 
-          p <- ggplot(dat.to.plot, aes(x=eval(parse(text=color.by)),y=value,fill=eval(parse(text=color.by))))+ ggbeeswarm::geom_quasirandom(pch=21,color="black", dodge.width = dodge.width, size=point.size, alpha = transparency) +
+          p <- ggplot(dat.to.plot, aes(x=eval(parse(text=color.by)),y=.data$value,fill=eval(parse(text=color.by))))+ ggbeeswarm::geom_quasirandom(pch=21,color="black", dodge.width = dodge.width, size=point.size, alpha = transparency) +
             scale_fill_manual(values=colors) + labs(fill=color.by) +
             theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
                                strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = legend.position,
@@ -405,10 +406,10 @@ beeswarmGenes <- function( ##can save as ggplot object and add layers afterwards
                              axis.title.y = element_text(size=20), axis.title.x=element_blank(), axis.text.x = element_text(size=axis.text.x.size))'
 
           if(is.raw.Ct==T){
-            p <- p + ylab("Raw Ct Value") + scale_y_reverse() + facet_wrap(~variable, ncol=ncols, scales = scales)
+            p <- p + ylab("Raw Ct Value") + scale_y_reverse() + facet_wrap(~.data$variable, ncol=ncols, scales = scales)
             call <- paste(call, '+ ylab("Raw Ct Value") + scale_y_reverse() + facet_wrap(~variable, ncol=ncols, scales = scales)')
           }else{
-            p <- p + ylab("Normalized Expression Level") + facet_wrap(~variable, ncol=ncols, scales = scales)
+            p <- p + ylab("Normalized Expression Level") + facet_wrap(~.data$variable, ncol=ncols, scales = scales)
             call <- paste(call, '+ ylab("Normalized Expression Level") + facet_wrap(~variable, ncol=ncols, scales = scales)')
           }
         }
@@ -431,7 +432,7 @@ beeswarmGenes <- function( ##can save as ggplot object and add layers afterwards
 
           if (facet.wrap == FALSE) {
 
-            p <- ggplot(dat.to.plot, aes(x=variable,y=value,fill=eval(parse(text=color.by)), group=eval(parse(text=groupby.x))))+ ggbeeswarm::geom_quasirandom(pch=21,color="black", dodge.width = dodge.width, size=point.size, alpha = transparency) +
+            p <- ggplot(dat.to.plot, aes(x=.data$variable,y=.data$value,fill=eval(parse(text=color.by)), group=eval(parse(text=groupby.x))))+ ggbeeswarm::geom_quasirandom(pch=21,color="black", dodge.width = dodge.width, size=point.size, alpha = transparency) +
               scale_fill_manual(values=colors) + labs(fill=color.by) +
               theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
                                  strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = legend.position,
@@ -454,7 +455,7 @@ beeswarmGenes <- function( ##can save as ggplot object and add layers afterwards
 
           if (facet.wrap == TRUE) {
 
-            p <- ggplot(dat.to.plot, aes(x=eval(parse(text=groupby.x)),y=value,fill=eval(parse(text=color.by)),group=eval(parse(text=groupby.x))))+ ggbeeswarm::geom_quasirandom(pch=21,color="black", dodge.width = dodge.width, size=point.size, alpha = transparency) +
+            p <- ggplot(dat.to.plot, aes(x=eval(parse(text=groupby.x)),y=.data$value,fill=eval(parse(text=color.by)),group=eval(parse(text=groupby.x))))+ ggbeeswarm::geom_quasirandom(pch=21,color="black", dodge.width = dodge.width, size=point.size, alpha = transparency) +
               scale_fill_manual(values=colors) + labs(fill=color.by) +
               theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
                                  strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = legend.position,
@@ -468,10 +469,10 @@ beeswarmGenes <- function( ##can save as ggplot object and add layers afterwards
 
 
             if(is.raw.Ct==T){
-              p <- p + ylab("Raw Ct Value") + scale_y_reverse() + facet_wrap(~variable, ncol=ncols, scales = scales)
+              p <- p + ylab("Raw Ct Value") + scale_y_reverse() + facet_wrap(~.data$variable, ncol=ncols, scales = scales)
               call <- paste(call, '+ ylab("Raw Ct Value") + scale_y_reverse() + facet_wrap(~variable, ncol=ncols, scales = scales)')
             }else{
-              p <- p + ylab("Normalized Expression Level") + facet_wrap(~variable, ncol=ncols, scales = scales)
+              p <- p + ylab("Normalized Expression Level") + facet_wrap(~.data$variable, ncol=ncols, scales = scales)
               call <- paste(call, '+ ylab("Normalized Expression Level") + facet_wrap(~variable, ncol=ncols, scales = scales)')
             }
           }
@@ -483,7 +484,7 @@ beeswarmGenes <- function( ##can save as ggplot object and add layers afterwards
 
           if (any(squishy != FALSE)) { dat.to.plot$value <- scales::squish(dat.to.plot$value, squishy)}
 
-          p <- ggplot(dat.to.plot, aes(x=variable,y=value,fill=eval(parse(text=color.by))))+ ggbeeswarm::geom_quasirandom(pch=21,color="black", size=point.size, alpha = transparency) +
+          p <- ggplot(dat.to.plot, aes(x=.data$variable,y=.data$value,fill=eval(parse(text=color.by))))+ ggbeeswarm::geom_quasirandom(pch=21,color="black", size=point.size, alpha = transparency) +
             scale_fill_manual(values=colors) + labs(fill=color.by) +
             theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
                                strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = legend.position,
@@ -536,7 +537,7 @@ beeswarmGenes <- function( ##can save as ggplot object and add layers afterwards
 
         if (facet.wrap == FALSE) {
 
-          p <- ggplot(dat.to.plot, aes(x=variable,y=value, group=eval(parse(text=groupby.x))))+ ggbeeswarm::geom_quasirandom(pch=21,color="black", fill = color.by, dodge.width = dodge.width, size=point.size, alpha = transparency) +
+          p <- ggplot(dat.to.plot, aes(x=.data$variable,y=.data$value, group=eval(parse(text=groupby.x))))+ ggbeeswarm::geom_quasirandom(pch=21,color="black", fill = color.by, dodge.width = dodge.width, size=point.size, alpha = transparency) +
             theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
                                strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = legend.position,
                                axis.title.y = element_text(size=20), axis.title.x=element_blank(), axis.text.x = element_text(size=axis.text.x.size))
@@ -559,7 +560,7 @@ beeswarmGenes <- function( ##can save as ggplot object and add layers afterwards
 
         if (facet.wrap == TRUE) {
 
-          p <- ggplot(dat.to.plot, aes(x=eval(parse(text=groupby.x)),y=value,group=eval(parse(text=groupby.x))))+ ggbeeswarm::geom_quasirandom(pch=21,color="black", fill = color.by, dodge.width = dodge.width, size=point.size, alpha = transparency) +
+          p <- ggplot(dat.to.plot, aes(x=eval(parse(text=groupby.x)),y=.data$value,group=eval(parse(text=groupby.x))))+ ggbeeswarm::geom_quasirandom(pch=21,color="black", fill = color.by, dodge.width = dodge.width, size=point.size, alpha = transparency) +
             theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
                                strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = legend.position,
                                axis.title.y = element_text(size=20), axis.title.x=element_blank(), axis.text.x = element_text(size=axis.text.x.size))
@@ -570,10 +571,10 @@ beeswarmGenes <- function( ##can save as ggplot object and add layers afterwards
                                axis.title.y = element_text(size=20), axis.title.x=element_blank(), axis.text.x = element_text(size=axis.text.x.size))'
 
           if(is.raw.Ct==T){
-            p <- p + ylab("Raw Ct Value") + scale_y_reverse() + facet_wrap(~variable, ncol=ncols, scales = scales)
+            p <- p + ylab("Raw Ct Value") + scale_y_reverse() + facet_wrap(~.data$variable, ncol=ncols, scales = scales)
             call <- paste(call, '+ ylab("Raw Ct Value") + scale_y_reverse() + facet_wrap(~variable, ncol=ncols, scales = scales)')
           }else{
-            p <- p + ylab("Normalized Expression Level") + facet_wrap(~variable, ncol=ncols, scales = scales)
+            p <- p + ylab("Normalized Expression Level") + facet_wrap(~.data$variable, ncol=ncols, scales = scales)
             call <- paste(call, '+ ylab("Normalized Expression Level") + facet_wrap(~variable, ncol=ncols, scales = scales)')
           }
         }
@@ -583,7 +584,7 @@ beeswarmGenes <- function( ##can save as ggplot object and add layers afterwards
         if (any(squishy != FALSE)) { dat.to.plot$value <- scales::squish(dat.to.plot$value, squishy)}   ##if we want to squish
 
 
-        p <- ggplot(dat.to.plot, aes(x=variable,y=value))+ ggbeeswarm::geom_quasirandom(pch=21,color="black", fill = color.by, size=point.size, alpha = transparency) +
+        p <- ggplot(dat.to.plot, aes(x=.data$variable,y=.data$value))+ ggbeeswarm::geom_quasirandom(pch=21,color="black", fill = color.by, size=point.size, alpha = transparency) +
           theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
                              strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = legend.position,
                              axis.title.y = element_text(size=20), axis.title.x=element_blank(), axis.text.x = element_text(size=axis.text.x.size))
@@ -694,7 +695,7 @@ volcano <- function(
     mat <- cbind(mat, My.Genes)
   }
 
-  p <- ggplot(mat,aes(x=LFC, y=-log10(pvals), col=Color)) + geom_point(size=point.size, alpha = transparency) +
+  p <- ggplot(mat,aes(x=.data$LFC, y=-log10(pvals), col=.data$Color)) + geom_point(size=point.size, alpha = transparency) +
     theme(panel.grid = element_blank(), panel.background = element_rect(fill="white"), panel.border = element_rect(color = "black", fill=NA), strip.background = element_blank(),
           strip.text = element_text(size=25), axis.text.x = element_text(size=15), axis.text.y = element_text(size=15), axis.title = element_text(size=20), plot.title = element_text(size=15, hjust = 0.5), legend.position = legend.position) +
     xlab("Log2 Fold Change") + ylab("-log10(Pvalue)") + scale_color_manual(name = paste(paste0("FC.cut = ", FC.cut), paste0("Pval.cut = ", pval.cut), sep="\n"), values=c("Downregulated"=downreg.color,"Upregulated"=upreg.color,"No Sig"=nosig.color)) +
@@ -769,7 +770,7 @@ DensityGenes <- function(
       coloring <- list(color.by = color.by, colors = colors)
     }
 
-    p <- ggplot(dat.to.plot, aes(x=value,fill=eval(parse(text = color.by))))+ geom_density(alpha = transparency) +
+    p <- ggplot(dat.to.plot, aes(x=.data$value,fill=eval(parse(text = color.by))))+ geom_density(alpha = transparency) +
       scale_fill_manual(values=colors) + labs(fill=color.by) +
       theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
                          strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = legend.position,
@@ -782,11 +783,11 @@ DensityGenes <- function(
                          axis.title = element_text(size=20), axis.text.x = element_text(size = 15))'
 
     if (facet.annotation == FALSE) {
-      p <- p + facet_wrap(~variable, ncol=ncols, scales=scales)
+      p <- p + facet_wrap(~.data$variable, ncol=ncols, scales=scales)
       call <- paste(call, '+ facet_wrap(~variable, ncol=ncols, scales=scales)')
     }else{ if (facet.annotation == "wrap") {p <- p + facet_wrap(eval(parse(text = color.by))~variable, scales=scales)
     call <- paste(call, '+ facet_wrap(eval(parse(text = color.by))~variable, scales=scales)')
-    }else{p <- p + facet_grid(eval(parse(text = color.by))~variable, scales=scales)
+    }else{p <- p + facet_grid(eval(parse(text = color.by))~.data$variable, scales=scales)
     call <- paste(call, '+ facet_grid(eval(parse(text = color.by))~variable, scales=scales)')
     }}
 
@@ -804,7 +805,7 @@ DensityGenes <- function(
 
   dat.to.plot <- suppressMessages( reshape2::melt(dat.to.plot) )
 
-  p <- ggplot(dat.to.plot, aes(x=value))+ geom_density(alpha = transparency, fill = color.by) + facet_wrap(~variable, ncol=ncols, scales=scales) +
+  p <- ggplot(dat.to.plot, aes(x=.data$value))+ geom_density(alpha = transparency, fill = color.by) + facet_wrap(~.data$variable, ncol=ncols, scales=scales) +
     theme_bw() + theme(panel.grid = element_blank(), plot.title = element_text(hjust=0.5, size=40),
                        strip.text = element_text(size=25), strip.background.x = element_blank(), legend.position = legend.position,
                        axis.title = element_text(size=20), axis.text.x = element_text(size = 15))

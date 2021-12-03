@@ -13,7 +13,7 @@ set_annot_genes(annotations = NULL)
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{annotations}{
-a character vector including the column names in the annotations.genes parameter (\link[dataVisEasy]{set_annotations.genes}) that should be shown as annotations in the heatmap. If no argument is supplied, assumes that all columns in the annotations.genes parameter should be shown in the heatmap.
+a character vector including the column names in the annotations.genes parameter (\link[dataVisEasy]{set_annotations.genes}) that should be shown as annotations in the heatmap. If no argument is supplied, assumes that all columns in the annotations.genes parameter should be shown in the heatmap. For showing multiple annotations, the order in which the annotations are listed is the order they will appear on the heatmap from the closest to the heatmap on the right to those farthest on the left. To remove all annotation tracks and reset, simply set to NA.
 }
 }
 \details{

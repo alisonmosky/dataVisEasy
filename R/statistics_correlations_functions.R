@@ -31,23 +31,24 @@ AOV1way <- function(
 
 
   dat.check <- t(data.to.aov); dat.check <- reshape2::melt(dat.check); dat.check$groupings <- groupings
-  present <- dplyr::summarise_all(dplyr::group_by(dat.check,Var2, groupings), list(present=function(x)(sum(!is.na(x)))))
+  present <- dplyr::summarise_all(dplyr::group_by(dat.check,.data$Var2, .data$groupings), list(present=function(x)(sum(!is.na(x)))))
   incomplete <- unique(as.character(present$Var2[which(present$value_present == 0)]))
 
 
-  present.incomplete <- present[which(present$Var2 %in% incomplete),] %>% dplyr::group_by(Var2)
+  present.incomplete <- present[which(present$Var2 %in% incomplete),] %>% dplyr::group_by(.data$Var2)
   levels.present <- present.incomplete %>% dplyr::summarise_at("value_present",function(x)(sum(x != 0)))
-  take.out <- unique(as.character(levels.present$Var2[which(levels.present$value_present <= 1)]))
+  suppressWarnings(max.obs <- present.incomplete %>% dplyr::summarise_at("value_present", function(x)(max(x, na.rm = T))))
+  take.out <- unique(c(as.character(levels.present$Var2[which(levels.present$value_present <= 1)]), as.character(max.obs$Var2[which(max.obs$value_present <= 1)])))
 
   if (length(take.out != 0)) {
     data.to.aov <- data.to.aov[-which(rownames(data.to.aov) %in% take.out),]
-    warning(paste(paste(take.out, collapse = ", "),"do not have two or more groups with no non-missing arguments and have been removed from the AOV analysis "))
+    warning(paste(paste(take.out, collapse = ", "),"do(es) not have two or more groups with no non-missing arguments OR does not have more that one observation for each category, therefore removed from the AOV analysis"))
 
   }
 
   incomplete.keep <- incomplete[incomplete %notin% take.out]
   if (length(incomplete.keep) != 0 ) {
-    warning(paste(paste(incomplete.keep, collapse = ", "), "have at least one group with no non-missing arguments"))
+    warning(paste(paste(incomplete.keep, collapse = ", "), "contain(s) at least one group with no non-missing arguments"))
   }
 
 
@@ -147,28 +148,30 @@ AOV2way <- function(
 
 
   dat.check <- t(data.to.aov); dat.check <- melt(dat.check); dat.check$grouping1 <- groupings1; dat.check$grouping2 <- groupings2
-  present1 <- dplyr::summarise_all(dplyr::group_by(dat.check,Var2, grouping1), list(present=function(x)(sum(!is.na(x)))))
-  present2 <- dplyr::summarise_all(dplyr::group_by(dat.check,Var2, grouping2), list(present=function(x)(sum(!is.na(x)))))
+  present1 <- dplyr::summarise_all(dplyr::group_by(dat.check,.data$Var2, .data$grouping1), list(present=function(x)(sum(!is.na(x)))))
+  present2 <- dplyr::summarise_all(dplyr::group_by(dat.check,.data$Var2, .data$grouping2), list(present=function(x)(sum(!is.na(x)))))
 
   incomplete1 <- unique(as.character(present1$Var2[which(present1$value_present == 0)]))
-  present.incomplete1 <- present1[which(present1$Var2 %in% incomplete1),] %>% dplyr::group_by(Var2)
+  present.incomplete1 <- present1[which(present1$Var2 %in% incomplete1),] %>% dplyr::group_by(.data$Var2)
   levels.present1 <- present.incomplete1 %>% dplyr::summarise_at("value_present",function(x)(sum(x != 0)))
-  take.out1 <- unique(as.character(levels.present1$Var2[which(levels.present1$value_present <= 1)]))
+  suppressWarnings(max.obs1 <- present.incomplete1 %>% dplyr::summarise_at("value_present", function(x)(max(x, na.rm = T))))
+  take.out1 <- unique(c(as.character(levels.present1$Var2[which(levels.present1$value_present <= 1)]), as.character(max.obs1$Var2[which(max.obs1$value_present <= 1)])))
 
   incomplete2 <- unique(as.character(present2$Var2[which(present2$value_present == 0)]))
-  present.incomplete2 <- present2[which(present2$Var2 %in% incomplete2),] %>% dplyr::group_by(Var2)
+  present.incomplete2 <- present2[which(present2$Var2 %in% incomplete2),] %>% dplyr::group_by(.data$Var2)
   levels.present2 <- present.incomplete2 %>% dplyr::summarise_at("value_present",function(x)(sum(x != 0)))
-  take.out2 <- unique(as.character(levels.present2$Var2[which(levels.present2$value_present <= 1)]))
+  suppressWarnings(max.obs2 <- present.incomplete2 %>% dplyr::summarise_at("value_present", function(x)(max(x, na.rm = T))))
+  take.out2 <- unique(c(as.character(levels.present2$Var2[which(levels.present2$value_present <= 1)]), as.character(max.obs2$Var2[which(max.obs2$value_present <= 1)])))
 
   if (length(unique(c(take.out1,take.out2)) != 0)) {
     data.to.aov <- data.to.aov[-which(rownames(data.to.aov) %in% unique(c(take.out1,take.out2))),]
-    warning(paste(paste(unique(c(take.out1,take.out2)), collapse = ", "),"do not have two or more groups with no non-missing arguments and have been removed from the AOV analysis "))
+    warning(paste(paste(unique(c(take.out1,take.out2)), collapse = ", "),"do(es) not have two or more groups with no non-missing arguments OR does not have more that one observation for each category, therefore removed from the AOV analysis"))
 
   }
 
   incomplete.keep <- unique(c(incomplete1,incomplete2))[unique(c(incomplete1,incomplete2)) %notin% unique(c(take.out1,take.out2))]
   if (length(incomplete.keep) != 0 ) {
-    warning(paste(paste(incomplete.keep, collapse = ", "), "have at least one group with no non-missing arguments"))
+    warning(paste(paste(incomplete.keep, collapse = ", "), "contains(s) at least one group with no non-missing arguments"))
   }
 
 
@@ -354,14 +357,14 @@ myPCA <- function(
 
     if (all(is.na(shape.by)) == TRUE) {
       if (color.by %in% rownames(data) | any(custom.color.vec != FALSE)) {
-        p <- ggplot(pca.data, aes(x=eval(parse(text = PCs.to.plot[1])),y=eval(parse(text = PCs.to.plot[2])),fill=cols, Samples = Samples))+ geom_point(pch=21,color="black",size=point.size, alpha = transparency)  +
+        p <- ggplot(pca.data, aes(x=eval(parse(text = PCs.to.plot[1])),y=eval(parse(text = PCs.to.plot[2])),fill=cols, Samples = .data$Samples))+ geom_point(pch=21,color="black",size=point.size, alpha = transparency)  +
           scale_fill_identity()
 
         call <- 'ggplot(input_data, aes(x = PCs.to.plot[1], y = PCs.to.plot[2], fill=cols, Samples = Samples))+ geom_point(pch=21,color="black",size=point.size, alpha = transparency)  +
           scale_fill_identity()'
 
       }else {
-        p <- ggplot(pca.data, aes(x=eval(parse(text = PCs.to.plot[1])),y=eval(parse(text = PCs.to.plot[2])),fill=cols, Samples = Samples))+ geom_point(pch=21,color="black",size=point.size, alpha = transparency)  +
+        p <- ggplot(pca.data, aes(x=eval(parse(text = PCs.to.plot[1])),y=eval(parse(text = PCs.to.plot[2])),fill=cols, Samples = .data$Samples))+ geom_point(pch=21,color="black",size=point.size, alpha = transparency)  +
           scale_fill_manual(values=colors) + labs(fill=color.by)
 
         call <- 'ggplot(input_data, aes(x = PCs.to.plot[1], y = PCs.to.plot[2], fill=cols, Samples = Samples))+ geom_point(pch=21,color="black",size=point.size, alpha = transparency)  +
@@ -369,13 +372,13 @@ myPCA <- function(
       }
     }else{
       if (color.by %in% rownames(data) | any(custom.color.vec != FALSE)) {
-        p <- ggplot(pca.data, aes(x=eval(parse(text = PCs.to.plot[1])),y=eval(parse(text = PCs.to.plot[2])),fill=cols, shape = shapes, Samples = Samples))+ geom_point(size=point.size, alpha = transparency)  +
+        p <- ggplot(pca.data, aes(x=eval(parse(text = PCs.to.plot[1])),y=eval(parse(text = PCs.to.plot[2])),fill=cols, shape = shapes, Samples = .data$Samples))+ geom_point(size=point.size, alpha = transparency)  +
           scale_fill_identity() + labs(shape = shape.by) + scale_shape_manual(values = c((1:length(levels(shapes)))+20))
 
         call <- 'ggplot(input_data, aes(x = PCs.to.plot[1], y = PCs.to.plot[2], fill=cols, shape = shapes, Samples = Samples))+ geom_point(size=point.size, alpha = transparency)  +
           scale_fill_identity() + labs(shape = shape.by) + scale_shape_manual(values = c((1:length(levels(shapes)))+20))'
       }else {
-        p <- ggplot(pca.data, aes(x=eval(parse(text = PCs.to.plot[1])),y=eval(parse(text = PCs.to.plot[2])),fill=cols, shape = shapes, Samples = Samples))+ geom_point(size=point.size, alpha = transparency)  +
+        p <- ggplot(pca.data, aes(x=eval(parse(text = PCs.to.plot[1])),y=eval(parse(text = PCs.to.plot[2])),fill=cols, shape = shapes, Samples = .data$Samples))+ geom_point(size=point.size, alpha = transparency)  +
           scale_fill_manual(values=colors) + labs(fill=color.by, shape = shape.by) + scale_shape_manual(values = c((1:length(levels(shapes)))+20)) + guides(fill = guide_legend(override.aes=list(shape=21)))
 
         call <- 'ggplot(input_data, aes(x = PCs.to.plot[1], y = PCs.to.plot[2], fill=cols, shape = shapes, Samples = Samples))+ geom_point(size=point.size, alpha = transparency)  +
@@ -442,26 +445,26 @@ myPCA <- function(
 
     if (all(is.na(shape.by)) == TRUE) {
       if (any(custom.color.vec != FALSE)) {
-        p <- ggplot(pca.data, aes(x=eval(parse(text = PCs.to.plot[1])),y=eval(parse(text = PCs.to.plot[2])),fill=cols, Genes = Genes))+ geom_point(pch=21,color="black",size=point.size, alpha = transparency)  +
+        p <- ggplot(pca.data, aes(x=eval(parse(text = PCs.to.plot[1])),y=eval(parse(text = PCs.to.plot[2])),fill=cols, Genes = .data$Genes))+ geom_point(pch=21,color="black",size=point.size, alpha = transparency)  +
           scale_fill_identity()
 
         call <- 'ggplot(input_data, aes(x = PCs.to.plot[1],y = PCs.to.plot[2], fill=cols, Genes = Genes))+ geom_point(pch=21,color="black",size=point.size, alpha = transparency)  +
           scale_fill_identity()'
       }else {
-        p <- ggplot(pca.data, aes(x=eval(parse(text = PCs.to.plot[1])),y=eval(parse(text = PCs.to.plot[2])),fill=cols, Genes = Genes))+ geom_point(pch=21,color="black",size=point.size, alpha = transparency)  +
+        p <- ggplot(pca.data, aes(x=eval(parse(text = PCs.to.plot[1])),y=eval(parse(text = PCs.to.plot[2])),fill=cols, Genes = .data$Genes))+ geom_point(pch=21,color="black",size=point.size, alpha = transparency)  +
           scale_fill_manual(values=colors) + labs(fill=color.by)
         call <- 'ggplot(input_data, aes(x = PCs.to.plot[1], y = PCs.to.plot[2], fill=cols, Genes = Genes))+ geom_point(pch=21,color="black",size=point.size, alpha = transparency)  +
           scale_fill_manual(values=colors) + labs(fill=color.by)'
       }
     }else{
       if (color.by %in% rownames(data) | any(custom.color.vec != FALSE)) {
-        p <- ggplot(pca.data, aes(x=eval(parse(text = PCs.to.plot[1])),y=eval(parse(text = PCs.to.plot[2])),fill=cols, shape = shapes, Genes = Genes))+ geom_point(size=point.size, alpha = transparency)  +
+        p <- ggplot(pca.data, aes(x=eval(parse(text = PCs.to.plot[1])),y=eval(parse(text = PCs.to.plot[2])),fill=cols, shape = shapes, Genes = .data$Genes))+ geom_point(size=point.size, alpha = transparency)  +
           scale_fill_identity() + labs(shape = shape.by) + scale_shape_manual(values = c((1:length(levels(shapes)))+20))
 
         call <- 'ggplot(input_data, aes(x = PCs.to.plot[1], y = PCs.to.plot[2], fill=cols, shape = shapes, Genes = Genes))+ geom_point(size=point.size, alpha = transparency)  +
           scale_fill_identity() + labs(shape = shape.by) + scale_shape_manual(values = c((1:length(levels(shapes)))+20))'
       }else {
-        p <- ggplot(pca.data, aes(x=eval(parse(text = PCs.to.plot[1])),y=eval(parse(text = PCs.to.plot[2])),fill=cols, shape = shapes, Genes = Genes))+ geom_point(size=point.size, alpha = transparency)  +
+        p <- ggplot(pca.data, aes(x=eval(parse(text = PCs.to.plot[1])),y=eval(parse(text = PCs.to.plot[2])),fill=cols, shape = shapes, Genes = .data$Genes))+ geom_point(size=point.size, alpha = transparency)  +
           scale_fill_manual(values=colors) + labs(fill=color.by, shape = shape.by) + scale_shape_manual(values = c((1:length(levels(shapes)))+20)) + guides(fill = guide_legend(override.aes=list(shape=21)))
 
         call <- 'ggplot(input_data, aes(x = PCs.to.plot[1],y = PCs.to.plot[2], fill=cols, shape = shapes, Genes = Genes))+ geom_point(size=point.size, alpha = transparency)  +
@@ -685,7 +688,7 @@ correlateGenesWithin <- function(  ##broad gene correlations
 
     melt.data <- melt(cor.dat); colnames(melt.data) <- c("Gene1","Gene2","Correlation")
 
-    picked.cors <- melt.data %>% dplyr::filter(!is.na(Correlation)) %>% dplyr::filter(Correlation < limits[1] | Correlation > limits[2] )
+    picked.cors <- melt.data %>% dplyr::filter(!is.na(.data$Correlation)) %>% dplyr::filter(.data$Correlation < limits[1] | .data$Correlation > limits[2] )
 
     return(picked.cors)
   }
@@ -717,7 +720,7 @@ correlateGenesAcross <- function(  ##broad gene correlations
 
     melt.data <- melt(cor.dat); colnames(melt.data) <- c("Gene_Data1","Gene_Data2","Correlation")
 
-    picked.cors <- melt.data %>% dplyr::filter(!is.na(Correlation)) %>% dplyr::filter(Correlation < limits[1] | Correlation > limits[2] )
+    picked.cors <- melt.data %>% dplyr::filter(!is.na(.data$Correlation)) %>% dplyr::filter(.data$Correlation < limits[1] | .data$Correlation > limits[2] )
 
     return(picked.cors)
   }
@@ -844,7 +847,7 @@ find.silhouette <- function(
 
     data.to.plot <- data.frame(vals=c(rands, sil.coef))
 
-    p <- ggplot(data.to.plot, aes(x=vals)) + geom_density(size=1) + geom_point(x=sil.coef, y=density(data.to.plot$vals)$y[which.min(abs(density(data.to.plot$vals)$x-sil.coef))], size=3) + geom_text(x=sil.coef, y=(density(data.to.plot$vals)$y[which.min(abs(density(data.to.plot$vals)$x-sil.coef))])+5, label=round(sil.coef,3)) +
+    p <- ggplot(data.to.plot, aes(x=.data$vals)) + geom_density(size=1) + geom_point(x=sil.coef, y=density(data.to.plot$vals)$y[which.min(abs(density(data.to.plot$vals)$x-sil.coef))], size=3) + geom_text(x=sil.coef, y=(density(data.to.plot$vals)$y[which.min(abs(density(data.to.plot$vals)$x-sil.coef))])+5, label=round(sil.coef,3)) +
       geom_segment(x=sil.coef, xend=sil.coef, y=0, yend=density(data.to.plot$vals)$y[which.min(abs(density(data.to.plot$vals)$x-sil.coef))], size=1) + theme_bw() +  theme(panel.grid=element_blank() ,
                                                                                                                                                                            axis.title = element_text(size=axis.label.size), plot.title = element_text(size=main.label.size, hjust = 0.5))+
       xlab(paste(axis.label)) + ylab("Density") + ggtitle(paste(main))
@@ -889,10 +892,10 @@ find.silhouette <- function(
 
 
 
-      p <- ggplot() + geom_line(data=to.plot,aes(x=clusts, y=sil.coefs),size=1) + geom_point(data=to.plot,aes(x=clusts, y=sil.coefs, shape=type),size=3) +
-        geom_boxplot(data=rands.melt, aes(x=Var2, y=value, group=Var2)) + geom_point(data=rands.melt, aes(x=Var2,y=value, group=Var2, shape=type), size=1) +
-        stat_summary(data=rands.melt,aes(x=Var2, y=value), fun = median, geom = 'line') +
-        stat_summary(data=rands.melt,aes(x=Var2, y=value), fun = median, geom = 'point', size=4,shape=17) +
+      p <- ggplot() + geom_line(data=to.plot,aes(x=clusts, y=sil.coefs),size=1) + geom_point(data=to.plot,aes(x=clusts, y=sil.coefs, shape=.data$type),size=3) +
+        geom_boxplot(data=rands.melt, aes(x=.data$Var2, y=.data$value, group=.data$Var2)) + geom_point(data=rands.melt, aes(x=.data$Var2,y=.data$value, group=.data$Var2, shape=.data$type), size=1) +
+        stat_summary(data=rands.melt,aes(x=.data$Var2, y=.data$value), fun = median, geom = 'line') +
+        stat_summary(data=rands.melt,aes(x=.data$Var2, y=.data$value), fun = median, geom = 'point', size=4,shape=17) +
         theme_bw()+ theme(panel.grid = element_blank()) + xlab("Clusters") + scale_shape_manual(values=c(19,17),labels=c("Original Data", "Randomized Data")) +
         ylab(paste(axis.label)) + ggtitle(paste(main)) + theme(axis.title = element_text(size=axis.label.size), plot.title = element_text(size=main.label.size, hjust=0.5),
                                                                legend.position = legend.position, legend.direction="horizontal",legend.title = element_blank(), legend.background = element_rect(color="black")) + scale_x_continuous(breaks=scales::pretty_breaks()) +
