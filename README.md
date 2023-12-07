@@ -7,5 +7,5 @@ Please reach out if you have questions or issues.
 
 >install.packages("devtools")
 >
->devtools::install_github("alisonmoss3/dataVisEasy")
+>devtools::install_github("alisonmosky/dataVisEasy")
 
