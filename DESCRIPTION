@@ -9,6 +9,7 @@ Depends:
     pheatmap,
     ggplot2,
     R (>= 2.10)
+biocViews:
 Imports: 
     tidyverse,
     dplyr,
